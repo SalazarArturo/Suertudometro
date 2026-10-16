@@ -1,0 +1,8 @@
+# Enlaces locales a las skills de Claude Code (cada integrante crea los suyos)
+.claude/skills/
+
+# Preferencias personales de Claude Code
+CLAUDE.local.md
+
+# Configuración local de herramientas
+.impeccable/
