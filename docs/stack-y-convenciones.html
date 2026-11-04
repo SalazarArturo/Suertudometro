@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suertudómetro · Matriz de Stack, Convenciones y Skills</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #334155;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body class="p-4 md:p-6 text-sm">
+  <!-- Header -->
+  <header class="mb-6 pb-4 border-b border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <span
+          class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-400 border border-sky-500/30">Suertudómetro</span>
+        <span class="text-xs text-slate-400">Versión propuesta · 2026-11-03</span>
+      </div>
+      <h1 class="text-2xl font-bold mt-1 text-white">Matriz Integral de Stack, Convenciones y Skills</h1>
+      <p class="text-slate-400 text-xs mt-0.5">Estructura unificada 100% tabular para consulta rápida de arquitectura,
+        base de datos y directivas de desarrollo.</p>
+    </div>
+
+    <!-- Quick search -->
+    <div class="relative w-full md:w-72">
+      <input type="text" id="globalSearch" placeholder="Filtrar cualquier fila o skill..."
+        class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500 transition-colors">
+      <span class="absolute right-2.5 top-2 text-slate-400 text-xs">🔍</span>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="flex flex-wrap gap-2 mb-6">
+    <button onclick="switchTab('all')"
+      class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-sky-500 text-slate-900 shadow-sm"
+      data-tab="all">Todo</button>
+    <button onclick="switchTab('skills')"
+      class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+      data-tab="skills">4. Skills para IA (8)</button>
+    <button onclick="switchTab('tech')"
+      class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+      data-tab="tech">1. Tecnologías</button>
+    <button onclick="switchTab('databases')"
+      class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+      data-tab="databases">2. Bases de Datos</button>
+    <button onclick="switchTab('tools')"
+      class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+      data-tab="tools">3. Herramientas & Libs</button>
+    <button onclick="switchTab('conventions')"
+      class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+      data-tab="conventions">5. Convenciones de Código</button>
+  </nav>
+
+  <!-- Section 4: Skills (Main focus requested by user) -->
+  <section id="section-skills" class="content-section mb-8">
+    <div class="bg-slate-800/90 rounded-xl border border-slate-700 p-4 md:p-5 shadow-lg">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            Catálogo Maestro de Skills para Agentes de IA
+          </h2>
+          <p class="text-slate-400 text-xs">8 skills en el repositorio: una por tecnología más las que
+            necesita todo el equipo. La skill propia del proyecto manda sobre las de terceros.</p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="text-left w-full">
+          <thead>
+            <tr class="bg-slate-900/80 text-slate-400 text-xs uppercase tracking-wider">
+              <th class="py-2.5 px-3 rounded-l-lg">Categoría</th>
+              <th class="py-2.5 px-3">Skill / Nombre</th>
+              <th class="py-2.5 px-3">Propósito y Responsabilidad en el Proyecto</th>
+              <th class="py-2.5 px-3 rounded-r-lg">Repositorio / Origen</th>
+            </tr>
+          </thead>
+          <tbody id="skillsTableBody" class="divide-y divide-slate-700/60 text-xs">
+            <tr class="hover:bg-slate-700/30 transition-colors">
+              <td class="py-2.5 px-3 font-semibold text-slate-300">Todo el equipo</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">architecture-patterns</td>
+              <td class="py-2.5 px-3 text-slate-300">Capas, arquitectura limpia y DDD táctico en los seis servicios.</td>
+              <td class="py-2.5 px-3 text-slate-400"><code>wshobson/agents</code></td>
+            </tr>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+              <td class="py-2.5 px-3 font-semibold text-slate-300">Todo el equipo</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">microservices-patterns</td>
+              <td class="py-2.5 px-3 text-slate-300">Eventos, base de datos por servicio y resiliencia.</td>
+              <td class="py-2.5 px-3 text-slate-400"><code>wshobson/agents</code></td>
+            </tr>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+              <td class="py-2.5 px-3 font-semibold text-slate-300">Todo el equipo</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">supabase-postgres-best-practices</td>
+              <td class="py-2.5 px-3 text-slate-300">Índices, consultas y diseño de esquemas en PostgreSQL.</td>
+              <td class="py-2.5 px-3 text-slate-400"><code>supabase/agent-skills</code> (oficial)</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+              <td class="py-2.5 px-3 font-semibold text-slate-300">Spring Boot</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">domain-driven-design</td>
+              <td class="py-2.5 px-3 text-slate-300">Agregados, value objects, eventos de dominio y dominio separado de JPA.</td>
+              <td class="py-2.5 px-3 text-slate-400"><a href="https://github.com/rrezartprebreza/spring-boot-skills" target="_blank" class="text-sky-400 hover:underline">rrezartprebreza/spring-boot-skills</a> (carpeta <code>spring-boot-4</code>)</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+              <td class="py-2.5 px-3 font-semibold text-slate-300">NestJS</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">nestjs-expert</td>
+              <td class="py-2.5 px-3 text-slate-300">Módulos, DTOs, guards, JWT y pruebas en <code>identity</code> y <code>notification</code>.</td>
+              <td class="py-2.5 px-3 text-slate-400"><code>Jeffallan/claude-skills</code></td>
+            </tr>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+              <td class="py-2.5 px-3 font-semibold text-slate-300">Django</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">django-expert</td>
+              <td class="py-2.5 px-3 text-slate-300">DRF, serializers, consultas y pruebas en <code>update</code> y <code>search</code>.</td>
+              <td class="py-2.5 px-3 text-slate-400"><code>Jeffallan/claude-skills</code></td>
+            </tr>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+              <td class="py-2.5 px-3 font-semibold text-slate-300">Angular</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">angular-developer</td>
+              <td class="py-2.5 px-3 text-slate-300">Componentes, signals y rutas en Angular moderno.</td>
+              <td class="py-2.5 px-3 text-slate-400"><code>angular/skills</code> (oficial)</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+              <td class="py-2.5 px-3 font-semibold text-slate-300">Todo el equipo</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">suertudometro-conventions</td>
+              <td class="py-2.5 px-3 text-slate-300">Las convenciones de este documento; manda sobre las demás skills.</td>
+              <td class="py-2.5 px-3 text-slate-400">Propia del repositorio (por escribir)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 1: Tecnologías -->
+  <section id="section-tech" class="content-section mb-8">
+    <div class="bg-slate-800/90 rounded-xl border border-slate-700 p-4 md:p-5 shadow-lg">
+      <h2 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+        1. Tecnologías y Runtime por Servicio
+      </h2>
+      <p class="text-slate-400 text-xs mb-3">Distribución técnica acordada por los 4 integrantes para cubrir los
+        requisitos del docente.</p>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="text-left w-full">
+          <thead>
+            <tr class="bg-slate-900/80 text-slate-400 text-xs uppercase tracking-wider">
+              <th class="py-2.5 px-3 rounded-l-lg">Componente / Microservicio</th>
+              <th class="py-2.5 px-3">Stack Tecnológico</th>
+              <th class="py-2.5 px-3 rounded-r-lg">Responsabilidad Principal en la Solución</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700/60 text-xs text-slate-300">
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">Frontend</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-red-500/10 text-red-400 font-medium">Angular
+                  22</span> (TypeScript)</td>
+              <td class="py-2.5 px-3">SPA única: portal público, panel del organizador y panel administrativo.</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">API Gateway</td>
+              <td class="py-2.5 px-3"><span
+                  class="px-2 py-0.5 rounded bg-green-500/10 text-green-400 font-medium">Spring Cloud Gateway</span>
+                (Spring Boot 4.1 · Java 21)</td>
+              <td class="py-2.5 px-3">Punto de entrada único: validación JWT, CORS global, límite de peticiones en memoria y ruteo
+                perimetral.</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">campaign-service</td>
+              <td class="py-2.5 px-3"><span
+                  class="px-2 py-0.5 rounded bg-green-500/10 text-green-400 font-medium">Spring Boot 4.1</span> (Java
+                21)</td>
+              <td class="py-2.5 px-3">Núcleo del negocio (Core Domain): estados, moderación, metas y reglas de campañas.
+              </td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">contribution-service</td>
+              <td class="py-2.5 px-3"><span
+                  class="px-2 py-0.5 rounded bg-green-500/10 text-green-400 font-medium">Spring Boot 4.1</span> (Java
+                21)</td>
+              <td class="py-2.5 px-3">Núcleo del negocio (Core Domain): aportes, compromisos de pago y recaudación
+                exacta.</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">identity-service</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-red-500/10 text-red-400 font-medium">NestJS
+                  12</span> (Node.js 24 LTS)</td>
+              <td class="py-2.5 px-3">Gestión de cuentas, asignación de roles y emisión de tokens JWT seguros.</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">notification-service</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-red-500/10 text-red-400 font-medium">NestJS
+                  12</span> (Node.js 24 LTS)</td>
+              <td class="py-2.5 px-3">Envío asíncrono de correos (Mailpit) y despacho a la bandeja interna de avisos.
+              </td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">update-service</td>
+              <td class="py-2.5 px-3"><span
+                  class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-medium">Django 5.2 LTS</span> + DRF
+                (Python 3.13)</td>
+              <td class="py-2.5 px-3">Publicación de novedades, avances y bitácora del creador de la campaña.</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">search-service</td>
+              <td class="py-2.5 px-3"><span
+                  class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-medium">Django 5.2 LTS</span> + DRF
+                (Python 3.13)</td>
+              <td class="py-2.5 px-3">Catálogo de solo lectura (CQRS) con filtros facetados y búsqueda de texto
+                completo.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Bases de datos -->
+  <section id="section-databases" class="content-section mb-8">
+    <div class="bg-slate-800/90 rounded-xl border border-slate-700 p-4 md:p-5 shadow-lg">
+      <h2 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>
+        2. Bases de Datos y Almacenamiento (Database per Service)
+      </h2>
+      <p class="text-slate-400 text-xs mb-3">Ningún microservicio puede compartir o consultar directamente el almacén de
+        datos de otro componente.</p>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="text-left w-full">
+          <thead>
+            <tr class="bg-slate-900/80 text-slate-400 text-xs uppercase tracking-wider">
+              <th class="py-2.5 px-3 rounded-l-lg">Servicio Propietario</th>
+              <th class="py-2.5 px-3">Motor de Base de Datos</th>
+              <th class="py-2.5 px-3">Tipo de Almacén</th>
+              <th class="py-2.5 px-3 rounded-r-lg">Justificación Arquitectónica</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700/60 text-xs text-slate-300">
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-mono text-white">identity-service</td>
+              <td class="py-2.5 px-3 font-semibold text-sky-400">PostgreSQL 18</td>
+              <td class="py-2.5 px-3">Relacional (ACID)</td>
+              <td class="py-2.5 px-3">Garantía estricta de unicidad en emails, autenticación y auditoría de usuarios.
+              </td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-mono text-white">campaign-service</td>
+              <td class="py-2.5 px-3 font-semibold text-sky-400">PostgreSQL 18</td>
+              <td class="py-2.5 px-3">Relacional (ACID)</td>
+              <td class="py-2.5 px-3">Integridad en transiciones de estado de campañas y reglas de moderación.</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-mono text-white">contribution-service</td>
+              <td class="py-2.5 px-3 font-semibold text-sky-400">PostgreSQL 18</td>
+              <td class="py-2.5 px-3">Relacional (ACID)</td>
+              <td class="py-2.5 px-3">Precisión monetaria exacta sin redondeos con <code>NUMERIC(12,2)</code>.</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-mono text-white">update-service</td>
+              <td class="py-2.5 px-3 font-semibold text-sky-400">PostgreSQL 18</td>
+              <td class="py-2.5 px-3">Relacional (ACID)</td>
+              <td class="py-2.5 px-3">Publicaciones cronológicas y relación con los autores de cada campaña.</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-mono text-white">search-service</td>
+              <td class="py-2.5 px-3 font-semibold text-sky-400">PostgreSQL 18 (FTS)</td>
+              <td class="py-2.5 px-3">Búsqueda Textual</td>
+              <td class="py-2.5 px-3">Lado de consultas CQRS indexado con <code>tsvector</code> y <code>pg_trgm</code>.
+              </td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-mono text-white">notification-service</td>
+              <td class="py-2.5 px-3 font-semibold text-sky-400">PostgreSQL 18</td>
+              <td class="py-2.5 px-3">Relacional (ACID) + JSONB</td>
+              <td class="py-2.5 px-3">Bandeja de avisos, contactos y aportantes por campaña; el contenido variable de
+                cada aviso va en una columna <code>JSONB</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-4 rounded-lg border border-sky-500/30 bg-sky-500/10 p-3 text-xs text-sky-100">
+        <strong class="text-sky-300">Un solo motor para los seis servicios.</strong> El enunciado pide una base por
+        servicio, no motores distintos. Todos los datos son estructurados, así que PostgreSQL cubre todo y el equipo
+        aprende, migra y respalda un solo motor. Detalle en el ADR 0002.
+      </div>
+
+      <h3 class="text-sm font-bold text-white mt-5 mb-2">Necesidades que no son bases de datos</h3>
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="text-left w-full">
+          <thead>
+            <tr class="bg-slate-900/80 text-slate-400 text-xs uppercase tracking-wider">
+              <th class="py-2.5 px-3 rounded-l-lg">Necesidad</th>
+              <th class="py-2.5 px-3">Solución</th>
+              <th class="py-2.5 px-3 rounded-r-lg">Por qué</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700/60 text-xs text-slate-300">
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">Imágenes de campañas</td>
+              <td class="py-2.5 px-3">Archivos en el volumen de Docker <code>campaign-images</code>; en campaign-db solo
+                la ruta, el tipo y el tamaño</td>
+              <td class="py-2.5 px-3">Guardarlas dentro de la base la agranda y vuelve lentos los respaldos.</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">Límite de peticiones del gateway</td>
+              <td class="py-2.5 px-3">En la memoria del gateway (Bucket4j + Caffeine)</td>
+              <td class="py-2.5 px-3">Con un solo gateway no hace falta compartir contadores entre instancias.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Librerías por tecnología -->
+  <section id="section-tools" class="content-section mb-8">
+    <div class="bg-slate-800/90 rounded-xl border border-slate-700 p-4 md:p-5 shadow-lg">
+      <h2 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+        3. Ecosistema de Librerías y Frameworks por Tecnología
+      </h2>
+      <p class="text-slate-400 text-xs mb-3">Homologación de capacidades para garantizar que los 3 stacks backend
+        resuelvan los mismos patrones.</p>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="text-left w-full">
+          <thead>
+            <tr class="bg-slate-900/80 text-slate-400 text-xs uppercase tracking-wider">
+              <th class="py-2.5 px-3 rounded-l-lg">Capacidad / Área</th>
+              <th class="py-2.5 px-3">Spring Boot 4 (Java 21)</th>
+              <th class="py-2.5 px-3">NestJS 12 (Node.js 24)</th>
+              <th class="py-2.5 px-3 rounded-r-lg">Django 5.2 LTS (Python 3.13)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700/60 text-xs text-slate-300">
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">Patrón CQRS</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">PipelinR (como el docente)</td>
+              <td class="py-2.5 px-3 font-mono text-emerald-300">@nestjs/cqrs</td>
+              <td class="py-2.5 px-3 text-slate-400">Handlers propios (Command/Query classes)</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">Persistencia / ORM</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">Spring Data JPA</td>
+              <td class="py-2.5 px-3 font-mono text-emerald-300">Prisma (identity y notification)</td>
+              <td class="py-2.5 px-3 font-mono text-amber-300">Django ORM nativo</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">Migraciones de BD</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">Flyway</td>
+              <td class="py-2.5 px-3 font-mono text-emerald-300">Prisma Migrate</td>
+              <td class="py-2.5 px-3 font-mono text-amber-300">Migraciones nativas de Django</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">Integración RabbitMQ</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">Spring AMQP</td>
+              <td class="py-2.5 px-3 font-mono text-emerald-300">amqplib (payload JSON universal)</td>
+              <td class="py-2.5 px-3 font-mono text-amber-300">pika</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">Documentación OpenAPI</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">springdoc-openapi</td>
+              <td class="py-2.5 px-3 font-mono text-emerald-300">@nestjs/swagger</td>
+              <td class="py-2.5 px-3 font-mono text-amber-300">drf-spectacular</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">Testing Suite</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">JUnit 5 + Testcontainers</td>
+              <td class="py-2.5 px-3 font-mono text-emerald-300">Jest / CLI Runner oficial</td>
+              <td class="py-2.5 px-3 font-mono text-amber-300">pytest + pytest-django</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30">
+              <td class="py-2.5 px-3 font-semibold text-white">Linter y Formato</td>
+              <td class="py-2.5 px-3 font-mono text-sky-300">Spotless (google-java-format)</td>
+              <td class="py-2.5 px-3 font-mono text-emerald-300">ESLint + Prettier</td>
+              <td class="py-2.5 px-3 font-mono text-amber-300">Ruff</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Convenciones -->
+  <section id="section-conventions" class="content-section mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Nombres -->
+      <div class="bg-slate-800/90 rounded-xl border border-slate-700 p-4 shadow-lg">
+        <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+          <span>🏷️</span> Convenciones de Nomenclatura
+        </h3>
+        <table class="text-left w-full text-xs">
+          <thead>
+            <tr class="bg-slate-900 text-slate-400">
+              <th class="py-1.5 px-2">Elemento</th>
+              <th class="py-1.5 px-2">Java 21</th>
+              <th class="py-1.5 px-2">TypeScript</th>
+              <th class="py-1.5 px-2">Python 3.13</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700/50 text-slate-300">
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-white">Clases</td>
+              <td class="py-1.5 px-2 font-mono text-sky-300">PascalCase</td>
+              <td class="py-1.5 px-2 font-mono text-emerald-300">PascalCase</td>
+              <td class="py-1.5 px-2 font-mono text-amber-300">PascalCase</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-white">Métodos / Funciones</td>
+              <td class="py-1.5 px-2 font-mono text-sky-300">camelCase</td>
+              <td class="py-1.5 px-2 font-mono text-emerald-300">camelCase</td>
+              <td class="py-1.5 px-2 font-mono text-amber-300">snake_case</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-white">Variables</td>
+              <td class="py-1.5 px-2 font-mono text-sky-300">camelCase</td>
+              <td class="py-1.5 px-2 font-mono text-emerald-300">camelCase</td>
+              <td class="py-1.5 px-2 font-mono text-amber-300">snake_case</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-white">Archivos</td>
+              <td class="py-1.5 px-2 font-mono text-sky-300">PascalCase.java</td>
+              <td class="py-1.5 px-2 font-mono text-emerald-300">kebab-case.ts</td>
+              <td class="py-1.5 px-2 font-mono text-amber-300">snake_case.py</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Envelope RabbitMQ -->
+      <div class="bg-slate-800/90 rounded-xl border border-slate-700 p-4 shadow-lg">
+        <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+          <span>📨</span> Envelope Estándar RabbitMQ
+        </h3>
+        <table class="text-left w-full text-xs">
+          <thead>
+            <tr class="bg-slate-900 text-slate-400">
+              <th class="py-1.5 px-2">Campo</th>
+              <th class="py-1.5 px-2">Tipo</th>
+              <th class="py-1.5 px-2">Propósito</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700/50 text-slate-300">
+            <tr>
+              <td class="py-1.5 px-2 font-mono text-sky-300">eventId</td>
+              <td class="py-1.5 px-2">UUID string</td>
+              <td class="py-1.5 px-2">Identificador único para idempotencia obligatoria.</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-mono text-sky-300">eventType</td>
+              <td class="py-1.5 px-2">String</td>
+              <td class="py-1.5 px-2">Nombre con punto (coincide con la routing key).</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-mono text-sky-300">version</td>
+              <td class="py-1.5 px-2">Integer</td>
+              <td class="py-1.5 px-2">Versión del contrato para compatibilidad evolutiva.</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-mono text-sky-300">occurredAt</td>
+              <td class="py-1.5 px-2">ISO-8601 UTC</td>
+              <td class="py-1.5 px-2">Marca de tiempo exacta de publicación en UTC.</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-mono text-sky-300">data</td>
+              <td class="py-1.5 px-2">JSON Object</td>
+              <td class="py-1.5 px-2">Carga útil con los datos de negocio del evento.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Precisión Financiera -->
+      <div class="bg-slate-800/90 rounded-xl border border-slate-700 p-4 shadow-lg">
+        <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+          <span>💰</span> Manejo de Dinero y Datos
+        </h3>
+        <table class="text-left w-full text-xs">
+          <thead>
+            <tr class="bg-slate-900 text-slate-400">
+              <th class="py-1.5 px-2">Capa / Motor</th>
+              <th class="py-1.5 px-2">Tipo Utilizado</th>
+              <th class="py-1.5 px-2">Regla Estricta</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700/50 text-slate-300">
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-white">PostgreSQL 18</td>
+              <td class="py-1.5 px-2 font-mono text-emerald-400">NUMERIC(12, 2)</td>
+              <td class="py-1.5 px-2">Jamás float ni double en base de datos.</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-white">Java (Spring)</td>
+              <td class="py-1.5 px-2 font-mono text-emerald-400">BigDecimal</td>
+              <td class="py-1.5 px-2">Aritmética exacta para metas y recaudación.</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-white">Python (Django)</td>
+              <td class="py-1.5 px-2 font-mono text-emerald-400">decimal.Decimal</td>
+              <td class="py-1.5 px-2">Evitar conversiones a float en serializers.</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-white">Formato JSON</td>
+              <td class="py-1.5 px-2 font-mono text-emerald-400">{"amount": "150.00", "currency": "BOB"}</td>
+              <td class="py-1.5 px-2">Siempre strings numéricos en peticiones y respuestas.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Git y Commits -->
+      <div class="bg-slate-800/90 rounded-xl border border-slate-700 p-4 shadow-lg">
+        <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+          <span>🌿</span> Convenciones de Git y Ramas
+        </h3>
+        <table class="text-left w-full text-xs">
+          <thead>
+            <tr class="bg-slate-900 text-slate-400">
+              <th class="py-1.5 px-2">Tipo</th>
+              <th class="py-1.5 px-2">Patrón de Rama</th>
+              <th class="py-1.5 px-2">Ejemplo Real</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700/50 text-slate-300">
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-sky-400">Feature</td>
+              <td class="py-1.5 px-2 font-mono">feat/&lt;servicio&gt;-&lt;tema&gt;</td>
+              <td class="py-1.5 px-2 font-mono text-slate-300">feat/campaign-approval</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-rose-400">Bugfix</td>
+              <td class="py-1.5 px-2 font-mono">fix/&lt;servicio&gt;-&lt;tema&gt;</td>
+              <td class="py-1.5 px-2 font-mono text-slate-300">fix/gateway-cors-header</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-amber-400">Refactor</td>
+              <td class="py-1.5 px-2 font-mono">refactor/&lt;servicio&gt;-&lt;tema&gt;</td>
+              <td class="py-1.5 px-2 font-mono text-slate-300">refactor/identity-jwt-guard</td>
+            </tr>
+            <tr>
+              <td class="py-1.5 px-2 font-medium text-emerald-400">Commits</td>
+              <td class="py-1.5 px-2">Conventional Commits</td>
+              <td class="py-1.5 px-2 font-mono text-slate-300">feat(campaign): aprobar meta</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Interactive JavaScript -->
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.getAttribute('data-tab') === tab) {
+          btn.className = 'tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-sky-500 text-slate-900 shadow-sm';
+        } else {
+          btn.className = 'tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors';
+        }
+      });
+
+      const sections = ['skills', 'tech', 'databases', 'tools', 'conventions'];
+      sections.forEach(sec => {
+        const el = document.getElementById('section-' + sec);
+        if (el) {
+          if (tab === 'all' || tab === sec) {
+            el.style.display = 'block';
+          } else {
+            el.style.display = 'none';
+          }
+        }
+      });
+    }
+
+    // Global Search across all table rows
+    document.getElementById('globalSearch').addEventListener('input', function (e) {
+      const q = e.target.value.toLowerCase().trim();
+      const allRows = document.querySelectorAll('tbody tr');
+      allRows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+      });
+    });
+  </script>
+</body>
+
+</html>
