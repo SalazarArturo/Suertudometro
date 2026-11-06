@@ -127,15 +127,15 @@ BORRADOR ──► EN_REVISION ──► PUBLICADA ──► FINALIZADA   (termi
       vuelve a      observaciones)            │
       BORRADOR                     ┌───────────┴───────────┐
                                    │                       │
-                              (meta alcanzada,      (cancelada por
+                              (meta alcanzada,      (campaña cancelada por
                                plazo vencido)        organizador o
                                                      administración)
                                                            │
                                                            ▼
-                                                      CANCELADA   (terminal)
+                                                      FINALIZADA   (terminal)
 ```
 
-`FINALIZADA` y `CANCELADA` son estados **terminales e inmutables**: una campaña en esos estados no admite nuevos aportes ni cambios.
+`FINALIZADA` es estado **terminal e inmutable**: una campaña en ese estado no admite nuevos aportes ni cambios.
 
 ### Comandos por servicio
 
