@@ -7,27 +7,69 @@ Plataforma inspirada en GoFundMe que permite crear campañas de recaudación, re
 
 Los servicios se desarrollan con tres tecnologías: **Spring Boot**, **NestJS** y **Django**. Todos siguen la misma arquitectura de referencia, descrita en este documento.
 
+> [!IMPORTANT]
+> **Fuente de verdad del dominio:** el tablero de **event storming** (`docs/event-storming-suertudometro-updated.excalidraw`) es la referencia canónica de comandos, eventos, políticas y estados. Toda la documentación y el código usan **esos términos, en español**. Si un documento y el event storming difieren, manda el event storming.
+
+---
+
+## 🗣️ Idioma del proyecto: español en todo
+
+El proyecto usa **español en todo el código y los contratos**, sin excepción: clases, métodos, variables, comandos, consultas, eventos, rutas REST, routing keys de RabbitMQ y columnas de base de datos.
+
+> [!IMPORTANT]
+> **Caracteres en identificadores: solo ASCII. Tildes y `ñ` están PROHIBIDAS.**
+> En todo identificador técnico — clases, métodos, variables, atributos, nombres de archivo, comandos, consultas, eventos, enums, tablas y columnas de base de datos, routing keys, `tipoEvento`, campos JSON y segmentos de URI — se escribe en español pero **normalizado a ASCII**:
+> - La `ñ` se reemplaza por `n`: `campaña` → `campana`, `año` → `anio`.
+> - Las vocales acentuadas se escriben sin tilde: `aprobación` → `aprobacion`, `fecha_límite` → `fecha_limite`, `búsqueda` → `busqueda`.
+>
+> Las tildes y la `ñ` **solo** se permiten en texto para personas: documentación, comentarios de negocio y descripciones de commits y PRs. Nunca en nombres de código, rutas, eventos ni columnas.
+
+| Ámbito | Idioma | Ejemplo |
+|--------|--------|---------|
+| Clases, comandos, consultas, eventos | Español ASCII | `CrearCampanaComando`, `CampanaPublicada` |
+| Métodos, funciones y atributos | Español ASCII | `calcularMontoRecaudado()`, `estaActiva` |
+| Rutas REST (URIs) | Español ASCII | `/api/campanas/{id}/aprobacion` |
+| Routing keys y `tipoEvento` | Español ASCII | `campana.publicada`, `aporte.registrado` |
+| Tablas y columnas de BD | Español ASCII | `campanas`, `meta_financiera`, `fecha_limite` |
+| Documentación, commits, comentarios | Español normal (con tildes y ñ) | `feat(campaign): validar meta mínima` |
+
+**Única excepción (nombres de infraestructura):** los nombres de servicios, módulos, contenedores y bases de datos se mantienen en inglés *kebab-case*, tal como aparecen en los tres diagramas del repo (`campaign-service`, `identity-db`, `api-gateway`). Son identificadores de infraestructura, no lenguaje de dominio. El paquete base de Java sigue siendo `com.crowdfunding.<servicio>`.
+
 ---
 
 ## 📐 Arquitectura general
 
-El proyecto toma como **referencia de arquitectura** el repositorio del docente ([`spring-boot-expense-manager-ddd`](https://github.com/garyfrancodev/spring-boot-expense-manager-ddd)), que está implementado con Spring Boot. De ese proyecto se adopta la separación de capas, las responsabilidades de cada una y las reglas de dependencia. **No** se adopta como obligación el stack ni los nombres de carpetas de Java: cada servicio aplica esa misma arquitectura con la estructura propia de su tecnología.
+El proyecto toma como **referencia de arquitectura** el repositorio del docente ([`spring-boot-expense-manager-ddd`](https://github.com/garyfrancodev/spring-boot-expense-manager-ddd)), implementado con Spring Boot. De ese proyecto se adopta la separación de capas, las responsabilidades de cada una y las reglas de dependencia. **No** se adopta como obligación su stack ni los nombres de carpetas de Java: cada servicio aplica esa misma arquitectura con la estructura propia de su tecnología.
 
 Monorepo con un directorio por servicio:
 
 ```
-crowdfunding/
+Suertudometro/
 │
-├── api-gateway/              # Punto de entrada único
-├── identity-service/         # Registro, autenticación, usuarios y roles
-├── campaign-service/         # Campañas, metas, categorías, estados e imágenes
-├── contribution-service/     # Aportes simulados, anonimato y mensajes de apoyo
-├── update-service/           # Actualizaciones publicadas por el organizador
-├── search-service/           # Exploración, filtros y consultas optimizadas
-└── notification-service/     # Avisos ante aportes, metas alcanzadas y cambios
+├── api-gateway/              # Punto de entrada único (Spring Cloud Gateway)
+├── identity-service/         # Registro, autenticación, usuarios y roles (NestJS)
+├── campaign-service/         # Campañas, metas, categorías, estados e imágenes (Spring Boot)
+├── contribution-service/     # Aportes simulados, anonimato y mensajes de apoyo (Spring Boot)
+├── update-service/           # Novedades publicadas por el organizador (Django)
+├── search-service/           # Exploración, filtros y catálogo de solo lectura (Django)
+├── notification-service/     # Avisos ante aportes, metas alcanzadas y cambios (NestJS)
+└── frontend/                 # Aplicación web única: portal, panel organizador y admin (Angular)
 ```
 
-> **Tecnología por servicio:** la asignación de Spring Boot, NestJS o Django a cada servicio está **pendiente de definir** por el equipo.
+### Tecnología por servicio
+
+| Servicio | Tecnología | Rol DDD | Ruta en el gateway |
+|----------|------------|---------|--------------------|
+| `api-gateway` | Spring Cloud Gateway (Java 21) | Perimetral | — |
+| `identity-service` | NestJS 12 (Node.js 24) | Subdominio genérico | `/api/identidad` |
+| `campaign-service` | Spring Boot 4.1 (Java 21) | Core | `/api/campanas` |
+| `contribution-service` | Spring Boot 4.1 (Java 21) | Core | `/api/aportes` |
+| `update-service` | Django 5.2 + DRF (Python 3.13) | Soporte | `/api/novedades` |
+| `search-service` | Django 5.2 + DRF (Python 3.13) | Lectura (CQRS) | `/api/busqueda` |
+| `notification-service` | NestJS 12 (Node.js 24) | Subdominio genérico | `/api/notificaciones` |
+| `frontend` | Angular 22 (TypeScript) | Presentación | — |
+
+> El detalle de versiones, librerías y bases de datos está en [`docs/stack-y-convenciones.md`](docs/stack-y-convenciones.md).
 
 ---
 
@@ -38,10 +80,10 @@ Cada microservicio se organiza en las mismas cinco capas, sin importar la tecnol
 | Capa | Responsabilidad |
 |------|-----------------|
 | **Api** | Exposición HTTP: controladores/endpoints REST, DTOs de request y response, configuración de rutas. Sin lógica de negocio. |
-| **Application** | Orquesta el dominio. Casos de uso, comandos, queries y handlers (CQRS), servicios de aplicación y **puertos** de salida (interfaces hacia la infraestructura). |
+| **Application** | Orquesta el dominio. Casos de uso, comandos, consultas y manejadores (CQRS), servicios de aplicación y **puertos** de salida (interfaces hacia la infraestructura). |
 | **Domain** | Núcleo del negocio, sin dependencias externas. Agregados, entidades, objetos de valor, eventos de dominio, interfaces de repositorio, servicios de dominio y excepciones de dominio. |
 | **Infrastructure** | Implementaciones concretas: persistencia (modelos del ORM, repositorios, mappers hacia el dominio), mensajería (publicadores y consumidores de eventos) y configuración. |
-| **SharedKernel** | Elementos compartidos dentro del mismo servicio: clases base (`AggregateRoot`, `DomainEvent`, `ValueObject`) y utilidades. |
+| **SharedKernel** | Elementos compartidos dentro del mismo servicio: clases base (`RaizDeAgregado`, `EventoDeDominio`, `ObjetoDeValor`) y utilidades. |
 
 ### Reglas de dependencia
 
@@ -51,10 +93,10 @@ Cada microservicio se organiza en las mismas cinco capas, sin importar la tecnol
 - `Api` depende de `Application`.
 - Un servicio nunca accede a la base de datos ni al código de otro servicio.
 
-### Elementos típicos por capa
+### Nombres por capa (en español ASCII)
 
-- **Application:** `CreateCampaignCommand`, `GetCampaignByIdQuery`, y sus handlers `...CommandHandler` / `...QueryHandler`.
-- **Domain:** agregados (`Campaign`, `Contribution`, `CampaignUpdate`), objetos de valor (`CampaignId`, `GoalAmount`, `ContributorName`) y eventos (`CampaignPublished`, `GoalReached`, `ContributionRegistered`).
+- **Application:** `CrearCampanaComando`, `ObtenerCampanaPorIdConsulta`, y sus manejadores `...ComandoManejador` / `...ConsultaManejador`.
+- **Domain:** agregados (`Campana`, `Aporte`, `Actualizacion`), objetos de valor (`IdCampana`, `MetaFinanciera`, `NombreAportante`) y eventos (`CampanaPublicada`, `MetaAlcanzada`, `AporteRegistrado`).
 - **Infrastructure:** persistencia, publicadores y consumidores de eventos de otros servicios.
 
 ### Equivalencias orientativas por tecnología
@@ -64,63 +106,104 @@ La tabla muestra cómo suele expresarse cada capa en cada framework. Es orientat
 | Capa | Spring Boot (Java) | NestJS (TypeScript) | Django (Python) |
 |------|--------------------|---------------------|-----------------|
 | Api | Controllers y DTOs | Controllers y DTOs | Vistas/endpoints y serializers |
-| Application | Handlers y servicios de aplicación | Handlers y servicios de aplicación | Casos de uso/handlers como clases o funciones propias |
+| Application | Manejadores y servicios de aplicación | Manejadores y servicios de aplicación | Casos de uso/manejadores como clases o funciones propias |
 | Domain | Clases Java simples, sin anotaciones de JPA | Clases TypeScript simples, sin decoradores del ORM | Clases Python simples, **no** modelos de Django |
-| Infrastructure | JPA/Spring Data, mensajería | ORM de NestJS (p. ej. TypeORM), mensajería | Modelos del ORM de Django, repositorios, mensajería |
+| Infrastructure | JPA/Spring Data, mensajería | ORM de NestJS (p. ej. TypeORM/Prisma), mensajería | Modelos del ORM de Django, repositorios, mensajería |
 
 ---
 
-## ⚡ Eventos de dominio
+## 🔤 Lenguaje ubicuo (fuente de verdad: event storming)
 
-Los microservicios se comunican de forma asíncrona mediante eventos. Como los servicios pueden estar en lenguajes distintos, los eventos se serializan en un formato independiente del lenguaje (JSON, con esquema acordado por el equipo). Los eventos principales del sistema son:
+Estos son los términos canónicos del dominio. El código usa exactamente estos nombres (en español, ASCII).
 
-| Evento                     | Publicado por           | Consumido por                          |
-|----------------------------|-------------------------|----------------------------------------|
-| `CampaignPublished`        | campaign-service        | search-service, notification-service  |
-| `CampaignUpdated`          | campaign-service        | search-service, notification-service  |
-| `CampaignClosed`           | campaign-service        | notification-service                  |
-| `GoalReached`              | campaign-service        | notification-service                  |
-| `ContributionRegistered`   | contribution-service    | campaign-service, notification-service|
+### Estados de una campaña
+
+Valores del enum `EstadoCampana`:
+
+```
+BORRADOR ──► EN_REVISION ──► PUBLICADA ──► FINALIZADA   (terminal)
+    ▲            │                            ▲
+    └────────────┘ (rechazada, con            │
+      vuelve a      observaciones)            │
+      BORRADOR                     ┌───────────┴───────────┐
+                                   │                       │
+                              (meta alcanzada,      (cancelada por
+                               plazo vencido)        organizador o
+                                                     administración)
+                                                           │
+                                                           ▼
+                                                      CANCELADA   (terminal)
+```
+
+`FINALIZADA` y `CANCELADA` son estados **terminales e inmutables**: una campaña en esos estados no admite nuevos aportes ni cambios.
+
+### Comandos por servicio
+
+| Servicio | Comandos |
+|----------|----------|
+| `identity-service` | `RegistrarUsuario`, `IniciarSesion` |
+| `campaign-service` | `CrearCampana`, `EditarBorrador`, `SolicitarRevisionCampana`, `AprobarCampana`, `RechazarCampana`, `EliminarCampana`, `CerrarPorMetaAlcanzada`, `CerrarPorPlazoVencido`, `CancelarCampana`, `FinalizarCampana` |
+| `contribution-service` | `RealizarAporte` (con mensaje de apoyo y anonimato opcionales) |
+| `update-service` | `PublicarActualizacion` |
+
+### Eventos de integración (bus de RabbitMQ)
+
+Comunicación **asíncrona** entre servicios: entre microservicios **no hay llamadas HTTP, solo eventos**. Exchange topic `suertudometro.events`, una cola por consumidor y una cola de errores (DLQ) por consumidor.
+
+| Evento de integración | Routing key | Publica | Consumen |
+|-----------------------|-------------|---------|----------|
+| `UsuarioRegistrado` | `usuario.registrado` | identity-service | notification-service |
+| `CampanaPublicada` | `campana.publicada` | campaign-service | contribution, search, update, notification |
+| `CampanaRechazada` | `campana.rechazada` | campaign-service | notification-service |
+| `AporteRegistrado` | `aporte.registrado` | contribution-service | campaign, search, notification |
+| `MetaAlcanzada` | `meta.alcanzada` | campaign-service | search, notification |
+| `CampanaActualizada` | `campana.actualizada` | update-service | notification-service |
+| `CampanaCerrada` | `campana.cerrada` | campaign-service | contribution, search, update |
+
+> Los eventos de dominio van en pasado y **sin** sufijo `Event`/`Evento`. El contrato de los mensajes (envelope JSON) está en [`docs/stack-y-convenciones.md`](docs/stack-y-convenciones.md).
 
 ---
 
 ## 🗂️ Responsabilidades por microservicio
 
-| Microservicio            | Responsabilidad principal                                                    |
-|--------------------------|------------------------------------------------------------------------------|
-| `identity-service`       | Registro, login, JWT, roles (VISITOR, ORGANIZER, ADMIN)                     |
-| `campaign-service`       | CRUD de campañas, manejo de estados, imágenes, metas y categorías           |
-| `contribution-service`   | Aportes simulados, anonimato, mensajes de apoyo                             |
-| `update-service`         | Publicación de actualizaciones/novedades por el organizador                 |
-| `search-service`         | Búsqueda y filtrado optimizado de campañas (por categoría, estado, etc.)    |
-| `notification-service`   | Envío de notificaciones ante eventos relevantes del sistema                 |
-| `api-gateway`            | Punto de entrada único, enrutamiento, autenticación centralizada            |
+| Microservicio | Responsabilidad principal |
+|---------------|---------------------------|
+| `identity-service` | Registro, login, JWT, roles (VISITANTE, ORGANIZADOR, ADMINISTRADOR) |
+| `campaign-service` | CRUD de campañas, manejo de estados, imágenes, metas y categorías |
+| `contribution-service` | Aportes simulados, anonimato, mensajes de apoyo |
+| `update-service` | Publicación de actualizaciones/novedades por el organizador |
+| `search-service` | Búsqueda y filtrado optimizado de campañas (catálogo de solo lectura) |
+| `notification-service` | Envío de notificaciones ante eventos relevantes del sistema |
+| `api-gateway` | Punto de entrada único, enrutamiento, autenticación centralizada |
 
 ---
 
-## 🔄 Flujo de estados de una campaña
+## 🔄 Flujo principal (del event storming)
 
 ```
-DRAFT ──► PUBLISHED ──► CLOSED
-                  │
-                  ├──► GOAL_REACHED  (automático al llegar a la meta)
-                  └──► EXPIRED       (automático al vencer el período)
+1. Crear campaña       →  BORRADOR
+2. Solicitar revisión  →  EN_REVISION
+3. Aprobar / Rechazar  →  PUBLICADA  (o vuelve a BORRADOR con observaciones)
+4. Recibir aportes y publicar actualizaciones  (mientras está PUBLICADA)
+5. Cerrar recaudación  →  FINALIZADA (meta alcanzada o plazo vencido) / CANCELADA
 ```
 
-> Propuesta inicial. El enunciado sugiere los estados Borrador, En revisión, Publicada, Finalizada y Cancelada; el equipo debe alinear ambos esquemas.
+Mientras está `PUBLICADA`, la campaña puede recibir múltiples aportes y actualizaciones, y conserva su historial. Al alcanzar la meta, vencer el período o ser cancelada, pasa a un estado terminal.
 
 ---
 
 ## 🛠️ Stack tecnológico
 
-| Componente          | Tecnología                                                       |
-|---------------------|------------------------------------------------------------------|
-| Servicios           | **Spring Boot 3.x** (Java 21), **NestJS** (TypeScript) y **Django** (Python), según el servicio |
-| API Gateway         | Por definir (el docente de referencia usa Spring Cloud Gateway)  |
-| Mensajería          | RabbitMQ o Kafka (por definir)                                   |
-| Persistencia        | PostgreSQL, una base de datos por servicio                       |
-| Autenticación       | JWT                                                              |
-| Contenedores        | Docker + Docker Compose                                          |
+| Componente | Tecnología |
+|------------|------------|
+| Frontend | **Angular 22** (TypeScript) |
+| API Gateway | **Spring Cloud Gateway** (Spring Boot 4.1 · Java 21) |
+| Servicios | **Spring Boot 4.1** (Java 21), **NestJS 12** (Node.js 24) y **Django 5.2 + DRF** (Python 3.13), según el servicio |
+| Mensajería | **RabbitMQ 4.3** (exchange topic `suertudometro.events`) |
+| Persistencia | **PostgreSQL 18**, una base de datos por servicio |
+| Autenticación | JWT |
+| Correo de prueba | Mailpit |
+| Contenedores | Docker + Docker Compose |
 
 ---
 
@@ -131,7 +214,7 @@ Requisitos mínimos del enunciado que el proyecto debe cumplir:
 - **API Gateway** — punto de entrada único a todos los servicios
 - **DDD + Arquitectura Limpia** — separación en Api / Application / Domain / Infrastructure / SharedKernel
 - **Base de datos por servicio** — cada microservicio gestiona su propia base de datos
-- **CQRS** — comandos y queries separados en la capa de aplicación
+- **CQRS** — comandos y consultas separados en la capa de aplicación
 - **Eventos de dominio** — comunicación asíncrona entre microservicios
 - **Patrones de diseño** — Repository, Factory, Domain Events, Aggregate Root
 
@@ -146,11 +229,20 @@ Requisitos mínimos del enunciado que el proyecto debe cumplir:
 git clone https://github.com/SalazarArturo/Suertudometro.git
 cd Suertudometro
 
-# Levantar todos los servicios con Docker Compose
-docker-compose up --build
+# Levantar todo el sistema con Docker Compose
+docker compose up --build
 ```
 
-Los servicios estarán disponibles a través del API Gateway en `http://localhost:8080`.
+Puertos publicados en la máquina (según el diagrama de despliegue):
+
+| Puerto | Servicio |
+|--------|----------|
+| `4200` | Aplicación web (Angular) |
+| `8080` | API Gateway (entrada a `/api/**`) |
+| `15672` | Consola de RabbitMQ |
+| `8025` | Mailpit (bandeja de correos de prueba) |
+
+Las bases de datos y los servicios internos **no** se publican al host.
 
 ---
 
@@ -173,5 +265,6 @@ Las reglas para trabajar con agentes de IA (Claude Code, Cursor, Codex, Copilot 
 ## 📚 Referencias
 
 - Repositorio de referencia de arquitectura del docente: [garyfrancodev/spring-boot-expense-manager-ddd](https://github.com/garyfrancodev/spring-boot-expense-manager-ddd)
+- Diagramas del proyecto en `docs/`: arquitectura, despliegue y event storming (Excalidraw)
 - Evans, E. (2003). *Domain-Driven Design: Tackling Complexity in the Heart of Software*
 - Richardson, C. (2018). *Microservices Patterns*

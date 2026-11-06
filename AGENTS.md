@@ -11,94 +11,123 @@ Instrucciones para agentes de IA (Claude Code, Cursor, Codex, Copilot, etc.) que
 - Los organizadores publican actualizaciones. La administración modera campañas, usuarios y estados.
 - **No se integran pasarelas de pago reales** (Stripe, PayPal, bancos). Los aportes son transacciones simuladas dentro del sistema.
 
-Fuentes de contexto: `README.md` (arquitectura y estructura), el enunciado del Proyecto 07 (requisitos del docente) y el repositorio de referencia del docente, [spring-boot-expense-manager-ddd](https://github.com/garyfrancodev/spring-boot-expense-manager-ddd), que sirve como modelo de arquitectura y no como stack obligatorio.
+Fuentes de contexto, en orden de prioridad:
+
+1. El **event storming** (`docs/event-storming-suertudometro-updated.excalidraw`) — **fuente de verdad del dominio**: comandos, eventos, políticas y estados.
+2. `README.md` — arquitectura, estructura y lenguaje ubicuo.
+3. `docs/stack-y-convenciones.md` — stack, convenciones de código, contrato de eventos y modelado de datos.
+4. Los diagramas `docs/diagrama-arquitectura.excalidraw` y `docs/diagrama-despliegue.excalidraw`.
+5. El enunciado del Proyecto 07 (requisitos del docente) y el repositorio de referencia [spring-boot-expense-manager-ddd](https://github.com/garyfrancodev/spring-boot-expense-manager-ddd), que es modelo de arquitectura, **no** de stack obligatorio.
+
+Si dos fuentes difieren, manda la de mayor prioridad. En dominio, siempre manda el event storming.
+
+## Idioma: español en todo
+
+El proyecto usa **español en todo el código y los contratos**, sin excepción: clases, métodos, variables, comandos, consultas, eventos, rutas REST, routing keys de RabbitMQ y columnas de base de datos. La documentación, los commits y los comentarios también van en español.
+
+> [!IMPORTANT]
+> **Caracteres en identificadores: solo ASCII. Tildes y `ñ` están PROHIBIDAS.**
+> En todo identificador técnico — clases, métodos, variables, atributos, nombres de archivo, comandos, consultas, eventos, enums, tablas y columnas de BD, routing keys, `tipoEvento`, campos JSON y segmentos de URI — se escribe en español **normalizado a ASCII**: la `ñ` se reemplaza por `n` (`campaña` → `campana`) y las vocales acentuadas van sin tilde (`aprobación` → `aprobacion`, `búsqueda` → `busqueda`, `fecha_límite` → `fecha_limite`).
+> Las tildes y la `ñ` **solo** se permiten en texto para personas: documentación, comentarios de negocio y descripciones de commits y PRs. Nunca en nombres de código, rutas, eventos ni columnas.
+
+**Única excepción (infraestructura):** los nombres de servicios, módulos, contenedores y bases de datos se mantienen en inglés *kebab-case* tal como aparecen en los diagramas (`campaign-service`, `identity-db`, `api-gateway`). El paquete base de Java sigue siendo `com.crowdfunding.<servicio>`.
 
 ## Stack
 
-El backend es **políglota**: los servicios se desarrollan con tres tecnologías, según la asignación que defina el equipo.
+El backend es **políglota**: los servicios se desarrollan con tres tecnologías, ya asignadas por servicio.
 
-| Tecnología | Lenguaje | Uso previsto |
-|------------|----------|--------------|
-| Spring Boot 3.x | Java 21 | Servicios con Maven multimódulo, Spring Data JPA, Spring Security + JWT |
-| NestJS | TypeScript (Node.js) | Servicios con TypeORM u otro ORM por definir |
-| Django | Python | Servicios con el ORM de Django (y Django REST Framework si se decide) |
+| Servicio | Tecnología | Lenguaje |
+|----------|------------|----------|
+| `api-gateway` | Spring Cloud Gateway (Spring Boot 4.1) | Java 21 |
+| `campaign-service` · `contribution-service` | Spring Boot 4.1 | Java 21 |
+| `identity-service` · `notification-service` | NestJS 12 | TypeScript (Node.js 24 LTS) |
+| `update-service` · `search-service` | Django 5.2 LTS + DRF | Python 3.13 |
+| `frontend` | Angular 22 | TypeScript |
 
-Común a todos: PostgreSQL (una base por servicio), RabbitMQ o Kafka (por definir) para eventos, y Docker + Docker Compose para levantar todo el sistema. La tecnología del API Gateway y la del frontend están por definir (ver "Pendiente de definir").
+Común a todos: **PostgreSQL 18** (una base por servicio), **RabbitMQ 4.3** para eventos, **Mailpit** como correo de prueba y **Docker + Docker Compose** para levantar todo el sistema. El detalle de librerías por tecnología está en `docs/stack-y-convenciones.md`.
 
-Qué servicio usa qué tecnología **aún no está decidido**. Un agente no debe elegir la tecnología de un servicio por su cuenta: debe usar la que el equipo haya asignado a ese servicio.
+Un agente **no** debe cambiar la tecnología asignada a un servicio por su cuenta.
 
 ## Arquitectura (requisitos obligatorios del enunciado)
 
 - Microservicios con **API Gateway** como único punto de entrada.
 - **DDD + Arquitectura Limpia** en cada servicio.
-- **CQRS** donde resulte pertinente (comandos y queries separados).
-- **Eventos de dominio** entre servicios: `CampaignPublished`, `CampaignUpdated`, `CampaignClosed`, `GoalReached`, `ContributionRegistered`.
+- **CQRS** donde resulte pertinente (comandos y consultas separados).
+- **Eventos de dominio** entre servicios: `UsuarioRegistrado`, `CampanaPublicada`, `CampanaRechazada`, `AporteRegistrado`, `MetaAlcanzada`, `CampanaActualizada`, `CampanaCerrada`.
 - **Base de datos por servicio**: nunca compartir tablas entre microservicios.
 - **Patrones de diseño** aplicados solo cuando el dominio los justifique.
 
 Servicios: `identity`, `campaign`, `contribution`, `update`, `search`, `notification` y `api-gateway`. Cada servicio se divide en capas `Api`, `Application`, `Domain`, `Infrastructure` y `SharedKernel`.
 
-El `README.md` describe esta estructura tomando como **referencia de arquitectura** el proyecto del docente (`spring-boot-expense-manager-ddd`), que está hecho con Spring Boot. Es un modelo a seguir para las capas, responsabilidades y reglas de dependencia, **no** una obligación de usar Spring Boot ni de copiar sus carpetas y nombres de Java en todos los servicios. Cada servicio replica esa arquitectura con las carpetas y módulos propios de su tecnología (Spring Boot, NestJS o Django).
+El `README.md` describe esta estructura tomando como **referencia de arquitectura** el proyecto del docente (`spring-boot-expense-manager-ddd`), hecho con Spring Boot. Es un modelo para las capas, responsabilidades y reglas de dependencia, **no** una obligación de usar Spring Boot ni de copiar sus carpetas y nombres de Java en todos los servicios. Cada servicio replica esa arquitectura con las carpetas y módulos propios de su tecnología.
 
-Como los servicios pueden estar en lenguajes distintos, **el contrato entre ellos debe ser independiente del lenguaje**: APIs REST documentadas (por ejemplo OpenAPI) y eventos serializados en JSON con un esquema acordado. Ningún servicio comparte código con otro.
+Como los servicios están en lenguajes distintos, **el contrato entre ellos es independiente del lenguaje**: APIs REST documentadas (OpenAPI) y eventos serializados en JSON con el esquema acordado (ver `docs/stack-y-convenciones.md`, §5.5). Entre servicios **no hay llamadas HTTP directas: solo eventos** por el bus. Ningún servicio comparte código con otro.
 
 ### Reglas de dependencia entre capas
 
 Aplican igual en Spring Boot, NestJS y Django:
 
-- `Domain` no depende de ninguna otra capa ni de frameworks ni ORMs (sin Spring, NestJS, Django, JPA, TypeORM ni modelos de Django).
+- `Domain` no depende de ninguna otra capa ni de frameworks ni ORMs (sin Spring, NestJS, Django, JPA, TypeORM/Prisma ni modelos de Django).
 - `Application` depende solo de `Domain` (y de `SharedKernel`). Define puertos de salida como interfaces.
-- `Infrastructure` implementa los puertos y los repositorios. Las entidades del ORM (JPA, TypeORM, modelos de Django) son distintas de los agregados de dominio y se convierten con mappers.
+- `Infrastructure` implementa los puertos y los repositorios. Las entidades del ORM (JPA, Prisma, modelos de Django) son distintas de los agregados de dominio y se convierten con mappers.
 - `Api` depende de `Application`. Los controladores no contienen lógica de negocio.
 - Un servicio nunca accede directamente a la base de datos ni al código de otro. Se comunican por HTTP a través del gateway o por eventos.
 
-### Nombres
+### Nombres (en español ASCII)
 
-- Comandos y queries: `CreateCampaignCommand`, `GetCampaignByIdQuery`, con sus handlers `...CommandHandler` / `...QueryHandler`.
-- Eventos de dominio en pasado: `GoalReached`, `ContributionRegistered`.
-- Código e identificadores en inglés. Documentación y comentarios de negocio en español.
-- Los ejemplos de arriba están en estilo Java. En NestJS y Django se adaptan a la convención idiomática del lenguaje (por ejemplo `snake_case` en Python y `camelCase` en TypeScript para funciones y variables), conservando los mismos conceptos: Command, Query, Handler y eventos en pasado.
+Los términos del dominio se toman **tal cual del event storming**, normalizados a ASCII (sin tildes ni `ñ`). No se traducen al inglés.
+
+- Comandos y consultas: `CrearCampanaComando`, `ObtenerCampanaPorIdConsulta`, con sus manejadores `...ComandoManejador` / `...ConsultaManejador`.
+- Eventos de dominio en pasado y **sin** sufijo `Event`/`Evento`: `MetaAlcanzada`, `AporteRegistrado`.
+- Routing keys en minúsculas con puntos: `campana.publicada`, `aporte.registrado`.
+- Rutas REST en español ASCII: `/api/campanas/{id}/aprobacion`.
+- Código, identificadores, columnas de BD y comentarios en español. Nombres de servicios, módulos y contenedores en inglés kebab-case (infraestructura).
+- La convención idiomática de cada lenguaje se respeta: `snake_case` en Python (`meta_financiera`), `camelCase` en TypeScript y Java (`metaFinanciera`), `PascalCase` para clases en los tres.
 - Paquete base en Java: `com.crowdfunding.<servicio>`.
+
+El mapeo completo de estados, comandos y eventos está en el `README.md`, sección "Lenguaje ubicuo".
 
 ## Skills del proyecto
 
-Las skills están en `.agents/skills/` (la lista exacta y sus versiones están en `skills-lock.json`). Úsalas según la tarea:
+Conjunto de skills acordado por el equipo (viven en `.agents/skills/`, versiones en `skills-lock.json`). Úsalas según la tarea:
 
 | Skill | Cuándo usarla | Aplica a |
 |-------|---------------|----------|
-| `architecture-patterns` | Diseñar la estructura de capas de un servicio (Clean Architecture, hexagonal, DDD), definir contextos delimitados o depurar dependencias circulares entre capas | Todos los servicios |
+| `architecture-patterns` | Diseñar la estructura de capas de un servicio (Clean Architecture, hexagonal, DDD), definir contextos delimitados o depurar dependencias circulares | Todos los servicios |
 | `microservices-patterns` | Definir límites entre servicios, comunicación basada en eventos y patrones de resiliencia | Todos los servicios |
-| `api-design-principles` | Diseñar o revisar endpoints REST y establecer estándares de API | Todos los servicios |
-| `code-review-excellence` | Revisar pull requests y dar feedback de código | Todo el repo |
-| `spring-boot-engineer` | Servicios Spring Boot 3.x: controladores REST, Spring Security, Spring Data JPA, Spring Cloud | Servicios en Spring Boot |
-| `nestjs-expert` | Servicios NestJS: módulos, controladores, DTOs, guards, JWT, TypeORM, pruebas | Servicios en NestJS |
-| `django-expert` | Servicios Django: modelos, ORM, serializers y viewsets con Django REST Framework, JWT | Servicios en Django |
-| `ui-ux-pro-max` | Diseñar o revisar interfaces: portal público, panel del organizador y panel de administración (accesibilidad, diseño responsivo, tipografía, color) | Frontend (tecnología por definir) |
+| `supabase-postgres-best-practices` | Índices, consultas y diseño de esquemas en PostgreSQL | Todos (persistencia) |
+| `domain-driven-design` | Agregados, objetos de valor, eventos de dominio y dominio separado de JPA | Servicios en Spring Boot |
+| `nestjs-expert` | Servicios NestJS: módulos, controladores, DTOs, guards, JWT, ORM, pruebas | Servicios en NestJS |
+| `django-expert` | Servicios Django: modelos, ORM, serializers y viewsets con DRF, JWT | Servicios en Django |
+| `angular-developer` | Componentes, signals y rutas en Angular moderno | Frontend (Angular) |
+| `suertudometro-conventions` | Convenciones de este proyecto (idioma español ASCII, capas, CQRS, eventos, API, Git); **manda sobre las demás** | Todo el repo |
 
-Cómo combinarlas: para un servicio nuevo, primero `architecture-patterns` y `api-design-principles`, y luego la skill de la tecnología asignada. Las skills de tecnología pueden sugerir patrones de su propio ecosistema; en caso de conflicto, mandan las reglas de arquitectura de este documento.
+Cómo combinarlas: para un servicio nuevo, primero `architecture-patterns`, luego `domain-driven-design` o la skill de la tecnología asignada. `suertudometro-conventions` siempre manda; ante conflicto con una skill de terceros, prevalecen estas convenciones y el event storming.
+
+> [!NOTE]
+> **Estado de la reconciliación.** La skill propia `suertudometro-conventions` ya está creada. Falta **ejecutar en cada equipo** la instalación de las externas (`supabase-postgres-best-practices`, `angular-developer`, `domain-driven-design`) y el borrado de las que salen (`spring-boot-engineer`, `api-design-principles`, `code-review-excellence`, `ui-ux-pro-max`), más la limpieza de `skills-lock.json`. Los comandos están en `cambios-realizados.md` (§5). Hasta aplicarlo, si `spring-boot-engineer` sigue instalado, **no** sigas su patrón de poner `@Entity` de JPA en el dominio: viola la regla de dependencia de capas.
 
 ## Cómo trabajar
 
-- Antes de escribir código, leer `README.md` y revisar el módulo que se va a tocar.
+- Antes de escribir código, leer `README.md` y el event storming, y revisar el módulo que se va a tocar.
 - Hacer cambios pequeños y enfocados en un solo servicio y una sola tarea. No refactorizar código ajeno a la tarea.
 - No inventar dependencias ni comandos. Si algo no existe todavía en el repo (módulos, scripts, perfiles de Maven), decirlo en lugar de suponerlo.
 - No agregar funcionalidad fuera del alcance del enunciado salvo que el equipo lo pida (las mejoras opcionales son campañas destacadas, favoritos, comentarios, etiquetas, reportes y verificación de organizadores).
 - Todo código generado debe ser revisado y entendido por quien lo integra. Los cambios entran por pull request.
+- Usar los términos del event storming tal cual (en español ASCII). No traducir el dominio al inglés.
 - Si una decisión de diseño no está definida (ver la lista siguiente), proponer opciones y preguntar, sin decidir en silencio.
 
 ## Pendiente de definir por el equipo
 
 Hasta que estén decididos, los agentes no deben asumirlos:
 
-- **Qué tecnología (Spring Boot, NestJS o Django) usa cada servicio.**
-- Tecnología del API Gateway y tecnología del frontend (portal público, panel del organizador y panel de administración).
-- Convenciones de código detalladas **por tecnología** (formato, linters, estilo de tests) y su documento (`CONTRIBUTING.md`).
-- Cómo se expresan las capas DDD en NestJS y en Django (estructura de carpetas y módulos).
-- Contrato de eventos entre servicios (formato del mensaje JSON, nombres de colas o tópicos) y herramienta para documentar las APIs.
-- Estrategia de ramas y formato de commits.
-- Estados definitivos de una campaña. El enunciado sugiere Borrador, En revisión, Publicada, Finalizada y Cancelada; el README usa DRAFT, PUBLISHED, CLOSED, GOAL_REACHED y EXPIRED.
-- Broker de mensajería (RabbitMQ o Kafka).
-- Formato de errores y versionado de la API REST.
+- **Estructura concreta de carpetas DDD en NestJS y en Django** (cómo se expresan las capas `Api`/`Application`/`Domain`/`Infrastructure`/`SharedKernel` en cada tecnología). En Spring Boot ya está marcada por el repo de referencia.
+- **Modelo de dominio detallado por servicio**: agregados, objetos de valor, invariantes y endpoints concretos. El event storming da los comandos y eventos; falta aterrizarlos servicio por servicio.
+- **Documento `CONTRIBUTING.md`** con el detalle fino por tecnología (formato, estilo de tests, flujo de PR). Las herramientas (linters, test runners) ya están en `docs/stack-y-convenciones.md`.
+- **Terminar de reconciliar las skills**: la skill propia `suertudometro-conventions` ya está escrita; falta correr los comandos de instalación/borrado y limpiar `skills-lock.json` (ver `cambios-realizados.md`, §5).
+- **Ubicación de algunos comandos del event storming** (`EnviarComentario`, `CompartirCampana`): confirmar a qué bounded context pertenecen.
+
+Ya **no** están pendientes (quedaron definidos por el event storming y el doc de convenciones): la tecnología de cada servicio, la del gateway y la del frontend; los estados de campaña; el broker de mensajería; el contrato y los nombres de los eventos; el formato de errores y el versionado de la API; y la estrategia de ramas y commits.
 
 ## Si usas Claude Code
 

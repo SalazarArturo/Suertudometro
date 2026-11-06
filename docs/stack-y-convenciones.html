@@ -47,7 +47,7 @@
       <div class="flex items-center gap-2">
         <span
           class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-400 border border-sky-500/30">Suertudómetro</span>
-        <span class="text-xs text-slate-400">Versión propuesta · 2026-11-03</span>
+        <span class="text-xs text-slate-400">Versión propuesta · 2026-11-05 · fuente de verdad del dominio: event storming</span>
       </div>
       <h1 class="text-2xl font-bold mt-1 text-white">Matriz Integral de Stack, Convenciones y Skills</h1>
       <p class="text-slate-400 text-xs mt-0.5">Estructura unificada 100% tabular para consulta rápida de arquitectura,
@@ -476,14 +476,14 @@
           </thead>
           <tbody class="divide-y divide-slate-700/50 text-slate-300">
             <tr>
-              <td class="py-1.5 px-2 font-mono text-sky-300">eventId</td>
+              <td class="py-1.5 px-2 font-mono text-sky-300">idEvento</td>
               <td class="py-1.5 px-2">UUID string</td>
               <td class="py-1.5 px-2">Identificador único para idempotencia obligatoria.</td>
             </tr>
             <tr>
-              <td class="py-1.5 px-2 font-mono text-sky-300">eventType</td>
+              <td class="py-1.5 px-2 font-mono text-sky-300">tipoEvento</td>
               <td class="py-1.5 px-2">String</td>
-              <td class="py-1.5 px-2">Nombre con punto (coincide con la routing key).</td>
+              <td class="py-1.5 px-2">Nombre con punto en español ASCII (coincide con la routing key: <code>campana.publicada</code>).</td>
             </tr>
             <tr>
               <td class="py-1.5 px-2 font-mono text-sky-300">version</td>
@@ -491,12 +491,12 @@
               <td class="py-1.5 px-2">Versión del contrato para compatibilidad evolutiva.</td>
             </tr>
             <tr>
-              <td class="py-1.5 px-2 font-mono text-sky-300">occurredAt</td>
+              <td class="py-1.5 px-2 font-mono text-sky-300">ocurridoEn</td>
               <td class="py-1.5 px-2">ISO-8601 UTC</td>
               <td class="py-1.5 px-2">Marca de tiempo exacta de publicación en UTC.</td>
             </tr>
             <tr>
-              <td class="py-1.5 px-2 font-mono text-sky-300">data</td>
+              <td class="py-1.5 px-2 font-mono text-sky-300">datos</td>
               <td class="py-1.5 px-2">JSON Object</td>
               <td class="py-1.5 px-2">Carga útil con los datos de negocio del evento.</td>
             </tr>
@@ -535,7 +535,7 @@
             </tr>
             <tr>
               <td class="py-1.5 px-2 font-medium text-white">Formato JSON</td>
-              <td class="py-1.5 px-2 font-mono text-emerald-400">{"amount": "150.00", "currency": "BOB"}</td>
+              <td class="py-1.5 px-2 font-mono text-emerald-400">{"monto": "150.00", "moneda": "BOB"}</td>
               <td class="py-1.5 px-2">Siempre strings numéricos en peticiones y respuestas.</td>
             </tr>
           </tbody>
@@ -559,7 +559,7 @@
             <tr>
               <td class="py-1.5 px-2 font-medium text-sky-400">Feature</td>
               <td class="py-1.5 px-2 font-mono">feat/&lt;servicio&gt;-&lt;tema&gt;</td>
-              <td class="py-1.5 px-2 font-mono text-slate-300">feat/campaign-approval</td>
+              <td class="py-1.5 px-2 font-mono text-slate-300">feat/campaign-aprobacion</td>
             </tr>
             <tr>
               <td class="py-1.5 px-2 font-medium text-rose-400">Bugfix</td>
