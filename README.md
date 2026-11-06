@@ -185,7 +185,7 @@ Comunicación **asíncrona** entre servicios: entre microservicios **no hay llam
 2. Solicitar revisión  →  EN_REVISION
 3. Aprobar / Rechazar  →  PUBLICADA  (o vuelve a BORRADOR con observaciones)
 4. Recibir aportes y publicar actualizaciones  (mientras está PUBLICADA)
-5. Cerrar recaudación  →  FINALIZADA (meta alcanzada o plazo vencido) / CANCELADA
+5. Cerrar recaudación  →  FINALIZADA (meta alcanzada, plazo vencido o campaña cancelada)
 ```
 
 Mientras está `PUBLICADA`, la campaña puede recibir múltiples aportes y actualizaciones, y conserva su historial. Al alcanzar la meta, vencer el período o ser cancelada, pasa a un estado terminal.
