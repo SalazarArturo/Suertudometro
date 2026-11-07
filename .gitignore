@@ -6,3 +6,32 @@ CLAUDE.local.md
 
 # Configuración local de herramientas
 .impeccable/
+
+# Variables de entorno reales: solo se versiona .env.example
+.env
+.env.*
+!.env.example
+
+# Java / Maven (api-gateway, campaign-service, contribution-service)
+target/
+*.class
+
+# Node / NestJS / Angular (identity-service, notification-service, frontend)
+node_modules/
+dist/
+.angular/
+coverage/
+
+# Python / Django (update-service, search-service)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# IDE y sistema operativo
+.idea/
+*.iml
+.DS_Store
+Thumbs.db

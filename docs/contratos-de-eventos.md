@@ -2,7 +2,15 @@
 
 **Propuesta para revisión del equipo · Versión 1 · 7 de noviembre de 2026**
 
-El [event storming](event-storming-suertudometro-updated.excalidraw) define cuándo ocurre cada hecho y las políticas que activa. El [catálogo del proyecto](../README.md#eventos-de-integración-bus-de-rabbitmq) identifica al productor y a sus consumidores. Este documento propone qué debe incluir el productor en `datos` para que cada consumidor pueda actuar con su propia base de datos.
+> **Documento compartido.** Lo creó Gabo (commit `1266ac3`). Cada ficha la mantiene **quien publica** ese evento, y la revisan en el PR **quienes lo consumen**:
+> - `campaign-service`: Arturo;
+> - `contribution-service`: Raul;
+> - `identity-service`: Efrain;
+> - `update-service`: Gabo.
+>
+> Ningún campo de `datos` se usa sin estar en su ficha.
+
+El [event storming](diagramas/event-storming.excalidraw) define cuándo ocurre cada hecho y las políticas que activa. El [catálogo del proyecto](../README.md#eventos-de-integración-bus-de-rabbitmq) identifica al productor y a sus consumidores. Este documento propone qué debe incluir el productor en `datos` para que cada consumidor pueda actuar con su propia base de datos.
 
 La lista de eventos, las rutas de RabbitMQ y el sobre del mensaje ya están documentados. De los campos de negocio, `idCampana`, `titulo`, `metaFinanciera` y `moneda` ya aparecen en el ejemplo de `CampanaPublicada`. Las fichas siguientes proponen los campos completos, su obligatoriedad y el uso que les dará cada consumidor. La aprobación de estos detalles corresponde a los equipos que producen y consumen el evento.
 
@@ -74,6 +82,11 @@ Campañas publica el cierre definitivo por meta alcanzada, plazo vencido o cance
 
 **Novedades** bloquea nuevas publicaciones y conserva el historial. **Búsqueda** retira la campaña del catálogo público. **Contribuciones** bloquea nuevos aportes. A los tres les basta `idCampana` para aplicar el cierre. El instante de cierre viene en `ocurridoEn`.
 
+> [!WARNING]
+> **Nota de Raul (2026-11-07). Decide Arturo, que publica este evento.**
+> - **Estado final.** Según el [ADR 0003](adr/0003-estados-terminales-de-campana.md) (opción A, en revisión del equipo), la cancelación deja la campaña en `CANCELADA`, no en `FINALIZADA`. El event storming ya está corregido. El `motivoCierre` propuesto sirve igual: `META_ALCANZADA` y `PLAZO_VENCIDO` llevan a `FINALIZADA`, y `CANCELACION` lleva a `CANCELADA`. Falta decidir si también se envía el estado final de forma explícita.
+> - **Catálogo.** Que Búsqueda retire la campaña del catálogo depende del pendiente #14 de `estado-del-proyecto.md`, porque el enunciado pide explorar por estado.
+
 ## CampanaActualizada
 
 El organizador ejecutó `PublicarActualizacion` y Novedades guardó una novedad en una campaña publicada. `idActualizacion` identifica esa publicación y `contenido` es el texto escrito por el organizador. `ocurridoEn` indica cuándo se publicó.
@@ -91,7 +104,10 @@ El organizador ejecutó `PublicarActualizacion` y Novedades guardó una novedad 
 
 ## AporteRegistrado
 
-Contribuciones registró un aporte simulado. `monto` indica cuánto se aportó **en esa operación**. Tanto Campañas como Búsqueda suman ese importe una sola vez.
+> **Ficha de `contribution-service` · Responsable: Raul · Propuesta v1 (2026-11-07).**
+> Une la propuesta de Gabo con el diseño de [`servicios/contribution-service.md`](servicios/contribution-service.md).
+
+Contribuciones registró un aporte simulado. `monto` indica cuánto se aportó **en esa operación**. Tanto Campañas como Búsqueda suman ese importe una sola vez, identificándolo por `idAporte`. El instante del aporte viene en `ocurridoEn` del sobre.
 
 ```json
 {
@@ -99,15 +115,23 @@ Contribuciones registró un aporte simulado. `monto` indica cuánto se aportó *
   "idCampana": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
   "monto": "150.00",
   "moneda": "BOB",
-  "idAportante": "dcfce0af-9a86-4d5c-b79a-4c4e206754f0"
+  "idAportante": "dcfce0af-9a86-4d5c-b79a-4c4e206754f0",
+  "esAnonimo": false,
+  "nombreAportante": "Ana Pérez",
+  "mensajeApoyo": "¡Mucho éxito con la campaña!"
 }
 ```
 
-`idAportante` es **opcional**. Se propone incluirlo cuando exista una cuenta que pueda recibir novedades y omitirlo para visitantes sin cuenta. La atribución pública del aporte y la asociación privada a una bandeja son decisiones distintas. El tratamiento de las cuentas que eligen anonimato queda para acuerdo del equipo.
+- **`idAportante` es obligatorio**, porque para aportar hay que iniciar sesión (decisión de Raul del 2026-11-07). Es un dato interno: nunca se muestra en público si el aporte es anónimo.
+- **`nombreAportante`** es el nombre para mostrar. Vale `null` cuando `esAnonimo` es `true`.
+- **`mensajeApoyo`** es opcional: hasta 300 caracteres, o `null`.
 
+Uso de cada consumidor:
 - **Campañas** suma el importe en la moneda de la campaña y evalúa si el total alcanzó o superó la meta.
 - **Búsqueda** actualiza el importe recaudado y calcula el avance con la meta que recibió al publicarse la campaña. Con una meta de `"5000.00"`, un primer aporte de `"150.00"` lleva el avance al 3 %.
-- **Notificaciones** avisa por correo al organizador y, cuando recibe `idAportante`, vincula esa cuenta a la campaña para las futuras novedades.
+- **Notificaciones** avisa por correo al organizador, con el nombre (o "Anónimo"), el monto y el mensaje. Además, vincula `idAportante` a la campaña para avisarle de las futuras novedades.
+
+Queda pendiente si en un aporte anónimo se guarda el nombre real y si pueden verlo el organizador o el administrador (pendiente #15 de `estado-del-proyecto.md`). Si se decide que sí, se agrega un campo.
 
 ## MetaAlcanzada
 

@@ -1,30 +1,27 @@
 # Stack Tecnológico y Convenciones del Proyecto · Suertudómetro
 
 > [!NOTE]
-> **Estado:** Propuesta para aprobación en equipo · **Fecha:** 2026-11-05  
-> **Fuente de verdad del dominio:** el event storming (`event-storming-suertudometro-updated.excalidraw`).  
-> **Documentos de referencia:** ADR 0001 (tecnologías) y ADR 0002 (bases de datos) *(pendientes de redactar)* · diagramas de arquitectura y despliegue en `docs/`.
-
-> [!IMPORTANT]
-> **Idioma del proyecto: español en todo, sin excepción.** Código, clases, comandos, consultas, eventos, rutas REST, routing keys y columnas de BD van en español, usando **los términos del event storming**. La única excepción son los nombres de infraestructura (servicios, módulos, contenedores y bases de datos), que se mantienen en inglés *kebab-case* como en los diagramas (`campaign-service`, `identity-db`).
-
-> [!WARNING]
-> **Caracteres en identificadores: solo ASCII. Tildes y `ñ` están PROHIBIDAS.** En todo identificador técnico (ver §5.1) se escribe en español pero normalizado a ASCII: la `ñ` se reemplaza por `n` y las vocales acentuadas se escriben sin tilde. `campaña` → `campana`, `aprobación` → `aprobacion`, `búsqueda` → `busqueda`, `fecha_límite` → `fecha_limite`. Las tildes y la `ñ` solo se permiten en texto para personas (documentación, comentarios, descripciones de commits).
+> **Estado:** Vigente (los cambios se proponen por PR) · **Última revisión:** 2026-11-07 · **Responsable:** Raul
+> **Para qué sirve:** es la única fuente de las reglas técnicas. `AGENTS.md` las resume y la skill `suertudometro-conventions` las convierte en checklist.
+> **Fuentes de mayor prioridad:** el enunciado (`docs/enunciado/enunciado.md`) y el event storming (`docs/diagramas/event-storming.excalidraw`). El orden completo está en `AGENTS.md`.
+> **Ver también:** qué servicio hace qué y el lenguaje ubicuo en `README.md`; los diagramas en `docs/diagramas/`; las decisiones en `docs/adr/`.
 
 ---
 
 ## 1. Tecnologías y Runtime
 
-| Componente / Servicio | Tecnología y Runtime | Propósito en el Sistema |
+| Tecnología | Versión y runtime | Uso |
 |:---|:---|:---|
-| **Frontend** | **Angular 22** (TypeScript) | Aplicación web única (SPA) con portal público, panel del organizador y panel de administración. |
-| **API Gateway** | **Spring Cloud Gateway** (Spring Boot 4.1 · Java 21) | Punto de entrada perimetral: valida JWT, aplica CORS global, rate limiting y enruta hacia los servicios. |
-| **campaign-service** | **Spring Boot 4.1** (Java 21) | Núcleo de negocio (Core Domain): gestión de campañas, estados, reglas e imágenes. |
-| **contribution-service** | **Spring Boot 4.1** (Java 21) | Núcleo de negocio (Core Domain): aportes, recaudación y metas. |
-| **identity-service** | **NestJS 12** (Node.js 24 LTS) | Cuentas de usuario, roles y emisión de tokens JWT. |
-| **notification-service** | **NestJS 12** (Node.js 24 LTS) | Despacho de avisos por correo electrónico (Mailpit) y bandeja interna. |
-| **update-service** | **Django 5.2 LTS** + DRF (Python 3.13) | Bitácora de novedades y avances publicados por creadores. |
-| **search-service** | **Django 5.2 LTS** + DRF (Python 3.13) | Catálogo de solo lectura (CQRS) optimizado para exploración y búsqueda de texto completo. |
+| **Spring Boot** / **Spring Cloud Gateway** | 4.1 · Java 21 | Servicios core (`campaign-service`, `contribution-service`) y API Gateway |
+| **NestJS** | 12 · Node.js 24 LTS | Subdominios genéricos (`identity-service`, `notification-service`) |
+| **Django** + DRF | 5.2 LTS · Python 3.13 | Subdominios de soporte (`update-service`, `search-service`) |
+| **Angular** | 22 · TypeScript | Frontend (una sola SPA) |
+| **PostgreSQL** | 18 | Una base por servicio (§2) |
+| **RabbitMQ** | 4.3 | Bus de eventos (§5.5) |
+| **Mailpit** | — | Correo de prueba |
+| **Docker + Docker Compose** | — | Levantar todo el sistema |
+
+Qué hace cada servicio, su rol DDD y su ruta en el gateway: `README.md` → Arquitectura.
 
 > [!NOTE]
 > **Compatibilidad con el docente:** El repositorio base usa Spring Boot 3. Su estructura de capas se replica idéntica; solo se actualizan las versiones de dependencias a Spring Boot 4.1 por soporte técnico.
@@ -45,7 +42,7 @@
 | `search-service` | **PostgreSQL 18** *(FTS)* | Búsqueda Textual | Catálogo de lectura indexado con `pg_trgm` y `tsvector` para búsqueda eficiente. |
 | `notification-service` | **PostgreSQL 18** | Relacional (RDBMS) | Bandeja de avisos, contactos y aportantes por campaña; el contenido variable de cada aviso va en una columna `JSONB`. |
 
-**Un solo motor para los seis servicios.** El enunciado pide una base por servicio, no motores distintos. Todos los datos son estructurados, así que PostgreSQL cubre todo y el equipo aprende, migra y respalda un solo motor. Detalle y alternativas descartadas en el ADR 0002 *(pendiente)*.
+**Un solo motor para los seis servicios.** El enunciado pide una base por servicio, no motores distintos. Todos los datos son estructurados, así que PostgreSQL cubre todo y el equipo aprende, migra y respalda un solo motor. Las alternativas descartadas están en `docs/adr/0002-base-de-datos-por-servicio.md`.
 
 > [!NOTE]
 > **Nombres de tablas y columnas:** en español y **solo ASCII**, en `snake_case`, sin tildes ni `ñ` (`campanas`, `meta_financiera`, `fecha_limite`, `categoria`). Esto evita tener que entrecomillar identificadores y cualquier problema de *collation*. Las bases se crean igualmente con `ENCODING = 'UTF8'` para que los **datos** (textos de campañas, nombres, etc.) admitan tildes y `ñ` con normalidad.
@@ -90,12 +87,14 @@
 ## 4. Skills para Agentes de IA
 
 > [!IMPORTANT]
-> **Regla de precedencia:** Ante cualquier conflicto de diseño, prevalecen siempre el event storming, `AGENTS.md` y las skills locales del proyecto sobre las skills de terceros.
+> **Regla de precedencia:** ante cualquier conflicto de diseño, el enunciado, el event storming, `AGENTS.md` y la skill propia `suertudometro-conventions` prevalecen sobre las skills de terceros.
+
+**Cómo combinarlas:** para un servicio nuevo, primero `architecture-patterns`; luego `domain-driven-design` (Spring Boot) o la skill de la tecnología asignada. Para la persistencia, `supabase-postgres-best-practices`. Para la comunicación entre servicios, `microservices-patterns`.
 
 **Criterio:** una skill por tecnología, más las que necesita todo el equipo. Cada skill agrega su descripción al contexto del agente en cada sesión, y las de terceros traen ejemplos que pueden contradecir nuestra arquitectura. Por eso conviene tener pocas.
 
-> [!WARNING]
-> Esta sección es una **propuesta todavía no aplicada**. Lo que hay instalado en `.agents/skills/` y en `skills-lock.json` es el conjunto anterior (incluye `spring-boot-engineer`, `api-design-principles`, `code-review-excellence` y `ui-ux-pro-max`). Aplicar esta propuesta — y escribir la skill propia — es una tarea pendiente (ver `AGENTS.md`).
+> [!NOTE]
+> **Aplicado (2026-11-07).** Las 8 skills de esta sección son las que hay en `.agents/skills/`, y las 4 que salieron ya no están en el repositorio. `skills-lock.json` registra solo las instaladas con `npx skills add`; `domain-driven-design` (copiada a mano) y `suertudometro-conventions` (propia) no figuran en ese archivo.
 
 ### 4.1 Skills del repositorio (8)
 
@@ -108,16 +107,16 @@
 | NestJS | `nestjs-expert` | Módulos, DTOs, guards, JWT y pruebas | `Jeffallan/claude-skills` |
 | Django | `django-expert` | DRF, serializers, consultas y pruebas | `Jeffallan/claude-skills` |
 | Angular | `angular-developer` | Componentes, signals y rutas en Angular moderno | [angular/skills](https://github.com/angular/skills) *(oficial)* |
-| Todo el equipo | `suertudometro-conventions` *(por escribir)* | Las convenciones de este documento; manda sobre las demás | Propia del repositorio |
+| Todo el equipo | `suertudometro-conventions` | Las convenciones de este documento; manda sobre las demás | Propia del repositorio |
 
-**Se quitan del repositorio:**
+**Se quitaron del repositorio:**
 - `spring-boot-engineer`: su ejemplo base pone `@Entity` de JPA en el dominio.
 - `api-design-principles` y `code-review-excellence`: este documento y la skill propia ya cubren la API y la revisión de pull requests.
 - `ui-ux-pro-max`: pesa casi 3 MB; quien diseñe las pantallas puede instalarla en su propio equipo.
 
 **Skills personales (opcionales):** se instalan en el equipo de quien las necesite, no en el repositorio.
 - `ddd-event-storming`, para actualizar el tablero.
-- `skill-creator`, para escribir la skill propia.
+- `skill-creator`, para mantener la skill propia.
 - Las demás de Spring Boot (`spring-security-jwt`, `spring-cloud-gateway`, `flyway-migrations`…) y las de Prisma.
 
 ### 4.2 Instalación
@@ -132,6 +131,29 @@ npx skills add angular/skills --skill angular-developer
 ```
 
 La skill `domain-driven-design` se instala copiando la carpeta `skills/spring-boot-4/domain-driven-design/` del repositorio a `.agents/skills/`.
+
+### 4.3 Usar las skills en Claude Code
+
+Claude Code carga las skills de proyecto desde `.claude/skills/<skill>/SKILL.md`, y cada entrada puede ser un enlace a otra carpeta. Las skills del repo viven en `.agents/skills/`. Por eso, quien use Claude Code crea los enlaces **una sola vez**, desde la raíz del repo:
+
+```bash
+# macOS / Linux / Git Bash
+mkdir -p .claude/skills
+for d in .agents/skills/*/; do
+  n=$(basename "$d")
+  ln -s "../../.agents/skills/$n" ".claude/skills/$n"
+done
+```
+
+```powershell
+# Windows (PowerShell; requiere el modo desarrollador o permisos de administrador)
+New-Item -ItemType Directory -Force .claude\skills | Out-Null
+Get-ChildItem .agents\skills -Directory | ForEach-Object {
+  New-Item -ItemType SymbolicLink -Path ".claude\skills\$($_.Name)" -Target $_.FullName
+}
+```
+
+Si los enlaces no funcionan, copia las carpetas de `.agents/skills/` en `.claude/skills/`. Esa copia no se versiona, porque `.claude/skills/` está en `.gitignore`. La fuente es siempre `.agents/skills/`: **no edites las skills dentro de `.claude/skills/`**.
 
 ---
 
@@ -161,29 +183,27 @@ El proyecto usa **español en todo**, con los términos del event storming. Los 
 ```text
 Suertudometro/
 ├── api-gateway/            # Spring Cloud Gateway (Java 21)
-├── campaign-service/       # Spring Boot 4.1 (Java 21) - Core Domain
-├── contribution-service/   # Spring Boot 4.1 (Java 21) - Core Domain
-├── identity-service/       # NestJS 12 (Node.js 24) - Generic Subdomain
-├── notification-service/   # NestJS 12 (Node.js 24) - Supporting Subdomain
-├── update-service/         # Django 5.2 (Python 3.13) - Supporting Subdomain
-├── search-service/         # Django 5.2 (Python 3.13) - Read-Side CQRS
+├── campaign-service/       # Spring Boot 4.1 (Java 21) - Subdominio core
+├── contribution-service/   # Spring Boot 4.1 (Java 21) - Subdominio core
+├── identity-service/       # NestJS 12 (Node.js 24) - Subdominio genérico
+├── notification-service/   # NestJS 12 (Node.js 24) - Subdominio genérico
+├── update-service/         # Django 5.2 (Python 3.13) - Subdominio de soporte
+├── search-service/         # Django 5.2 (Python 3.13) - Subdominio de soporte (lado de lectura CQRS)
 ├── frontend/               # Angular 22 (TypeScript)
-├── docs/                   # Documentación técnica, diagramas y ADRs
+├── docs/
+│   ├── enunciado/          # Requisitos del docente (transcripción y PDF)
+│   ├── diagramas/          # Event storming, arquitectura y despliegue (Excalidraw)
+│   ├── servicios/          # Diseño de cada servicio
+│   ├── adr/                # Decisiones de arquitectura
+│   ├── contratos-de-eventos.md
+│   ├── estado-del-proyecto.md
+│   ├── historial.md
+│   └── stack-y-convenciones.md
 ├── .agents/skills/         # Skills configuradas para agentes de IA
 └── docker-compose.yml      # Definición de contenedores e infraestructura local
 ```
 
-| Directorio | Stack Tecnológico | Rol Arquitectónico | Ruta en el gateway | Responsabilidad Principal |
-|:---|:---|:---|:---|:---|
-| `api-gateway/` | Spring Cloud Gateway (Java 21) | Perimetral | — | Autenticación JWT, CORS, rate limiting y ruteo unificado |
-| `campaign-service/` | Spring Boot 4.1 (Java 21) | Core Domain | `/api/campanas` | Gestión de campañas, estados, reglas de negocio y moderación |
-| `contribution-service/` | Spring Boot 4.1 (Java 21) | Core Domain | `/api/aportes` | Registro de aportes, validación financiera y recaudación |
-| `identity-service/` | NestJS 12 (Node.js 24) | Generic Subdomain | `/api/identidad` | Autenticación, registro, emisión de JWT y gestión de usuarios |
-| `notification-service/` | NestJS 12 (Node.js 24) | Supporting Subdomain | `/api/notificaciones` | Notificaciones multicanal (correo con Mailpit y bandeja interna) |
-| `update-service/` | Django 5.2 (Python 3.13) | Supporting Subdomain | `/api/novedades` | Novedades y avances publicados por creadores de campañas |
-| `search-service/` | Django 5.2 (Python 3.13) | Read-side (CQRS) | `/api/busqueda` | Catálogo de solo lectura con filtros y búsqueda de texto completo |
-| `frontend/` | Angular 22 (TypeScript) | Presentación | — | SPA: portal público, panel organizador y panel administrativo |
-| `docs/` | Markdown / Excalidraw | Documentación | — | ADRs, modelo de dominio, contratos de eventos y despliegue |
+> Esta es la estructura objetivo; lo que ya existe está en `docs/estado-del-proyecto.md`. El rol, la ruta en el gateway y la responsabilidad de cada servicio están en `README.md` → Arquitectura.
 
 ### 5.3 Reglas de Capas y Dependencias (Clean Architecture / DDD)
 
@@ -207,7 +227,27 @@ Suertudometro/
 | **`application`** | Casos de uso y orquestación | Manejadores de Comando, Manejadores de Consulta, DTOs de aplicación | `domain`, `sharedkernel` | Frameworks web, controladores HTTP, persistencia directa |
 | **`infrastructure`** | Adaptadores técnicos y persistencia | Implementaciones de repositorios, entidades ORM, adaptadores RabbitMQ, mappers | `domain`, `application`, `sharedkernel` | Clases de la capa `api` |
 | **`api`** | Adaptador de entrada perimetral | Controladores REST, DTOs de Request/Response, validadores de entrada | `application`, `sharedkernel` | Entidades ORM directamente, repositorios de persistencia |
-| **`sharedkernel`** | Tipos y contratos transversales | Clases base, Objetos de Valor genéricos (`Dinero`, `Resultado`) | Librerías estándar del lenguaje | Código específico de un microservicio |
+| **`sharedkernel`** | Tipos y contratos transversales dentro del mismo servicio | Clases base (`RaizDeAgregado`, `EventoDeDominio`, `ObjetoDeValor`), Objetos de Valor genéricos (`Dinero`, `Resultado`) | Librerías estándar del lenguaje | Código específico de un microservicio |
+
+- Los modelos del ORM (JPA, Prisma, modelos de Django) son distintos de los agregados de dominio y se convierten con mappers en `infrastructure`.
+- Un servicio nunca accede a la base de datos ni al código de otro servicio.
+
+**Ejemplos por capa:**
+- `application`: `CrearCampanaComando`, `ObtenerCampanaPorIdConsulta` y sus manejadores.
+- `domain`:
+  - agregados: `Campana`, `Aporte`, `Actualizacion`, `CuentaUsuario`;
+  - objetos de valor: `IdCampana`, `MetaFinanciera`, `NombreAportante`;
+  - eventos de dominio con los nombres del event storming: `CampanaAprobada`, `AporteRealizado`.
+- `infrastructure`: repositorios, mappers, y publicadores y consumidores de los eventos de integración (`CampanaPublicada`, `AporteRegistrado`).
+
+**Equivalencias por tecnología** (orientativas; la estructura concreta de carpetas de cada servicio está en su documento de `docs/servicios/`):
+
+| Capa | Spring Boot (Java) | NestJS (TypeScript) | Django (Python) |
+|:---|:---|:---|:---|
+| `api` | Controllers y DTOs | Controllers y DTOs | Vistas/endpoints y serializers |
+| `application` | Manejadores (PipelinR) y servicios de aplicación | Manejadores (`@nestjs/cqrs`) y servicios de aplicación | Casos de uso y manejadores como clases propias |
+| `domain` | Clases Java simples, sin anotaciones de JPA | Clases TypeScript simples, sin decoradores del ORM | Clases Python simples, **no** modelos de Django |
+| `infrastructure` | JPA/Spring Data, Flyway, Spring AMQP | Prisma, `amqplib` | Modelos y migraciones de Django, `pika` |
 
 ### 5.4 Convenciones de Nomenclatura por Lenguaje
 
@@ -231,21 +271,17 @@ Los nombres se toman del event storming, en español ASCII.
 | **Manejador de Comando** | `[Accion][Entidad]ComandoManejador` | `CrearCampanaComandoManejador` |
 | **Consulta** | `Obtener[Entidad]Por[Criterio]Consulta` | `ObtenerCampanaPorIdConsulta` |
 | **Manejador de Consulta** | `Obtener[Entidad]Por[Criterio]ConsultaManejador` | `ObtenerCampanaPorIdConsultaManejador` |
-| **Evento de Dominio** | `[Entidad][AccionEnPasado]` *(sin sufijo `Evento`)* | `CampanaPublicada`, `AporteRegistrado` |
+| **Evento de Dominio** | `[Entidad][AccionEnPasado]` *(sin sufijo `Evento`)*, con el nombre del event storming | `CampanaAprobada`, `AporteRealizado` |
+| **Evento de Integración** | El nombre del catálogo del `README.md` (lo que sale al bus) | `CampanaPublicada`, `AporteRegistrado` |
 
-#### Catálogo de eventos de integración (bus de RabbitMQ)
+#### Bus de eventos (RabbitMQ)
 
 Exchange topic `suertudometro.events`. Una cola por consumidor y una cola de errores (DLQ) por consumidor. Entre servicios **no hay llamadas HTTP: solo eventos**.
 
-| Evento | Routing key | Publica | Consumen |
-|:---|:---|:---|:---|
-| `UsuarioRegistrado` | `usuario.registrado` | identity-service | notification-service |
-| `CampanaPublicada` | `campana.publicada` | campaign-service | contribution, search, update, notification |
-| `CampanaRechazada` | `campana.rechazada` | campaign-service | notification-service |
-| `AporteRegistrado` | `aporte.registrado` | contribution-service | campaign, search, notification |
-| `MetaAlcanzada` | `meta.alcanzada` | campaign-service | search, notification |
-| `CampanaActualizada` | `campana.actualizada` | update-service | notification-service |
-| `CampanaCerrada` | `campana.cerrada` | campaign-service | contribution, search, update |
+El **catálogo de eventos de integración** (nombre, routing key, quién publica y quién consume) y la equivalencia con los eventos de dominio del event storming están en el `README.md` → *Lenguaje ubicuo*. Este documento solo define el formato del mensaje.
+
+- **Consumidores idempotentes:** un mismo `idEvento` no se procesa dos veces.
+- **Contenido de `datos`:** cada evento tiene su ficha en `docs/contratos-de-eventos.md`. La mantiene quien publica el evento y la revisan por PR quienes lo consumen. Nadie inventa su propio formato.
 
 #### Especificación del Envelope de Mensajes RabbitMQ
 
@@ -256,6 +292,8 @@ Exchange topic `suertudometro.events`. Una cola por consumidor y una cola de err
 | `version` | Integer | Sí | Versión del contrato del evento para evolución compatible | `1` |
 | `ocurridoEn` | ISO-8601 UTC | Sí | Marca de tiempo exacta de ocurrencia en UTC | `"2026-11-05T15:30:00.000Z"` |
 | `datos` | Object | Sí | Carga útil (*payload*) con los datos de negocio del evento | `{ "idCampana": "...", "metaFinanciera": "5000.00" }` |
+
+Ejemplo ilustrativo del envelope (los campos de `datos` son solo un ejemplo; el contrato real de cada evento está en `docs/contratos-de-eventos.md`):
 
 ```json
 {
@@ -327,6 +365,8 @@ Ejemplo de columnas de la tabla `campanas`: `id`, `titulo`, `historia`, `meta_fi
 | **Feature** | `feat/<servicio>-<tema>` | Desarrollo de una nueva funcionalidad | `feat/campaign-aprobacion` |
 | **Bugfix** | `fix/<servicio>-<tema>` | Corrección de un error reportado | `fix/gateway-cors-header` |
 | **Refactor** | `refactor/<servicio>-<tema>` | Reestructuración de código sin alterar comportamiento | `refactor/identity-jwt-guard` |
+| **Docs** | `docs/<tema>` | Documentación que no pertenece a un solo servicio | `docs/contratos-eventos` |
+| **Chore** | `chore/<tema>` | Configuración del repositorio (CI, `.gitignore`, docker-compose) | `chore/ci-github-actions` |
 
 - **Rama principal:** `main` está protegida; todo cambio requiere Pull Request revisado y merge mediante **Squash and Merge**.
 - **Commits:** Convención *Conventional Commits* con descripción en español: `feat(campaign): agrega validacion de meta minima`. Los prefijos (`feat`, `fix`, `refactor`, `docs`, `test`, `chore`) se mantienen en inglés porque son parte del estándar.

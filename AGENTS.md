@@ -1,165 +1,117 @@
 # AGENTS.md
 
-Instrucciones para agentes de IA (Claude Code, Cursor, Codex, Copilot, etc.) que trabajen en este repositorio. Las personas del equipo también pueden leerlo como resumen rápido de las reglas del proyecto.
+Instrucciones para agentes de IA (Claude Code, Cursor, Codex, Copilot, etc.) que trabajen en este repositorio. Es la puerta de entrada: resume las reglas y dice dónde está cada cosa. El detalle vive en los documentos enlazados; no lo repitas en otro lado.
+
+## Antes de empezar cada sesión
+
+1. **Lee `docs/estado-del-proyecto.md`.** Claude Code ya lo carga desde `CLAUDE.md`. Ahí están la meta, el equipo, la fase, el avance, los próximos pasos y las decisiones pendientes. **Si arriba hay un aviso, cuéntaselo primero a la persona con quien trabajas.**
+2. **Identifica con quién trabajas.** Compara `git config user.name` con la tabla "Equipo" de ese documento y trabaja en los servicios de esa persona. Si la tarea toca el servicio, la base de datos, un contrato o un documento de otro integrante, avisa antes de cambiar nada.
+3. **Antes de escribir código**, lee:
+   - el documento de diseño del servicio (`docs/servicios/`);
+   - los contratos de los eventos que publica o consume (`docs/contratos-de-eventos.md`);
+   - el módulo que vas a tocar.
 
 ## Proyecto
 
-**Suertudometro**: plataforma de crowdfunding y recaudación colectiva inspirada en GoFundMe. Proyecto académico de Ingeniería Web 3 (Proyecto 07), Universidad NUR.
+**Suertudometro** es una plataforma de crowdfunding inspirada en GoFundMe. Es el Proyecto 07 de Ingeniería Web 3 (Universidad NUR), con 4 integrantes.
 
-- Se crean campañas con portada, historia, meta, categoría y organizador.
-- Los visitantes exploran campañas, aportan de forma **simulada** (con nombre o anónimo) y dejan mensajes de apoyo.
-- Los organizadores publican actualizaciones. La administración modera campañas, usuarios y estados.
-- **No se integran pasarelas de pago reales** (Stripe, PayPal, bancos). Los aportes son transacciones simuladas dentro del sistema.
+- Las campañas pasan por la revisión de la administración antes de publicarse.
+- Los aportes son **simulados**: con nombre o anónimos, y con un mensaje de apoyo opcional.
+- Los organizadores publican actualizaciones, y la administración modera campañas, usuarios y estados.
+- Una campaña termina en `FINALIZADA` (meta alcanzada o plazo vencido) o en `CANCELADA` (cerrada por el organizador o la administración). No hay pasarelas de pago reales.
+- El sistema tiene seis microservicios, un API Gateway y un frontend Angular, con RabbitMQ y una PostgreSQL por servicio. Todo se levanta con Docker Compose.
 
-Fuentes de contexto, en orden de prioridad:
+Requisitos completos del docente: `docs/enunciado/enunciado.md`.
 
-1. El **event storming** (`docs/event-storming-suertudometro-updated.excalidraw`) — **fuente de verdad del dominio**: comandos, eventos, políticas y estados.
-2. `README.md` — arquitectura, estructura y lenguaje ubicuo.
-3. `docs/stack-y-convenciones.md` — stack, convenciones de código, contrato de eventos y modelado de datos.
-4. Los diagramas `docs/diagrama-arquitectura.excalidraw` y `docs/diagrama-despliegue.excalidraw`.
-5. El enunciado del Proyecto 07 (requisitos del docente) y el repositorio de referencia [spring-boot-expense-manager-ddd](https://github.com/garyfrancodev/spring-boot-expense-manager-ddd), que es modelo de arquitectura, **no** de stack obligatorio.
+## Fuentes de verdad y dónde vive cada cosa
 
-Si dos fuentes difieren, manda la de mayor prioridad. En dominio, siempre manda el event storming.
+Si dos fuentes difieren, manda la de mayor prioridad y la otra se corrige en un PR. No elijas en silencio: avisa de la contradicción.
 
-## Idioma: español en todo
+1. **Enunciado:** `docs/enunciado/`.
+2. **Event storming:** `docs/diagramas/event-storming.excalidraw`.
+3. **`README.md`.**
+4. **`docs/stack-y-convenciones.md`.**
+5. **Diagramas de arquitectura y despliegue:** `docs/diagramas/`.
+6. **Repositorio del docente** ([spring-boot-expense-manager-ddd](https://github.com/garyfrancodev/spring-boot-expense-manager-ddd)): solo como modelo de capas, no de stack ni de nombres.
 
-El proyecto usa **español en todo el código y los contratos**, sin excepción: clases, métodos, variables, comandos, consultas, eventos, rutas REST, routing keys de RabbitMQ y columnas de base de datos. La documentación, los commits y los comentarios también van en español.
+Cada tema vive en **un solo** documento. Si lo cambias, actualiza en el mismo PR los documentos que lo resumen.
 
-> [!IMPORTANT]
-> **Caracteres en identificadores: solo ASCII. Tildes y `ñ` están PROHIBIDAS.**
-> En todo identificador técnico — clases, métodos, variables, atributos, nombres de archivo, comandos, consultas, eventos, enums, tablas y columnas de BD, routing keys, `tipoEvento`, campos JSON y segmentos de URI — se escribe en español **normalizado a ASCII**: la `ñ` se reemplaza por `n` (`campaña` → `campana`) y las vocales acentuadas van sin tilde (`aprobación` → `aprobacion`, `búsqueda` → `busqueda`, `fecha_límite` → `fecha_limite`).
-> Las tildes y la `ñ` **solo** se permiten en texto para personas: documentación, comentarios de negocio y descripciones de commits y PRs. Nunca en nombres de código, rutas, eventos ni columnas.
+| Tema | Documento canónico | Lo resumen (actualizar también) |
+|------|--------------------|---------------------------------|
+| Requisitos | `docs/enunciado/enunciado.md` | — |
+| Modelo de dominio | Event storming | `README.md` → Lenguaje ubicuo |
+| Servicios y su tecnología; estados, comandos y catálogo de eventos | `README.md` | Este archivo, la skill `suertudometro-conventions` y `docs/diagramas/arquitectura.excalidraw` |
+| Convenciones técnicas: idioma, versiones, capas, nombres, API, datos, Git y skills | `docs/stack-y-convenciones.md` | Este archivo (resumen) y la skill (checklist) |
+| Contenido (`datos`) de cada evento | `docs/contratos-de-eventos.md` (cada ficha la mantiene quien publica el evento) | — |
+| Diseño de cada servicio | `docs/servicios/<servicio>.md` (lo mantiene su responsable) | `docs/servicios/README.md` (índice) |
+| Decisiones de arquitectura | `docs/adr/` | `docs/historial.md` |
+| Contenedores, puertos y volúmenes | `docs/diagramas/despliegue.excalidraw` | `docker-compose.yml` (cuando exista) |
+| Equipo, fase, avance, próximos pasos y pendientes | `docs/estado-del-proyecto.md` | `README.md` → Equipo (solo si cambia el reparto) |
+| Decisiones tomadas, bitácora y autoría | `docs/historial.md` | — |
 
-**Única excepción (infraestructura):** los nombres de servicios, módulos, contenedores y bases de datos se mantienen en inglés *kebab-case* tal como aparecen en los diagramas (`campaign-service`, `identity-db`, `api-gateway`). El paquete base de Java sigue siendo `com.crowdfunding.<servicio>`.
+## Reglas no negociables (resumen)
 
-## Stack
+El detalle está en `docs/stack-y-convenciones.md`, en la sección que se indica.
 
-El backend es **políglota**: los servicios se desarrollan con tres tecnologías, ya asignadas por servicio.
+- **Idioma (§5.1).** Todo el código y los contratos van en español, con los términos del event storming.
+  - Identificadores **solo en ASCII**, sin tildes ni `ñ`: `campaña` → `campana`, `aprobación` → `aprobacion`.
+  - Las tildes solo van en texto para personas: documentación, comentarios y commits.
+  - Excepción: los nombres de infraestructura van en inglés kebab-case (`campaign-service`, `identity-db`). El paquete Java es `com.crowdfunding.<servicio>`.
+- **Tecnología asignada (§1).** **No cambies la tecnología de un servicio.**
+  - Spring Boot 4.1 y Java 21: `api-gateway` (Spring Cloud Gateway), `campaign-service` y `contribution-service`.
+  - NestJS 12 y Node.js 24: `identity-service` y `notification-service`.
+  - Django 5.2 con DRF y Python 3.13: `update-service` y `search-service`.
+  - Angular 22: `frontend`.
+- **Arquitectura (§5.3).** El API Gateway es el único punto de entrada. Cada servicio tiene las capas `Api`, `Application`, `Domain`, `Infrastructure` y `SharedKernel`:
+  - `Domain`: sin frameworks ni ORM. **Nunca `@Entity` de JPA.**
+  - `Application`: depende solo de `Domain` y define los puertos.
+  - `Infrastructure`: implementa puertos y repositorios, con modelos del ORM separados del dominio y mappers.
+  - `Api`: sin lógica de negocio.
 
-| Servicio | Tecnología | Lenguaje |
-|----------|------------|----------|
-| `api-gateway` | Spring Cloud Gateway (Spring Boot 4.1) | Java 21 |
-| `campaign-service` · `contribution-service` | Spring Boot 4.1 | Java 21 |
-| `identity-service` · `notification-service` | NestJS 12 | TypeScript (Node.js 24 LTS) |
-| `update-service` · `search-service` | Django 5.2 LTS + DRF | Python 3.13 |
-| `frontend` | Angular 22 | TypeScript |
-
-Común a todos: **PostgreSQL 18** (una base por servicio), **RabbitMQ 4.3** para eventos, **Mailpit** como correo de prueba y **Docker + Docker Compose** para levantar todo el sistema. El detalle de librerías por tecnología está en `docs/stack-y-convenciones.md`.
-
-Un agente **no** debe cambiar la tecnología asignada a un servicio por su cuenta.
-
-## Arquitectura (requisitos obligatorios del enunciado)
-
-- Microservicios con **API Gateway** como único punto de entrada.
-- **DDD + Arquitectura Limpia** en cada servicio.
-- **CQRS** donde resulte pertinente (comandos y consultas separados).
-- **Eventos de dominio** entre servicios: `UsuarioRegistrado`, `CampanaPublicada`, `CampanaRechazada`, `AporteRegistrado`, `MetaAlcanzada`, `CampanaActualizada`, `CampanaCerrada`.
-- **Base de datos por servicio**: nunca compartir tablas entre microservicios.
-- **Patrones de diseño** aplicados solo cuando el dominio los justifique.
-
-Servicios: `identity`, `campaign`, `contribution`, `update`, `search`, `notification` y `api-gateway`. Cada servicio se divide en capas `Api`, `Application`, `Domain`, `Infrastructure` y `SharedKernel`.
-
-El `README.md` describe esta estructura tomando como **referencia de arquitectura** el proyecto del docente (`spring-boot-expense-manager-ddd`), hecho con Spring Boot. Es un modelo para las capas, responsabilidades y reglas de dependencia, **no** una obligación de usar Spring Boot ni de copiar sus carpetas y nombres de Java en todos los servicios. Cada servicio replica esa arquitectura con las carpetas y módulos propios de su tecnología.
-
-Como los servicios están en lenguajes distintos, **el contrato entre ellos es independiente del lenguaje**: APIs REST documentadas (OpenAPI) y eventos serializados en JSON con el esquema acordado (ver `docs/stack-y-convenciones.md`, §5.5). Entre servicios **no hay llamadas HTTP directas: solo eventos** por el bus. Ningún servicio comparte código con otro.
-
-### Reglas de dependencia entre capas
-
-Aplican igual en Spring Boot, NestJS y Django:
-
-- `Domain` no depende de ninguna otra capa ni de frameworks ni ORMs (sin Spring, NestJS, Django, JPA, TypeORM/Prisma ni modelos de Django).
-- `Application` depende solo de `Domain` (y de `SharedKernel`). Define puertos de salida como interfaces.
-- `Infrastructure` implementa los puertos y los repositorios. Las entidades del ORM (JPA, Prisma, modelos de Django) son distintas de los agregados de dominio y se convierten con mappers.
-- `Api` depende de `Application`. Los controladores no contienen lógica de negocio.
-- Un servicio nunca accede directamente a la base de datos ni al código de otro. Se comunican por HTTP a través del gateway o por eventos.
-
-### Nombres (en español ASCII)
-
-Los términos del dominio se toman **tal cual del event storming**, normalizados a ASCII (sin tildes ni `ñ`). No se traducen al inglés.
-
-- Comandos y consultas: `CrearCampanaComando`, `ObtenerCampanaPorIdConsulta`, con sus manejadores `...ComandoManejador` / `...ConsultaManejador`.
-- Eventos de dominio en pasado y **sin** sufijo `Event`/`Evento`: `MetaAlcanzada`, `AporteRegistrado`.
-- Routing keys en minúsculas con puntos: `campana.publicada`, `aporte.registrado`.
-- Rutas REST en español ASCII: `/api/campanas/{id}/aprobacion`.
-- Código, identificadores, columnas de BD y comentarios en español. Nombres de servicios, módulos y contenedores en inglés kebab-case (infraestructura).
-- La convención idiomática de cada lenguaje se respeta: `snake_case` en Python (`meta_financiera`), `camelCase` en TypeScript y Java (`metaFinanciera`), `PascalCase` para clases en los tres.
-- Paquete base en Java: `com.crowdfunding.<servicio>`.
-
-El mapeo completo de estados, comandos y eventos está en el `README.md`, sección "Lenguaje ubicuo".
-
-## Skills del proyecto
-
-Conjunto de skills acordado por el equipo (viven en `.agents/skills/`, versiones en `skills-lock.json`). Úsalas según la tarea:
-
-| Skill | Cuándo usarla | Aplica a |
-|-------|---------------|----------|
-| `architecture-patterns` | Diseñar la estructura de capas de un servicio (Clean Architecture, hexagonal, DDD), definir contextos delimitados o depurar dependencias circulares | Todos los servicios |
-| `microservices-patterns` | Definir límites entre servicios, comunicación basada en eventos y patrones de resiliencia | Todos los servicios |
-| `supabase-postgres-best-practices` | Índices, consultas y diseño de esquemas en PostgreSQL | Todos (persistencia) |
-| `domain-driven-design` | Agregados, objetos de valor, eventos de dominio y dominio separado de JPA | Servicios en Spring Boot |
-| `nestjs-expert` | Servicios NestJS: módulos, controladores, DTOs, guards, JWT, ORM, pruebas | Servicios en NestJS |
-| `django-expert` | Servicios Django: modelos, ORM, serializers y viewsets con DRF, JWT | Servicios en Django |
-| `angular-developer` | Componentes, signals y rutas en Angular moderno | Frontend (Angular) |
-| `suertudometro-conventions` | Convenciones de este proyecto (idioma español ASCII, capas, CQRS, eventos, API, Git); **manda sobre las demás** | Todo el repo |
-
-Cómo combinarlas: para un servicio nuevo, primero `architecture-patterns`, luego `domain-driven-design` o la skill de la tecnología asignada. `suertudometro-conventions` siempre manda; ante conflicto con una skill de terceros, prevalecen estas convenciones y el event storming.
-
-> [!NOTE]
-> **Estado de la reconciliación.** La skill propia `suertudometro-conventions` ya está creada. Falta **ejecutar en cada equipo** la instalación de las externas (`supabase-postgres-best-practices`, `angular-developer`, `domain-driven-design`) y el borrado de las que salen (`spring-boot-engineer`, `api-design-principles`, `code-review-excellence`, `ui-ux-pro-max`), más la limpieza de `skills-lock.json`. Los comandos están en `cambios-realizados.md` (§5). Hasta aplicarlo, si `spring-boot-engineer` sigue instalado, **no** sigas su patrón de poner `@Entity` de JPA en el dominio: viola la regla de dependencia de capas.
+  CQRS donde sea pertinente, y patrones de diseño aplicados y justificados por el dominio.
+- **Entre servicios (§5.5).** Una base de datos por servicio. Nadie lee la base ni el código de otro servicio. **Entre servicios solo hay eventos** por RabbitMQ, nunca HTTP directo.
+- **Nombres (§5.4 y §5.5).**
+  - Comandos y consultas: `CrearCampanaComando`, `ObtenerCampanaPorIdConsulta`; manejadores `...ComandoManejador` y `...ConsultaManejador`.
+  - Eventos: en pasado y sin sufijo. Dentro del dominio, el nombre del event storming (`AporteRealizado`); en el bus, el evento de integración del catálogo del README (`AporteRegistrado`).
+  - Routing keys: `campana.publicada`. Rutas REST: `/api/campanas/{id}/aprobacion`.
+  - `camelCase` en Java y TypeScript; `snake_case` en Python y en las columnas.
+- **Contratos (§5.5 y `docs/contratos-de-eventos.md`).** El envelope tiene `idEvento`, `tipoEvento`, `version`, `ocurridoEn` y `datos`.
+  - **No inventes campos de `datos`.** Usa solo los de la ficha del evento. Cada ficha la cambia quien publica ese evento; los consumidores proponen lo que necesitan.
+  - Un cambio de contrato se hace por PR y lo revisan los consumidores.
+  - Los consumidores son idempotentes por `idEvento`.
+- **API y datos (§5.6 y §5.7).**
+  - Errores en formato RFC 9457.
+  - Dinero como texto (`"150.00"`) con su `moneda`, guardado en `NUMERIC(12,2)`. Nunca `float`.
+  - Ids UUID y fechas `TIMESTAMPTZ` en UTC.
 
 ## Cómo trabajar
 
-- Antes de escribir código, leer `README.md` y el event storming, y revisar el módulo que se va a tocar.
-- Hacer cambios pequeños y enfocados en un solo servicio y una sola tarea. No refactorizar código ajeno a la tarea.
-- No inventar dependencias ni comandos. Si algo no existe todavía en el repo (módulos, scripts, perfiles de Maven), decirlo en lugar de suponerlo.
-- No agregar funcionalidad fuera del alcance del enunciado salvo que el equipo lo pida (las mejoras opcionales son campañas destacadas, favoritos, comentarios, etiquetas, reportes y verificación de organizadores).
-- Todo código generado debe ser revisado y entendido por quien lo integra. Los cambios entran por pull request.
-- Usar los términos del event storming tal cual (en español ASCII). No traducir el dominio al inglés.
-- Si una decisión de diseño no está definida (ver la lista siguiente), proponer opciones y preguntar, sin decidir en silencio.
+- Haz cambios pequeños: un servicio y una tarea por rama y por PR (ramas y commits: §5.8). No refactorices código ajeno a la tarea.
+- No inventes dependencias ni comandos. Si algo no existe en el repo, dilo.
+- No agregues funcionalidad fuera del enunciado. Las mejoras opcionales (campañas destacadas, favoritos, comentarios, etiquetas, reportes, verificación de organizadores) solo entran si el equipo lo decide.
+- Las **decisiones pendientes** del documento de estado no se asumen: propón opciones y pregunta.
+- Todo código generado lo revisa y lo entiende quien lo integra.
 
-## Pendiente de definir por el equipo
+## Quién hizo qué (trazabilidad)
 
-Hasta que estén decididos, los agentes no deben asumirlos:
+- **Responsable actual** de cada servicio, carpeta o documento: `docs/estado-del-proyecto.md`, en las tablas "Equipo" y "Responsables". Los documentos también lo indican en su cabecera.
+- **Autoría:** la fuente exacta es git.
+  - Historial de un archivo, aunque lo hayan movido o renombrado: `git log --follow --format="%h %ad %an %s" --date=short -- <archivo>`.
+  - Quién escribió cada línea: `git blame <archivo>`.
+  - Para pasar del usuario de git al integrante, usa la tabla "Equipo".
+- **Resumen de hitos, decisiones con su autor y autoría por archivo:** `docs/historial.md`.
 
-- **Estructura concreta de carpetas DDD en NestJS y en Django** (cómo se expresan las capas `Api`/`Application`/`Domain`/`Infrastructure`/`SharedKernel` en cada tecnología). En Spring Boot ya está marcada por el repo de referencia.
-- **Modelo de dominio detallado por servicio**: agregados, objetos de valor, invariantes y endpoints concretos. El event storming da los comandos y eventos; falta aterrizarlos servicio por servicio.
-- **Documento `CONTRIBUTING.md`** con el detalle fino por tecnología (formato, estilo de tests, flujo de PR). Las herramientas (linters, test runners) ya están en `docs/stack-y-convenciones.md`.
-- **Terminar de reconciliar las skills**: la skill propia `suertudometro-conventions` ya está escrita; falta correr los comandos de instalación/borrado y limpiar `skills-lock.json` (ver `cambios-realizados.md`, §5).
-- **Ubicación de algunos comandos del event storming** (`EnviarComentario`, `CompartirCampana`): confirmar a qué bounded context pertenecen.
+Reglas:
+- **Lo de otro integrante no se cambia en silencio.** Di a quién hay que consultar. Si el cambio sigue adelante, esa persona revisa el PR.
+- **Al terminar algo que cambie el estado:** actualiza `docs/estado-del-proyecto.md` (avance y pendientes). Si hubo una decisión o un hito, agrégalo a `docs/historial.md` con el nombre del integrante.
+- **Documento nuevo:** lleva una cabecera con responsable, fecha y estado, como `docs/servicios/contribution-service.md`.
+- **Commits:** cada integrante los hace con su propio usuario de git.
 
-Ya **no** están pendientes (quedaron definidos por el event storming y el doc de convenciones): la tecnología de cada servicio, la del gateway y la del frontend; los estados de campaña; el broker de mensajería; el contrato y los nombres de los eventos; el formato de errores y el versionado de la API; y la estrategia de ramas y commits.
+## Skills y herramientas
 
-## Si usas Claude Code
-
-Claude Code lee `CLAUDE.md` y no `AGENTS.md`. Por eso el repo incluye un `CLAUDE.md` en la raíz que importa este archivo, de modo que las reglas son las mismas para todos y se mantienen en un solo lugar.
-
-- **No dupliques reglas en `CLAUDE.md`.** Cualquier regla compartida se edita aquí, en `AGENTS.md`.
-- Las preferencias personales (idioma de respuesta, atajos, estilo propio) van en tu `CLAUDE.local.md`, que no se sube al repo, o en tu configuración de usuario (`~/.claude/`).
-
-### Skills en Claude Code
-
-Según la documentación de Claude Code, las skills de proyecto se cargan desde `.claude/skills/<nombre-de-skill>/SKILL.md`, y cada entrada puede ser un enlace simbólico a una carpeta ubicada en otro lugar. Las skills de este repo viven en `.agents/skills/`, así que cada integrante que use Claude Code debe crear los enlaces **una sola vez** desde la raíz del repo:
-
-```bash
-# macOS / Linux / Git Bash
-mkdir -p .claude/skills
-for d in .agents/skills/*/; do
-  n=$(basename "$d")
-  ln -s "../../.agents/skills/$n" ".claude/skills/$n"
-done
-```
-
-En Windows (PowerShell), crea un enlace por skill (requiere el modo desarrollador activado o permisos de administrador):
-
-```powershell
-New-Item -ItemType Directory -Force .claude\skills | Out-Null
-Get-ChildItem .agents\skills -Directory | ForEach-Object {
-  New-Item -ItemType SymbolicLink -Path ".claude\skills\$($_.Name)" -Target $_.FullName
-}
-```
-
-Si los enlaces no funcionan en tu equipo, copia las carpetas de `.agents/skills/` dentro de `.claude/skills/` y recuerda no versionar esa copia. La carpeta `.agents/skills/` es siempre la fuente única: **no edites las skills dentro de `.claude/skills/`**.
-
-## Si usas otra herramienta
-
-Cursor, Codex, Copilot y otros leen `AGENTS.md` directamente. No hace falta configurar nada adicional para las reglas. Para las skills, revisa en la documentación de tu herramienta si lee `.agents/skills/` o si necesita otra ruta.
+- **Skills:** están en `.agents/skills/`. La lista, cuándo usar cada una y cómo instalarlas están en `docs/stack-y-convenciones.md` §4. `suertudometro-conventions` manda sobre las skills de terceros, y por encima de todas están el enunciado y el event storming.
+- **Claude Code:** lee `CLAUDE.md`, que importa este archivo y `docs/estado-del-proyecto.md`.
+  - No dupliques reglas en `CLAUDE.md`.
+  - Las preferencias personales van en `CLAUDE.local.md`, que no se sube al repo.
+  - Para enlazar las skills en `.claude/skills/`, sigue §4.3.
+- **Cursor, Codex, Copilot y otros:** leen este archivo directamente. Sigue la sección "Antes de empezar cada sesión".
