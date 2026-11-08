@@ -15,9 +15,6 @@ export const ESTADO_POR_CODIGO: Readonly<Record<string, HttpStatus>> = {
   'usuario-no-encontrado': HttpStatus.NOT_FOUND,
 };
 
-/** Código de los errores de forma de la petición (campos faltantes o de más). */
-export const CODIGO_VALIDACION = 'validacion';
-
 const TITULO_POR_ESTADO: Readonly<Record<number, string>> = {
   400: 'Solicitud incorrecta',
   401: 'No autenticado',

@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-08 (Efrain: API REST de identity-service).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-08 (Efrain: API REST y autenticación de identity-service).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -67,7 +67,7 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar.** El único código es el de `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`) y el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`).
+**Fase 0: diseño y documentación, por cerrar.** El único código es el de `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`).
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 - las carpetas de los servicios (salvo `identity-service`) y del frontend;
@@ -82,7 +82,7 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 |---|---|---|---|
 | `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Sin empezar |
 | `api-gateway` | Efrain | Sin documento | Sin empezar |
-| `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Dominio en aislado |
+| `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Persistencia y API |
 | `notification-service` | Efrain | Sin documento | Sin empezar |
 | `campaign-service` | Arturo | Sin documento | Sin empezar |
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Sin empezar |

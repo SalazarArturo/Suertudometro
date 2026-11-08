@@ -1,4 +1,6 @@
+import { HttpStatus } from '@nestjs/common';
 import type { ValidationError } from 'class-validator';
+import { ErrorDeApi } from './error-de-api.js';
 import type { ErrorDeCampo } from './problema.js';
 
 /**
@@ -6,10 +8,13 @@ import type { ErrorDeCampo } from './problema.js';
  * correcto o sobra uno. Lo lanza el ValidationPipe global y FiltroProblemas lo
  * responde como `400 validacion`, con la lista de campos.
  */
-export class ErrorDeValidacion extends Error {
+export class ErrorDeValidacion extends ErrorDeApi {
   constructor(readonly errores: ErrorDeCampo[]) {
-    super('Los datos enviados no tienen la forma esperada.');
-    this.name = 'ErrorDeValidacion';
+    super(
+      'validacion',
+      HttpStatus.BAD_REQUEST,
+      'Los datos enviados no tienen la forma esperada.',
+    );
   }
 }
 

@@ -9,11 +9,8 @@ import {
 import type { Request, Response } from 'express';
 import { ErrorDeAplicacion } from '../../application/errores/error-de-aplicacion.js';
 import { ErrorDeDominio } from '../../sharedkernel/error-de-dominio.js';
-import {
-  CODIGO_VALIDACION,
-  ESTADO_POR_CODIGO,
-  tituloDe,
-} from './catalogo-errores.js';
+import { ESTADO_POR_CODIGO, tituloDe } from './catalogo-errores.js';
+import { ErrorDeApi } from './error-de-api.js';
 import { ErrorDeValidacion } from './error-de-validacion.js';
 import {
   BASE_TIPO_ERROR,
@@ -24,7 +21,8 @@ import {
 /**
  * Traduce cualquier error a RFC 9457 en un solo lugar. Los casos de uso lanzan
  * errores de dominio o de aplicación sin saber nada de HTTP; aquí se decide el
- * estado con el catálogo de errores.
+ * estado con el catálogo de errores. Los errores del borde (`ErrorDeApi`)
+ * traen su propio estado.
  */
 @Catch()
 export class FiltroProblemas implements ExceptionFilter {
@@ -52,11 +50,11 @@ export class FiltroProblemas implements ExceptionFilter {
 
 /** Arma el cuerpo RFC 9457 de un error. Es una función pura, para probarla sola. */
 export function aProblema(error: unknown, instancia: string): Problema {
-  if (error instanceof ErrorDeValidacion) {
+  if (error instanceof ErrorDeApi) {
     return {
-      ...propio(CODIGO_VALIDACION, HttpStatus.BAD_REQUEST, instancia),
+      ...propio(error.codigo, error.estado, instancia),
       detail: error.message,
-      errores: error.errores,
+      ...(error instanceof ErrorDeValidacion && { errores: error.errores }),
     };
   }
   if (error instanceof ErrorDeDominio) {

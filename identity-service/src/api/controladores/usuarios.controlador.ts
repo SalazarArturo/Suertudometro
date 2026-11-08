@@ -5,6 +5,7 @@ import { RegistrarUsuarioComando } from '../../application/comandos/registrar-us
 import { RegistrarUsuarioPeticion } from '../dtos/registrar-usuario.peticion.js';
 import { UsuarioRespuesta } from '../dtos/usuario.respuesta.js';
 import { RespuestaProblema } from '../errores/respuesta-problema.decorador.js';
+import { Publico } from '../seguridad/publico.decorador.js';
 
 @ApiTags('usuarios')
 @Controller('usuarios')
@@ -16,6 +17,7 @@ export class UsuariosControlador {
    * inicia sesión justo después con los mismos datos.
    */
   @Post()
+  @Publico()
   @ApiOperation({
     summary: 'Registra una cuenta USUARIO',
     description:

@@ -193,6 +193,12 @@ Ejemplo (`409`):
 
 **Los servicios** no validan el JWT: confían en esos headers, porque ningún servicio se publica al host y solo el gateway llega a ellos. Si falta `X-Usuario-Id` en una ruta que requiere sesión, responden `401`. Si la ruta requiere `ADMINISTRADOR` y `X-Usuario-Rol` no lo es, responden `403`. identity-service lee los mismos headers para `/perfil`.
 
+**Cómo lo hace identity-service** (sirve de referencia para los demás):
+- **`GuardIdentidad` es global:** toda ruta requiere los headers, salvo las marcadas con `@Publico` (el registro, el inicio de sesión y `/salud`). Así, una ruta nueva nace protegida.
+- **Exige los tres headers.** Responde `401 no-autenticado` si falta `X-Usuario-Id`, si `X-Usuario-Rol` no es `USUARIO` ni `ADMINISTRADOR`, o si `X-Usuario-Nombre` falta o no se puede decodificar. El formato del id (UUID) lo valida el dominio al usarlo (`400 id-usuario-invalido`).
+- **Un `Authorization: Bearer` sin los headers no alcanza** (`401`): el token solo lo valida el gateway.
+- **`@UsuarioActual`** entrega al controlador `{ id, rol, nombre }`, con el nombre ya decodificado.
+
 **Rutas públicas de identity-service** (el gateway las deja pasar sin token): `POST /api/identidad/usuarios` y `POST /api/identidad/sesiones`. La tabla completa de rutas públicas del sistema irá en `api-gateway.md`.
 
 ## 6. Eventos
@@ -377,5 +383,6 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-08 | Efrain | Fase 5: cómo aplica identity-service el contrato de headers (guard global, `@Publico`, los tres headers obligatorios). |
 | 2026-11-08 | Efrain | Fase 4: los dos niveles de validación, la tabla de errores completa (con `about:blank` y `500`), el `title` en español y el catálogo de errores; el administrador sembrado tiene el nombre fijo «Administrador»; estructura de carpetas actualizada. |
 | 2026-11-07 | Efrain | Primera versión, con las decisiones de roles, primer administrador, contrato del token (#5), sin moderación de usuarios (#6) y #8. |

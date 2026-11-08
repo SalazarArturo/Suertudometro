@@ -12,6 +12,7 @@ import {
   ReglaDeNegocio,
   ReglaDeNegocioIncumplida,
 } from '../../sharedkernel/regla-de-negocio.js';
+import { NoAutenticado } from './error-de-api.js';
 import { crearErrorDeValidacion } from './error-de-validacion.js';
 import { aProblema, FiltroProblemas } from './filtro-problemas.js';
 
@@ -109,6 +110,21 @@ describe('aProblema', () => {
     expect(
       aProblema(new BadRequestException(['uno', 'dos']), RUTA).detail,
     ).toBe('uno; dos');
+  });
+
+  it('un error del borde (no-autenticado) responde con su propio estado, 401', () => {
+    expect(
+      aProblema(
+        new NoAutenticado('falta el header X-Usuario-Id.'),
+        '/api/identidad/perfil',
+      ),
+    ).toEqual({
+      type: 'https://api.suertudometro.com/errores/no-autenticado',
+      title: 'No autenticado',
+      status: 401,
+      detail: 'Hace falta iniciar sesión: falta el header X-Usuario-Id.',
+      instance: '/api/identidad/perfil',
+    });
   });
 });
 
