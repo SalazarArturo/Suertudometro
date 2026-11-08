@@ -222,7 +222,9 @@ Requisitos mínimos del enunciado que el proyecto debe cumplir:
 
 ## 🚀 Cómo ejecutar el proyecto
 
-> Aún no hay código ni `docker-compose.yml`. Esta sección describe el objetivo.
+> `update-service` ya cuenta con implementación, pruebas y Compose propios. Consulta
+> [su guía de ejecución](update-service/README.md). El Compose global de la plataforma
+> todavía está pendiente; los comandos siguientes describen ese objetivo.
 
 ```bash
 # Clonar el repositorio

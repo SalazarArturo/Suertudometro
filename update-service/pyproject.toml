@@ -1,0 +1,35 @@
+[project]
+name = "update-service"
+version = "0.1.0"
+description = "Servicio de novedades de Suertudometro"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "Django>=5.2,<5.3",
+    "djangorestframework>=3.16,<4",
+    "drf-spectacular>=0.28,<1",
+    "psycopg[binary]>=3.2,<4",
+    "pika>=1.3,<2",
+    "PyJWT[crypto]>=2.10,<3",
+    "gunicorn>=23,<24; sys_platform != 'win32'",
+]
+
+[project.optional-dependencies]
+desarrollo = ["pytest>=8,<10", "pytest-django>=4.11,<5", "ruff>=0.11,<1"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "configuracion.ajustes"
+pythonpath = ["."]
+testpaths = ["pruebas"]
+python_files = ["test_*.py"]
+markers = ["postgres: verifica concurrencia real en PostgreSQL", "rabbitmq: usa un broker real"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+exclude = [".herramientas"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"configuracion/ajustes_pruebas.py" = ["F403", "F405"]

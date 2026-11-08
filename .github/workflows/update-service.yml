@@ -1,0 +1,41 @@
+name: Verificar novedades
+
+on:
+  pull_request:
+    paths:
+      - "update-service/**"
+      - ".github/workflows/update-service.yml"
+  push:
+    branches: [main]
+    paths:
+      - "update-service/**"
+      - ".github/workflows/update-service.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: update-service
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir imagen de pruebas
+        run: docker compose -f compose.pruebas.yaml build pruebas
+      - name: Comprobar estilo y formato
+        run: |
+          docker compose -f compose.pruebas.yaml run --rm --no-deps pruebas ruff check .
+          docker compose -f compose.pruebas.yaml run --rm --no-deps pruebas ruff format --check .
+      - name: Comprobar configuración, migraciones y OpenAPI
+        run: |
+          docker compose -f compose.pruebas.yaml run --rm --no-deps pruebas python manage.py check --settings=configuracion.ajustes_pruebas
+          docker compose -f compose.pruebas.yaml run --rm --no-deps pruebas python manage.py makemigrations --check --dry-run --settings=configuracion.ajustes_pruebas
+          docker compose -f compose.pruebas.yaml run --rm --no-deps pruebas python manage.py spectacular --validate --fail-on-warn --file /tmp/esquema.yaml --settings=configuracion.ajustes_pruebas
+      - name: Probar con PostgreSQL y RabbitMQ
+        run: docker compose -f compose.pruebas.yaml up --abort-on-container-exit --exit-code-from pruebas --attach pruebas
+      - name: Retirar contenedores de pruebas
+        if: always()
+        run: docker compose -f compose.pruebas.yaml down

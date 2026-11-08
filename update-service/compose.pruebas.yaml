@@ -1,0 +1,49 @@
+# Infraestructura efímera y aislada de las bases y colas de desarrollo.
+name: suertudometro-update-pruebas
+
+services:
+  update-db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: update-db
+      POSTGRES_USER: pruebas
+      POSTGRES_PASSWORD: clave-exclusiva-pruebas
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pruebas -d update-db"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:4.3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: pruebas
+      RABBITMQ_DEFAULT_PASS: clave-exclusiva-pruebas
+    tmpfs:
+      - /var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+  pruebas:
+    build:
+      context: .
+      target: pruebas
+    environment:
+      DJANGO_CLAVE_SECRETA: clave-exclusiva-pruebas
+      DJANGO_HOSTS_PERMITIDOS: testserver,localhost
+      POSTGRES_DB: update-db
+      POSTGRES_USER: pruebas
+      POSTGRES_PASSWORD: clave-exclusiva-pruebas
+      POSTGRES_HOST: update-db
+      RABBITMQ_URL: amqp://pruebas:clave-exclusiva-pruebas@rabbitmq:5672/%2F
+      PRUEBAS_RABBITMQ: "1"
+    depends_on:
+      update-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy

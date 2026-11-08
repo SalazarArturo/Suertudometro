@@ -1,0 +1,11 @@
+.venv/
+.herramientas/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.env
+*.sqlite3
+esquema-generado.yaml
