@@ -24,7 +24,7 @@ La lista de eventos, las rutas de RabbitMQ y el sobre del mensaje ya están docu
 | `AporteRegistrado` | `aporte.registrado` | `contribution-service` | `campaign-service`, `search-service`, `notification-service` |
 | `MetaAlcanzada` | `meta.alcanzada` | `campaign-service` | `search-service`, `notification-service` |
 | `CampanaActualizada` | `campana.actualizada` | `update-service` | `notification-service` |
-| `CampanaCerrada` | `campana.cerrada` | `campaign-service` | `contribution-service`, `search-service`, `update-service` |
+| `CampanaCerrada` | `campana.cerrada` | `campaign-service` | `contribution-service`, `search-service`, `update-service`, `notification-service` *(propuesto por Arturo; confirma Efrain)* |
 
 ## Cómo leer las fichas
 
@@ -42,6 +42,8 @@ En la propuesta, **los campos de cada ejemplo son obligatorios salvo indicación
 
 ## CampanaPublicada
 
+> **Ficha de `campaign-service` · Responsable: Arturo · Aprobada por el productor v1 (2026-11-08).**
+
 Cuando la administración aprueba una campaña, esta pasa a `PUBLICADA`. El mensaje identifica al organizador y lleva la información pública necesaria para construir la ficha de búsqueda.
 
 ```json
@@ -55,7 +57,7 @@ Cuando la administración aprueba una campaña, esta pasa a `PUBLICADA`. El mens
     "idOrganizador": "e3b68016-9750-41b3-9e34-762dd8346001",
     "titulo": "Libros para la biblioteca",
     "historia": "Queremos ampliar la colección de la biblioteca del barrio.",
-    "categoria": "Educación",
+    "categoria": "EDUCACION",
     "rutaPortada": "/imagenes/biblioteca.jpg",
     "metaFinanciera": "5000.00",
     "moneda": "BOB",
@@ -64,6 +66,9 @@ Cuando la administración aprueba una campaña, esta pasa a `PUBLICADA`. El mens
 }
 ```
 
+- **`categoria`** usa el código del enum `CategoriaCampana` en español ASCII: `EDUCACION`, `SALUD`, `APOYO_COMUNITARIO`, `EMERGENCIAS`, `PROYECTOS_PERSONALES` u `OTROS`.
+- **`moneda`** es siempre `"BOB"` en la versión 1.
+- **`fechaLimite`** es obligatoria en toda campaña y está en formato ISO 8601 UTC.
 - **Novedades** guarda `idCampana` e `idOrganizador` y habilita la publicación. Al recibir `PublicarActualizacion`, comprueba que la campaña siga habilitada y que el usuario autenticado sea su organizador.
 - **Búsqueda** incorpora la campaña al catálogo, indexa `titulo` e `historia`, permite filtrar por `categoria` y muestra portada, meta, moneda y plazo. El total inicial es cero, ya que los aportes se habilitan al publicarse la campaña. `rutaPortada` representa una ruta pública accesible desde el portal, independiente del volumen de Docker.
 - **Contribuciones** habilita aportes para `idCampana` en la moneda indicada.
@@ -71,21 +76,26 @@ Cuando la administración aprueba una campaña, esta pasa a `PUBLICADA`. El mens
 
 ## CampanaCerrada
 
-Campañas publica el cierre definitivo por meta alcanzada, plazo vencido o cancelación. Según el event storming, los tres casos dejan la campaña en `FINALIZADA`. Se propone que `motivoCierre` admita `META_ALCANZADA`, `PLAZO_VENCIDO` o `CANCELACION`. Son causas del cierre.
+> **Ficha de `campaign-service` · Responsable: Arturo · Aprobada por el productor v1 (2026-11-08).**
+> Alineada con el [ADR 0003](adr/0003-estados-terminales-de-campana.md) y el event storming: incluye explícitamente `estadoFinal` y `motivoCierre`.
+
+Campañas publica el cierre definitivo por meta alcanzada, plazo vencido o cancelación:
+- `motivoCierre` admite `META_ALCANZADA`, `PLAZO_VENCIDO` o `CANCELACION`.
+- `estadoFinal` indica el estado terminal resultante (`FINALIZADA` cuando el motivo es `META_ALCANZADA` o `PLAZO_VENCIDO`, y `CANCELADA` cuando el motivo es `CANCELACION`).
 
 ```json
 {
   "idCampana": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "estadoFinal": "FINALIZADA",
   "motivoCierre": "META_ALCANZADA"
 }
 ```
 
-**Novedades** bloquea nuevas publicaciones y conserva el historial. **Búsqueda** retira la campaña del catálogo público. **Contribuciones** bloquea nuevos aportes. A los tres les basta `idCampana` para aplicar el cierre. El instante de cierre viene en `ocurridoEn`.
-
-> [!WARNING]
-> **Nota de Raul (2026-11-07). Decide Arturo, que publica este evento.**
-> - **Estado final.** Según el [ADR 0003](adr/0003-estados-terminales-de-campana.md) (opción A, en revisión del equipo), la cancelación deja la campaña en `CANCELADA`, no en `FINALIZADA`. El event storming ya está corregido. El `motivoCierre` propuesto sirve igual: `META_ALCANZADA` y `PLAZO_VENCIDO` llevan a `FINALIZADA`, y `CANCELACION` lleva a `CANCELADA`. Falta decidir si también se envía el estado final de forma explícita.
-> - **Catálogo.** Que Búsqueda retire la campaña del catálogo depende del pendiente #14 de `estado-del-proyecto.md`, porque el enunciado pide explorar por estado.
+- **Novedades** bloquea nuevas publicaciones y conserva el historial.
+- **Búsqueda** actualiza el estado de la campaña en el catálogo (`FINALIZADA` o `CANCELADA`, según lo que se acuerde en el pendiente #14 de `estado-del-proyecto.md`).
+- **Contribuciones** cambia el estado en `CampanaAportable` a `estadoFinal` y bloquea nuevos aportes.
+- **Notificaciones** *(propuesto por Arturo; confirma Efrain)* avisa del cierre/cancelación de la campaña usando la asociación (`idCampana`, `idOrganizador`, `titulo`) registrada al publicarse.
+- El instante de cierre viene en `ocurridoEn`.
 
 ## CampanaActualizada
 
@@ -135,7 +145,9 @@ Queda pendiente si en un aporte anónimo se guarda el nombre real y si pueden ve
 
 ## MetaAlcanzada
 
-Campañas comprobó que el total recaudado alcanzó o superó la meta. `montoRecaudado` es el total en ese instante. El aporte que hizo cruzar la meta ya está incluido.
+> **Ficha de `campaign-service` · Responsable: Arturo · Aprobada por el productor v1 (2026-11-08).**
+
+Campañas comprobó que el total recaudado alcanzó o superó la meta. `montoRecaudado` es el total en ese instante. El aporte que hizo cruzar la meta ya está incluido. Al alcanzar la meta, `campaign-service` ejecuta enseguida el cierre definitivo (`FinalizarCampana`) y emite también `CampanaCerrada` con `estadoFinal = "FINALIZADA"` y `motivoCierre = "META_ALCANZADA"`. Si llega en tránsito algún `AporteRegistrado` aceptado antes de que `contribution-service` procese el cierre, `campaign-service` igual lo suma a `montoRecaudado` para mantener la consistencia financiera.
 
 ```json
 {
@@ -146,7 +158,7 @@ Campañas comprobó que el total recaudado alcanzó o superó la meta. `montoRec
 }
 ```
 
-**Búsqueda** marca la meta como alcanzada y sigue calculando el importe acumulado con los aportes individuales, para evitar contar dos veces el último aporte. El evento que retira la ficha pública es `CampanaCerrada`. **Notificaciones** puede usar ambos importes en el aviso de meta alcanzada. Se propone dirigirlo al organizador.
+**Búsqueda** marca la meta como alcanzada y sigue calculando el importe acumulado con los aportes individuales, para evitar contar dos veces el último aporte. **Notificaciones** usa ambos importes en el aviso de meta alcanzada, dirigido al organizador y a los aportantes de la campaña (a confirmar con Efrain).
 
 ## UsuarioRegistrado
 
@@ -162,6 +174,8 @@ Identidad creó la cuenta. `idUsuario` permite a Notificaciones reconocer a esa 
 **Notificaciones** registra la relación entre la cuenta y su correo para los avisos que correspondan.
 
 ## CampanaRechazada
+
+> **Ficha de `campaign-service` · Responsable: Arturo · Aprobada por el productor v1 (2026-11-08).**
 
 La administración rechazó la solicitud de publicación. La campaña vuelve a `BORRADOR` con las observaciones necesarias para que el organizador pueda editarla o eliminarla.
 
@@ -183,7 +197,7 @@ Si RabbitMQ reentrega un `AporteRegistrado`, el total y el número de avisos deb
 
 | Participantes | Acuerdo pendiente |
 |---|---|
-| Campañas, Búsqueda, Novedades y Contribuciones | Confirmar los datos de la publicación, en particular la identidad del organizador, la representación de la categoría y la portada, y si toda campaña tiene fecha límite. Acordar los tres valores de `motivoCierre`. |
+| Campañas, Búsqueda, Novedades y Contribuciones | **Definido por Arturo (productor, 2026-11-08):** `idOrganizador` UUID obligatorio; `categoria` como código de enum ASCII (`EDUCACION`, `SALUD`, `APOYO_COMUNITARIO`, `EMERGENCIAS`, `PROYECTOS_PERSONALES`, `OTROS`); `moneda` `"BOB"`; `fechaLimite` obligatoria en toda campaña; `CampanaCerrada` lleva `estadoFinal` (`FINALIZADA` \| `CANCELADA`) y `motivoCierre` (`META_ALCANZADA` \| `PLAZO_VENCIDO` \| `CANCELACION`). *Pendiente de confirmación de los consumidores (Gabo y Raul).* |
 | Contribuciones y Notificaciones | Decidir cuándo una cuenta que aporta anónimamente puede quedar vinculada en privado para recibir novedades. Los visitantes sin cuenta carecen de bandeja. |
 | Novedades y Notificaciones | Confirmar si el aviso muestra el contenido completo de la novedad o requiere un extracto. La ficha propone contenido completo. |
-| Campañas y Notificaciones | Confirmar los destinatarios del aviso de meta alcanzada. |
+| Campañas y Notificaciones | **Propuesto por Arturo (2026-11-08):** `MetaAlcanzada` notifica al organizador y a los aportantes, y `notification-service` también consume `CampanaCerrada`. *Pendiente de confirmación de Efrain.* |

@@ -8,7 +8,7 @@
 | Servicio | Documento | Responsable | Estado |
 |---|---|---|---|
 | `contribution-service` | [contribution-service.md](contribution-service.md) | Raul | Borrador (en revisión) |
-| `campaign-service` | `campaign-service.md` | Arturo | Sin documento |
+| `campaign-service` | [campaign-service.md](campaign-service.md) | Arturo | Borrador (en revisión) |
 | `identity-service` | `identity-service.md` | Efrain | Sin documento |
 | `notification-service` | `notification-service.md` | Efrain | Sin documento |
 | `api-gateway` | `api-gateway.md` (corto: rutas, seguridad y CORS) | Efrain | Sin documento |
