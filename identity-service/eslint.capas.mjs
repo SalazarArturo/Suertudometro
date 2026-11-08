@@ -8,8 +8,11 @@ const capa = (nombres) => `(^|/)(${nombres})(/|$)`;
 /** Cualquier importación que no sea relativa: paquetes de npm y módulos de Node. */
 const PAQUETE = '^[^.]';
 
+// Las pruebas (*.spec.ts) quedan fuera: no son código de producción y pueden
+// usar utilidades de Node, como node:util para inspeccionar objetos.
 const restringir = (carpeta, patterns) => ({
   files: [`src/${carpeta}/**/*.ts`],
+  ignores: ['**/*.spec.ts'],
   rules: { 'no-restricted-imports': ['error', { patterns }] },
 });
 

@@ -80,6 +80,8 @@ describe('Reglas de dependencia entre capas', () => {
     [INFRAESTRUCTURA, '../../domain/cuenta-usuario/cuenta-usuario.js'],
     [INFRAESTRUCTURA, '../../application/puertos/reloj.js'],
     [NUCLEO, './objeto-de-valor.js'],
+    // Las pruebas no son código de producción: quedan fuera de las reglas.
+    ['src/domain/cuenta-usuario/ejemplo.spec.ts', 'node:util'],
   ])('%s sí puede importar %s', async (archivo, importacion) => {
     expect(await infracciones(archivo, importacion)).toEqual([]);
   });

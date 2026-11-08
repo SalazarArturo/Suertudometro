@@ -53,6 +53,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-07 | Efrain | **Dominio de identity-service en aislado** (fase 2): agregado `CuentaUsuario`, sus objetos de valor y reglas R1 a R7, eventos `UsuarioCreado` y `SesionIniciada`; comandos `RegistrarUsuario`, `IniciarSesion` y `CrearAdministradorInicial`, y la consulta `ObtenerUsuarioPorId`, con dobles en memoria de cada puerto. Sin base de datos ni red. | Rama `feat/identity-dominio` |
 | 2026-11-07 | Efrain | **Esqueleto de identity-service** (fase 1): NestJS 12 en ESM con TypeScript 6, capas con reglas de importación en ESLint (y una prueba que lo comprueba), `sharedkernel`, configuración validada, `GET /salud`, Dockerfile y el primer workflow de CI. Usa Vitest porque NestJS 12 solo se publica en ESM; en el mismo PR se cambia Jest por Vitest en `stack-y-convenciones.md` §3.2 y §5.9, que revisa Raul. | Rama `feat/identity-esqueleto` |
 | 2026-11-07 | Efrain | **identity-service.** Documento de diseño; decisiones de roles, primer administrador, contrato del token y los headers, y pendientes 6 y 8; roles de identity actualizados en el README. | Rama `docs/identity-diseno` |
 | 2026-11-07 | Raul | **Unificación de contratos.** Se integró la propuesta de Gabo como único documento de contratos; ficha `AporteRegistrado` ajustada; nota en `CampanaCerrada` sobre el ADR 0003; enlace al event storming corregido. | Subido directo a `main`, sin PR |

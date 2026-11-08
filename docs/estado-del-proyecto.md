@@ -67,7 +67,7 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar.** El único código es el esqueleto de `identity-service` (rama `feat/identity-esqueleto`, de Efrain).
+**Fase 0: diseño y documentación, por cerrar.** El único código es el de `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`) y el dominio en aislado (rama `feat/identity-dominio`).
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 - las carpetas de los servicios (salvo `identity-service`) y del frontend;
@@ -82,7 +82,7 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 |---|---|---|---|
 | `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Sin empezar |
 | `api-gateway` | Efrain | Sin documento | Sin empezar |
-| `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Sin empezar |
+| `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Dominio en aislado |
 | `notification-service` | Efrain | Sin documento | Sin empezar |
 | `campaign-service` | Arturo | Sin documento | Sin empezar |
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Sin empezar |

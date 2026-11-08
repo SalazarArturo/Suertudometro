@@ -144,6 +144,7 @@ El registro no devuelve un token: el frontend inicia sesión justo después con 
 | Error | Código y `type` |
 |---|---|
 | Datos mal formados: correo inválido, nombre o contraseña fuera de rango, campos de más | `400`, `validacion` (con la extensión `errores: [{ "campo", "mensaje" }]`) |
+| Un dato que pasa la validación del DTO pero incumple una regla del dominio | `400`, con el código de la regla: `correo-invalido` (R1), `nombre-invalido` (R3) o `contrasena-invalida` (R4) |
 | El correo ya tiene una cuenta | `409`, `correo-ya-registrado` |
 | Correo inexistente o contraseña incorrecta | `401`, `credenciales-invalidas` |
 | Sin sesión en `/perfil` (normalmente lo corta antes el gateway) | `401`, `no-autenticado` |
