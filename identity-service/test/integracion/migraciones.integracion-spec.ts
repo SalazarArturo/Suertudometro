@@ -1,5 +1,5 @@
 import { inject } from 'vitest';
-import { ejecutarPrisma } from './prisma-cli.js';
+import { ejecutarPrisma } from '../base-datos/prisma-cli.js';
 
 describe('Migraciones de identity-db', () => {
   it('dejan la base exactamente igual que prisma/schema.prisma (sin diferencias)', () => {

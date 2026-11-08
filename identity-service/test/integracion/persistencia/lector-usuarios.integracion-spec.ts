@@ -7,7 +7,7 @@ import { Rol } from '../../../src/domain/cuenta-usuario/rol.js';
 import { LectorUsuariosPrisma } from '../../../src/infrastructure/persistencia/lector-usuarios.prisma.js';
 import { PrismaServicio } from '../../../src/infrastructure/persistencia/prisma.servicio.js';
 import { RepositorioCuentasUsuarioPrisma } from '../../../src/infrastructure/persistencia/repositorio-cuentas-usuario.prisma.js';
-import { crearPrisma, vaciarTablas } from '../base-datos.js';
+import { crearPrisma, vaciarTablas } from '../../base-datos/base-datos.js';
 
 const REGISTRO = new Date('2026-11-07T14:00:00.000Z');
 

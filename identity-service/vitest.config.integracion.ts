@@ -9,7 +9,7 @@ export default defineConfig({
     root: './',
     setupFiles: ['reflect-metadata'],
     include: ['test/integracion/**/*.integracion-spec.ts'],
-    globalSetup: ['test/integracion/preparar-base.ts'],
+    globalSetup: ['test/base-datos/preparar-base.ts'],
     // Todas las pruebas comparten una base: se ejecutan de a una.
     fileParallelism: false,
     testTimeout: 30_000,

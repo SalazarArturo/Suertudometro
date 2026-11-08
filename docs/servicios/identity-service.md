@@ -1,6 +1,6 @@
 # identity-service
 
-> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-07 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-08 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Identidad** (subdominio genérico) · NestJS 12 · Node.js 24 · TypeScript · base de datos `identity-db` · ruta en el gateway `/api/identidad` · puerto interno 8081.
 
 ## 1. Responsabilidad
@@ -79,7 +79,7 @@ Cada cuenta tiene **un solo rol**:
 |---|---|---|---|
 | `RegistrarUsuarioComando` | Visitante, sin sesión | R1 a R6 | Guarda la `CuentaUsuario`, emite `UsuarioCreado` y publica `UsuarioRegistrado` (mediante outbox, §6) |
 | `IniciarSesionComando` | Visitante con cuenta | R7 | Emite `SesionIniciada` y devuelve el token (§5.1). Es un comando y no una consulta porque cambia la cuenta (`ultimoInicioSesionEn`). |
-| `CrearAdministradorInicialComando` | El propio servicio, al arrancar | R1 a R5 | Si no existe una cuenta con `ADMIN_CORREO`, la crea con rol `ADMINISTRADOR`, emite `UsuarioCreado` y publica `UsuarioRegistrado`. Si ya existe, no hace nada y lo deja en el log (es idempotente). |
+| `CrearAdministradorInicialComando` | El propio servicio, al arrancar | R1 a R5 | Si no existe una cuenta con `ADMIN_CORREO`, la crea con la contraseña `ADMIN_CONTRASENA`, rol `ADMINISTRADOR` y el nombre fijo «Administrador». Emite `UsuarioCreado` y publica `UsuarioRegistrado`. Si ya existe, no hace nada y lo deja en el log (es idempotente). |
 
 Cada comando tiene su `...ComandoManejador` con `@nestjs/cqrs`. `CrearAdministradorInicialComando` no es un comando del event storming, porque no lo decide ningún actor: es la inicialización técnica que hace falta para que exista quien apruebe las campañas.
 
@@ -91,11 +91,11 @@ Convenciones (`docs/stack-y-convenciones.md` §5.6): JSON en `camelCase` y error
 
 | Método y ruta | Quién puede usarlo | Comando o consulta | Respuesta |
 |---|---|---|---|
-| `POST /api/identidad/usuarios` | Cualquiera, sin sesión | `RegistrarUsuarioComando` | `201 Created` con el usuario |
+| `POST /api/identidad/usuarios` | Cualquiera, sin sesión | `RegistrarUsuarioComando` | `201 Created` con el usuario. No lleva `Location`, porque no hay un endpoint para leer una cuenta por id: su dueño la ve en `/perfil`. |
 | `POST /api/identidad/sesiones` | Cualquiera, sin sesión | `IniciarSesionComando` | `200` con el token |
 | `GET /api/identidad/perfil` | Usuario autenticado | `ObtenerUsuarioPorIdConsulta`, con el id de `X-Usuario-Id` | `200` con el usuario |
 | `GET /salud` | Healthcheck de Docker (interno: sin prefijo y no pasa por el gateway) | — | `200` |
-| `GET /api/identidad/docs` | Desarrollo | Documentación OpenAPI (`@nestjs/swagger`) | Swagger UI |
+| `GET /api/identidad/docs` | Desarrollo | Documentación OpenAPI (`@nestjs/swagger`) | Swagger UI. El documento en JSON está en `/api/identidad/docs-json`. |
 
 Cuerpo de `POST /api/identidad/usuarios`:
 
@@ -141,14 +141,35 @@ Cuerpo de `POST /api/identidad/sesiones` y su respuesta (`200`):
 
 El registro no devuelve un token: el frontend inicia sesión justo después con los mismos datos.
 
-| Error | Código y `type` |
+La validación tiene dos niveles, y cada regla vive en un solo lugar:
+- **El DTO** (`ValidationPipe` global) solo revisa la forma: que estén los campos, que sean texto y que no sobre ninguno. Por ejemplo, un `rol` en el registro es un campo de más (R6).
+- **El dominio** revisa el formato del correo y los largos (R1, R3 y R4). Esos límites no se repiten en el DTO.
+
+| Error | Estado y código (`type`) |
 |---|---|
-| Datos mal formados: correo inválido, nombre o contraseña fuera de rango, campos de más | `400`, `validacion` (con la extensión `errores: [{ "campo", "mensaje" }]`) |
-| Un dato que pasa la validación del DTO pero incumple una regla del dominio | `400`, con el código de la regla: `correo-invalido` (R1), `nombre-invalido` (R3) o `contrasena-invalida` (R4) |
+| Falta un campo, no es texto o sobra uno | `400`, `validacion`, con la extensión `errores: [{ "campo", "mensaje" }]` |
+| Un dato incumple una regla del dominio | `400`, con el código de la regla: `correo-invalido` (R1), `nombre-invalido` (R3) o `contrasena-invalida` (R4) |
 | El correo ya tiene una cuenta | `409`, `correo-ya-registrado` |
 | Correo inexistente o contraseña incorrecta | `401`, `credenciales-invalidas` |
 | Sin sesión en `/perfil` (normalmente lo corta antes el gateway) | `401`, `no-autenticado` |
 | La cuenta del token ya no existe (por ejemplo, tras reiniciar la base) | `404`, `usuario-no-encontrado` |
+| Error HTTP sin significado propio: ruta inexistente, JSON mal formado | Su estado, con `type: "about:blank"` (RFC 9457 §4.2.1) |
+| Error inesperado | `500`, `about:blank`. El `detail` es genérico, para no mostrar nada interno; el error completo queda en el log. |
+
+Ejemplo (`409`):
+
+```json
+{
+  "type": "https://api.suertudometro.com/errores/correo-ya-registrado",
+  "title": "Conflicto",
+  "status": 409,
+  "detail": "Ya existe una cuenta con ese correo.",
+  "instance": "/api/identidad/usuarios"
+}
+```
+
+- **`title`:** resume el estado HTTP en español, igual que el ejemplo del stack §5.6.
+- **Estado de cada código:** lo decide el catálogo de `api/errores/catalogo-errores.ts`. Un error de dominio que no está en el catálogo responde `400`. Un error de aplicación que no está responde `500`, y el log avisa que falta agregarlo.
 
 ### 5.1 Contrato del token y de los headers
 
@@ -220,8 +241,9 @@ identity-service/
 │   ├── schema.prisma               # modelos del ORM, separados del dominio
 │   └── migrations/
 ├── src/
-│   ├── main.ts                     # prefijo global, ValidationPipe, filtro RFC 9457, Swagger
-│   ├── app.module.ts               # raíz de composición: une cada puerto con su adaptador
+│   ├── main.ts                     # arranca el servidor
+│   ├── configurar-aplicacion.ts    # prefijo global, ValidationPipe, filtro RFC 9457 y Swagger (también lo usan las e2e)
+│   ├── identidad.modulo.ts         # raíz de composición: une cada puerto con su adaptador
 │   ├── sharedkernel/               # RaizDeAgregado, EventoDeDominio, ObjetoDeValor, ReglaDeNegocio, ErrorDeDominio
 │   ├── domain/cuenta-usuario/      # CuentaUsuario, objetos de valor, PoliticaContrasena, eventos, reglas,
 │   │                               # errores e interfaz RepositorioCuentasUsuario. Sin NestJS ni Prisma.
@@ -241,10 +263,13 @@ identity-service/
 │       ├── controladores/          # usuarios, sesiones, perfil, salud
 │       ├── dtos/                   # peticiones y respuestas, con class-validator y @ApiProperty
 │       ├── seguridad/              # GuardIdentidad (lee X-Usuario-*), @Publico, @UsuarioActual
-│       └── errores/                # FiltroProblemas (RFC 9457) y catálogo de errores
+│       └── errores/                # FiltroProblemas (RFC 9457), catálogo de errores y errores de validación
 └── test/
-    ├── integracion/                # Testcontainers: PostgreSQL y RabbitMQ
-    └── e2e/                        # Supertest
+    ├── base-datos/                 # PostgreSQL 18 con Testcontainers y migraciones, para integración y e2e
+    ├── integracion/                # repositorios y mensajería (Testcontainers: PostgreSQL y RabbitMQ)
+    ├── e2e/                        # la aplicación completa con Supertest, contra la base de Testcontainers
+    ├── arquitectura/               # comprueba que las reglas de capas de ESLint funcionan
+    └── dobles/                     # dobles en memoria de cada puerto, para las pruebas unitarias
 ```
 
 **Reglas de importación entre capas:**
@@ -260,7 +285,7 @@ identity-service/
 **Pruebas:**
 - dominio y aplicación con Vitest (el runner oficial de NestJS 12; Jest no funciona bien con ESM), sin base de datos ni red, usando dobles en memoria de los puertos (las pruebas unitarias van junto al código, en `*.spec.ts`);
 - persistencia y mensajería con Testcontainers (PostgreSQL 18 y RabbitMQ);
-- API de punta a punta con Supertest.
+- API de punta a punta con Supertest, también contra PostgreSQL con Testcontainers.
 
 **Librerías propuestas:** `@nestjs/cqrs`, `@nestjs/config`, `@nestjs/swagger`, `@nestjs/jwt`, `class-validator`, `class-transformer`, `prisma`, `@prisma/client`, `@prisma/adapter-pg` y `pg`, `amqplib` y `argon2`. Para pruebas: `@nestjs/testing`, `supertest`, `@testcontainers/postgresql` y `@testcontainers/rabbitmq`. Las versiones exactas están en `package.json`.
 
@@ -352,4 +377,5 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-08 | Efrain | Fase 4: los dos niveles de validación, la tabla de errores completa (con `about:blank` y `500`), el `title` en español y el catálogo de errores; el administrador sembrado tiene el nombre fijo «Administrador»; estructura de carpetas actualizada. |
 | 2026-11-07 | Efrain | Primera versión, con las decisiones de roles, primer administrador, contrato del token (#5), sin moderación de usuarios (#6) y #8. |

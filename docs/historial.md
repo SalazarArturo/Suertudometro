@@ -8,6 +8,7 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-08 · Efrain** · El administrador sembrado se llama «Administrador», un valor fijo en el código: no hay variable `ADMIN_NOMBRE`. El rol `ADMINISTRADOR` ya lo pone la siembra, y en `.env` solo van `ADMIN_CORREO` y `ADMIN_CONTRASENA`. → [`servicios/identity-service.md`](servicios/identity-service.md) §4
 - **2026-11-07 · Efrain** · Decisiones de `identity-service` y del contrato de identidad (→ [`servicios/identity-service.md`](servicios/identity-service.md)). Las revisan por PR Arturo, Raul y Gabo, porque los roles y los headers afectan a sus servicios.
   - **Roles:** cada cuenta tiene un solo rol, `USUARIO` o `ADMINISTRADOR`. Reemplaza a VISITANTE, ORGANIZADOR y ADMINISTRADOR del README:
     - "visitante" es quien no tiene sesión;
@@ -53,6 +54,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-08 | Efrain | **API REST de identity-service** (fase 4): `POST /api/identidad/usuarios`, con validación global de la forma de la petición, errores RFC 9457 en un solo filtro (catálogo de códigos a estados HTTP) y Swagger en `/api/identidad/docs`. Las pruebas e2e corren contra PostgreSQL 18 con Testcontainers. Probado también con la imagen de Docker. | Rama `feat/identity-api` |
 | 2026-11-07 | Efrain | **Persistencia de identity-service** (fase 3): esquema y migración inicial de `identity-db` con Prisma 7.10 (no la 8, que todavía es *release candidate*); repositorio con outbox en la misma transacción, lector, mapper y cifrador argon2id. Pruebas de integración con Testcontainers (PostgreSQL 18), incluida una que verifica que las migraciones coinciden con el esquema. La imagen de Docker aplica las migraciones al arrancar. El índice del outbox es compuesto y no parcial, porque los parciales son *preview* en Prisma 7. | Rama `feat/identity-persistencia` |
 | 2026-11-07 | Efrain | **Dominio de identity-service en aislado** (fase 2): agregado `CuentaUsuario`, sus objetos de valor y reglas R1 a R7, eventos `UsuarioCreado` y `SesionIniciada`; comandos `RegistrarUsuario`, `IniciarSesion` y `CrearAdministradorInicial`, y la consulta `ObtenerUsuarioPorId`, con dobles en memoria de cada puerto. Sin base de datos ni red. | Rama `feat/identity-dominio` |
 | 2026-11-07 | Efrain | **Esqueleto de identity-service** (fase 1): NestJS 12 en ESM con TypeScript 6, capas con reglas de importación en ESLint (y una prueba que lo comprueba), `sharedkernel`, configuración validada, `GET /salud`, Dockerfile y el primer workflow de CI. Usa Vitest porque NestJS 12 solo se publica en ESM; en el mismo PR se cambia Jest por Vitest en `stack-y-convenciones.md` §3.2 y §5.9, que revisa Raul. | Rama `feat/identity-esqueleto` |

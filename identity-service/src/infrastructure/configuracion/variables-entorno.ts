@@ -1,5 +1,12 @@
 import { plainToInstance } from 'class-transformer';
-import { IsEnum, IsInt, Max, Min, validateSync } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  Matches,
+  Max,
+  Min,
+  validateSync,
+} from 'class-validator';
 
 export enum Entorno {
   Desarrollo = 'development',
@@ -10,7 +17,7 @@ export enum Entorno {
 /**
  * Variables de entorno del servicio. Se validan al arrancar: si falta una
  * o tiene un valor inválido, el servicio no levanta.
- * Las fases siguientes agregan las de la base de datos, el JWT y RabbitMQ.
+ * Las fases siguientes agregan las del JWT, el administrador y RabbitMQ.
  */
 export class VariablesEntorno {
   @IsEnum(Entorno)
@@ -21,6 +28,12 @@ export class VariablesEntorno {
   @Min(1)
   @Max(65535)
   PUERTO: number = 8081;
+
+  /** Conexión a identity-db. No tiene valor por defecto: es obligatoria. */
+  @Matches(/^postgres(ql)?:\/\/\S+$/, {
+    message: 'DATABASE_URL debe ser una URL de PostgreSQL (postgresql://...)',
+  })
+  DATABASE_URL: string;
 }
 
 export function validarVariablesEntorno(

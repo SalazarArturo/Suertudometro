@@ -7,7 +7,7 @@ import { Rol } from '../../../src/domain/cuenta-usuario/rol.js';
 import { PrismaServicio } from '../../../src/infrastructure/persistencia/prisma.servicio.js';
 import { RepositorioCuentasUsuarioPrisma } from '../../../src/infrastructure/persistencia/repositorio-cuentas-usuario.prisma.js';
 import { ReglaDeNegocioIncumplida } from '../../../src/sharedkernel/regla-de-negocio.js';
-import { crearPrisma, vaciarTablas } from '../base-datos.js';
+import { crearPrisma, vaciarTablas } from '../../base-datos/base-datos.js';
 
 const HASH = '$argon2id$v=19$m=65536,t=3,p=4$c2FsdA$aGFzaA';
 const REGISTRO = new Date('2026-11-07T14:00:00.123Z');

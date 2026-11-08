@@ -1,9 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 
 /**
  * Healthcheck interno para Docker Compose. No lleva el prefijo /api/identidad
- * y el gateway no lo enruta.
+ * y el gateway no lo enruta, así que tampoco aparece en la documentación.
  */
+@ApiExcludeController()
 @Controller('salud')
 export class SaludControlador {
   @Get()

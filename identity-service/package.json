@@ -33,6 +33,7 @@
     "@nestjs/core": "^12.4.0",
     "@nestjs/cqrs": "^12.1.2",
     "@nestjs/platform-express": "^12.4.0",
+    "@nestjs/swagger": "^12.1.0",
     "@prisma/adapter-pg": "~7.10.1",
     "@prisma/client": "~7.10.1",
     "argon2": "^0.45.2",
@@ -70,6 +71,7 @@
     "prisma": true,
     "argon2": true,
     "ssh2": false,
-    "protobufjs": false
+    "protobufjs": false,
+    "@scarf/scarf": false
   }
 }

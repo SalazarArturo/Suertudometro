@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-07 (Efrain: diseño de identity-service y pendientes 5, 6 y 8).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-08 (Efrain: API REST de identity-service).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -67,7 +67,7 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar.** El único código es el de `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`) y la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`).
+**Fase 0: diseño y documentación, por cerrar.** El único código es el de `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`) y el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`).
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 - las carpetas de los servicios (salvo `identity-service`) y del frontend;
