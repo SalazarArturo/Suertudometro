@@ -53,7 +53,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
-| 2026-11-07 | Efrain | **Esqueleto de identity-service** (fase 1): NestJS 12 en ESM con TypeScript 6, capas con reglas de importación en ESLint (y una prueba que lo comprueba), `sharedkernel`, configuración validada, `GET /salud`, Dockerfile y el primer workflow de CI. Usa Vitest porque NestJS 12 solo se publica en ESM; el stack dice Jest y hay que actualizarlo (lo decide Raul). | Rama `feat/identity-esqueleto` |
+| 2026-11-07 | Efrain | **Esqueleto de identity-service** (fase 1): NestJS 12 en ESM con TypeScript 6, capas con reglas de importación en ESLint (y una prueba que lo comprueba), `sharedkernel`, configuración validada, `GET /salud`, Dockerfile y el primer workflow de CI. Usa Vitest porque NestJS 12 solo se publica en ESM; en el mismo PR se cambia Jest por Vitest en `stack-y-convenciones.md` §3.2 y §5.9, que revisa Raul. | Rama `feat/identity-esqueleto` |
 | 2026-11-07 | Efrain | **identity-service.** Documento de diseño; decisiones de roles, primer administrador, contrato del token y los headers, y pendientes 6 y 8; roles de identity actualizados en el README. | Rama `docs/identity-diseno` |
 | 2026-11-07 | Raul | **Unificación de contratos.** Se integró la propuesta de Gabo como único documento de contratos; ficha `AporteRegistrado` ajustada; nota en `CampanaCerrada` sobre el ADR 0003; enlace al event storming corregido. | Subido directo a `main`, sin PR |
 | 2026-11-07 | Gabo | **Contratos de eventos:** propuesta v1 de los 7 eventos, con el uso de cada consumidor, reentregas y orden de llegada, y las decisiones para aprobarla. | `1266ac3` |
@@ -78,7 +78,7 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 | `docs/adr/` | Raul (2026-11-07) |
 | `docs/enunciado/` | Raul (2026-11-07): transcripción del PDF del docente. Efrain (2026-11-07): fila "Moderación de usuarios" de la sección 4, pendiente de revisión de Raul |
 | `docs/estado-del-proyecto.md` y `docs/historial.md` | Creados por Raul (2026-11-07) |
-| `docs/stack-y-convenciones.md` | Raul (2026-11-04); Efrain (2026-11-06, paso al español); Raul (2026-11-07). El `.html` que lo acompañaba se borró el 2026-11-07. |
+| `docs/stack-y-convenciones.md` | Raul (2026-11-04); Efrain (2026-11-06, paso al español); Raul (2026-11-07); Efrain (2026-11-08, Vitest en NestJS, pendiente de revisión de Raul). El `.html` que lo acompañaba se borró el 2026-11-07. |
 | `docs/diagramas/arquitectura.excalidraw` y `despliegue.excalidraw` | Raul (2026-11-04, como `docs/diagrama-*.excalidraw`); Raul (2026-11-07, paso al español y movidos) |
 | `docs/diagramas/event-storming.excalidraw` | Primera versión subida por Raul (2026-11-04, como `docs/event-storming-suertudometro.excalidraw`); Arturo (2026-11-04, renombrado a `-updated`); Gabo (2026-11-06: agregados, read models y sistemas externos); Raul (2026-11-07: opción A y movido) |
 | `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, roles de identity) |
