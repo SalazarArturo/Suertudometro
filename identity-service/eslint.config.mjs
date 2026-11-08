@@ -8,7 +8,14 @@ import { reglasDeCapas } from './eslint.capas.mjs';
 
 export default defineConfig(
   {
-    ignores: ['dist/**', 'coverage/**', '*.mjs', '*.d.mts'],
+    ignores: [
+      'dist/**',
+      'coverage/**',
+      '*.mjs',
+      '*.d.mts',
+      // Cliente de Prisma generado
+      'src/infrastructure/persistencia/prisma/generado/**',
+    ],
   },
   eslint.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
@@ -27,7 +34,7 @@ export default defineConfig(
   },
   {
     // En las pruebas es normal pasar métodos de un doble a expect().
-    files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
+    files: ['**/*.spec.ts', '**/*.e2e-spec.ts', '**/*.integracion-spec.ts'],
     rules: {
       '@typescript-eslint/unbound-method': 'off',
     },

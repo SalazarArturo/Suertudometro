@@ -1,0 +1,52 @@
+// Esquema de identity-db (docs/servicios/identity-service.md §7).
+// Estos modelos son del ORM, no del dominio: el mapper de infrastructure los
+// convierte en CuentaUsuario. Tablas y columnas en snake_case ASCII.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/infrastructure/persistencia/prisma/generado"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RolUsuario {
+  USUARIO
+  ADMINISTRADOR
+
+  @@map("rol_usuario")
+}
+
+/// Una fila por cuenta. `creado_en` es el `registradoEn` del dominio.
+model CuentaUsuarioFila {
+  id                   String     @id @db.Uuid
+  correo               String     @unique @db.VarChar(254)
+  nombre               String     @db.VarChar(100)
+  hashContrasena       String     @map("hash_contrasena")
+  rol                  RolUsuario
+  ultimoInicioSesionEn DateTime?  @map("ultimo_inicio_sesion_en") @db.Timestamptz(3)
+  creadoEn             DateTime   @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn        DateTime   @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  @@map("cuentas_usuario")
+}
+
+/// Outbox: los eventos de integración que esperan salir a RabbitMQ.
+/// `contenido` es el envelope completo (idEvento, tipoEvento, version, ocurridoEn, datos).
+model EventoSalidaFila {
+  idEvento    String    @id @map("id_evento") @db.Uuid
+  tipoEvento  String    @map("tipo_evento") @db.VarChar(100)
+  version     Int
+  contenido   Json      @db.JsonB
+  ocurridoEn  DateTime  @map("ocurrido_en") @db.Timestamptz(3)
+  publicadoEn DateTime? @map("publicado_en") @db.Timestamptz(3)
+  intentos    Int       @default(0)
+  ultimoError String?   @map("ultimo_error")
+
+  // El publicador busca los pendientes (publicado_en nulo) en orden de llegada.
+  @@index([publicadoEn, ocurridoEn], map: "ix_eventos_salida_pendientes")
+  @@map("eventos_salida")
+}

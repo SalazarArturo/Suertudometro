@@ -40,6 +40,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run test:e2e
+      # Testcontainers levanta PostgreSQL 18 con el Docker del runner.
+      - run: npm run test:integracion
       - run: npm run build
 
   imagen:

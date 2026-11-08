@@ -194,12 +194,16 @@ Se usa `amqplib` directamente, no `@nestjs/microservices`, porque ese paquete en
 
 ## 7. Base de datos (`identity-db`)
 
-Migraciones con Prisma Migrate. Los modelos de Prisma se mapean a tablas y columnas en `snake_case` con `@map` y `@@map`.
+Prisma 7.10 con Prisma Migrate, en `prisma/schema.prisma` y `prisma.config.ts`:
+- **Modelos del ORM.** Se llaman `CuentaUsuarioFila` y `EventoSalidaFila` para no confundirlos con el agregado, y se mapean a tablas y columnas en `snake_case` con `@map` y `@@map`.
+- **Conexión.** Prisma 7 se conecta con el driver `pg`, mediante `@prisma/adapter-pg`. La URL llega en la variable `DATABASE_URL`.
+- **Cliente generado.** Se genera en `src/infrastructure/persistencia/prisma/generado/`, que no se versiona: `npm install` lo genera solo, con el script `postinstall`.
+- **Migraciones.** En el contenedor se aplican al arrancar (`prisma migrate deploy`). Para desarrollar, `.env.example` explica cómo levantar una base local y migrarla con `npm run prisma:migrar`.
 
 | Tabla | Columnas principales | Para qué |
 |---|---|---|
 | `cuentas_usuario` | `id` (UUID, PK), `correo` `VARCHAR(254)` `UNIQUE`, `nombre` `VARCHAR(100)`, `hash_contrasena` `TEXT`, `rol` (enum `rol_usuario`), `ultimo_inicio_sesion_en` `TIMESTAMPTZ` (nulo hasta el primer inicio de sesión), `creado_en` y `actualizado_en` `TIMESTAMPTZ` | Las cuentas. El índice único de `correo` sirve también para buscar la cuenta al iniciar sesión. |
-| `eventos_salida` | `id_evento` (UUID, PK), `tipo_evento`, `version`, `contenido` `JSONB` (el envelope completo), `ocurrido_en` `TIMESTAMPTZ`, `publicado_en` `TIMESTAMPTZ` (nulo mientras está pendiente), `intentos` `INT`, `ultimo_error` `TEXT` | El outbox. Lleva un índice parcial sobre `ocurrido_en` con `WHERE publicado_en IS NULL`, para que el publicador encuentre rápido los pendientes. Prisma no modela índices parciales, así que va en SQL propio dentro de la migración. |
+| `eventos_salida` | `id_evento` (UUID, PK), `tipo_evento`, `version`, `contenido` `JSONB` (el envelope completo), `ocurrido_en` `TIMESTAMPTZ`, `publicado_en` `TIMESTAMPTZ` (nulo mientras está pendiente), `intentos` `INT`, `ultimo_error` `TEXT` | El outbox. Lleva el índice `ix_eventos_salida_pendientes` sobre (`publicado_en`, `ocurrido_en`), para que el publicador encuentre rápido los pendientes en orden de llegada. Se descartó un índice parcial (`WHERE publicado_en IS NULL`): en Prisma 7 es una función *preview*, y hecho a mano en la migración, Prisma lo vería como una diferencia con el esquema. Para una tabla pequeña, el compuesto rinde igual. |
 
 No hay tabla `eventos_procesados`, porque el servicio no consume eventos.
 
@@ -211,6 +215,7 @@ Un solo proyecto NestJS con las cinco capas en `src/<capa>/` (`docs/stack-y-conv
 identity-service/
 ├── package.json · tsconfig.json · nest-cli.json · eslint.config.mjs
 ├── Dockerfile                      # multi-stage con node:24; aplica `prisma migrate deploy` y arranca
+├── prisma.config.ts                # configuración de Prisma 7: esquema, migraciones y DATABASE_URL
 ├── prisma/
 │   ├── schema.prisma               # modelos del ORM, separados del dominio
 │   └── migrations/
@@ -225,7 +230,9 @@ identity-service/
 │   │   ├── consultas/              # obtener-usuario-por-id/
 │   │   └── puertos/                # CifradorContrasenas, EmisorTokens, LectorUsuarios, Reloj
 │   ├── infrastructure/
-│   │   ├── persistencia/           # PrismaService, repositorio, mapper dominio ↔ Prisma, LectorUsuarios
+│   │   ├── persistencia/           # PrismaServicio, repositorio, mapper dominio ↔ Prisma, LectorUsuarios
+│   │   │                           # y prisma/generado/ (el cliente generado, sin versionar)
+│   │   ├── reloj/                  # RelojSistema
 │   │   ├── mensajeria/             # conexión a RabbitMQ, PublicadorEventosSalida, MapeadorEventosIntegracion
 │   │   ├── seguridad/              # CifradorArgon2, EmisorTokensJwt
 │   │   ├── arranque/               # SembradorAdministrador (ejecuta CrearAdministradorInicialComando)
@@ -255,7 +262,9 @@ identity-service/
 - persistencia y mensajería con Testcontainers (PostgreSQL 18 y RabbitMQ);
 - API de punta a punta con Supertest.
 
-**Librerías propuestas:** `@nestjs/cqrs`, `@nestjs/config`, `@nestjs/swagger`, `@nestjs/jwt`, `class-validator`, `class-transformer`, `prisma` y `@prisma/client`, `amqplib` y `argon2`. Para pruebas: `@nestjs/testing`, `supertest`, `@testcontainers/postgresql` y `@testcontainers/rabbitmq`. Las versiones exactas se fijan al crear el esqueleto.
+**Librerías propuestas:** `@nestjs/cqrs`, `@nestjs/config`, `@nestjs/swagger`, `@nestjs/jwt`, `class-validator`, `class-transformer`, `prisma`, `@prisma/client`, `@prisma/adapter-pg` y `pg`, `amqplib` y `argon2`. Para pruebas: `@nestjs/testing`, `supertest`, `@testcontainers/postgresql` y `@testcontainers/rabbitmq`. Las versiones exactas están en `package.json`.
+
+**Scripts de instalación.** npm 11 no ejecuta los scripts de instalación de las dependencias si no están aprobados. `package.json` → `allowScripts` aprueba solo `@prisma/engines` (descarga el motor de migraciones), `prisma` y `argon2`, y rechaza `ssh2` y `protobufjs`, dos dependencias de Testcontainers que no los necesitan. Al agregar una dependencia con scripts, se revisa con `npm install-scripts ls`.
 
 ## 9. Patrones de diseño y justificación
 
@@ -322,7 +331,7 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
   - objetos de valor, `PoliticaContrasena`, `CuentaUsuario`, eventos, los tres comandos, la consulta y los puertos con sus dobles en memoria.
   - *Pruebas unitarias:* R1 a R7, los eventos emitidos (y que `reconstituir` no emita ninguno), y los manejadores: correo duplicado; correo inexistente y contraseña incorrecta dan el mismo error; siembra idempotente.
 - [ ] **Fase 3 · Persistencia** (`feat/identity-persistencia`):
-  - `schema.prisma`, la migración inicial (con el índice parcial), el repositorio con outbox en la misma transacción, el mapper, `LectorUsuarios` y `CifradorArgon2`.
+  - `schema.prisma`, la migración inicial, el repositorio con outbox en la misma transacción, el mapper, `LectorUsuarios` y `CifradorArgon2`.
   - *Pruebas con Testcontainers:* guardar y cargar, correo duplicado concurrente, fila de outbox con el envelope correcto y rollback conjunto.
 - [ ] **Fase 4 · API REST** (`feat/identity-api`):
   - prefijo global, `ValidationPipe`, `FiltroProblemas`, Swagger y `POST /usuarios`.

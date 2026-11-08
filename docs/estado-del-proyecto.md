@@ -67,7 +67,7 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar.** El único código es el de `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`) y el dominio en aislado (rama `feat/identity-dominio`).
+**Fase 0: diseño y documentación, por cerrar.** El único código es el de `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`) y la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`).
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 - las carpetas de los servicios (salvo `identity-service`) y del frontend;
@@ -121,6 +121,7 @@ Valores posibles:
     - Topología de RabbitMQ: nombres de colas y DLQ, reintentos y quién declara qué.
     - Modo de desarrollo local: cómo correr un servicio desde el IDE contra la base y RabbitMQ del compose.
     - Variables de `.env.example`.
+    - *Avance:* `identity-service/.env.example` explica cómo correr el servicio desde el IDE contra una base local en Docker (Efrain).
   - [ ] **Frontend** (`docs/frontend.md`). Responsable: Efrain, con todos.
     - Zonas, rutas y estructura de carpetas de Angular.
     - Inventario de pantallas, con su responsable y los endpoints que usa cada una.
