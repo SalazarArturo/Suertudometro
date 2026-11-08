@@ -93,6 +93,6 @@ Esta sección **no** es parte del enunciado. Relaciona cada requisito con la dec
 | Aportes simulados | No hay pasarela de pago: el aporte es una transacción interna de contribution-service. | `docs/servicios/contribution-service.md` |
 | Tres frentes (portal, organizador, admin) | Una sola aplicación Angular con tres zonas. | `docs/diagramas/arquitectura.excalidraw` |
 | Compartir la campaña | Requerido. Falta decidir si es solo del frontend o si también se registra en el backend. | `docs/estado-del-proyecto.md` → Pendientes |
-| Moderación de usuarios | Requerida (identity-service). Faltan definir sus comandos. | `docs/estado-del-proyecto.md` → Pendientes |
+| Moderación de usuarios | No se implementa (decisión de Efrain, 2026-11-07): el administrador solo aprueba, rechaza y cancela campañas, como en el event storming. **Riesgo:** el enunciado la pide. | `docs/historial.md` → Decisiones tomadas |
 | Mejoras opcionales (destacadas, favoritos, comentarios, etiquetas, reportes, verificación) | Fuera del alcance mientras el equipo no decida lo contrario. | `docs/estado-del-proyecto.md` |
 | Despliegue (no lo pide el enunciado; decisión del equipo) | Todo el sistema se levanta con `docker compose up --build`. | `docs/diagramas/despliegue.excalidraw` |

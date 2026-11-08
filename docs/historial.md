@@ -8,6 +8,20 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-07 · Efrain** · Decisiones de `identity-service` y del contrato de identidad (→ [`servicios/identity-service.md`](servicios/identity-service.md)). Las revisan por PR Arturo, Raul y Gabo, porque los roles y los headers afectan a sus servicios.
+  - **Roles:** cada cuenta tiene un solo rol, `USUARIO` o `ADMINISTRADOR`. Reemplaza a VISITANTE, ORGANIZADOR y ADMINISTRADOR del README:
+    - "visitante" es quien no tiene sesión;
+    - "organizador" y "aportante" son papeles que cada servicio comprueba por id (por ejemplo, `idOrganizador`).
+  - **Qué hace el administrador:** solo aprueba, rechaza y cancela campañas, en campaign-service. No tiene endpoints propios en identity-service.
+  - **Primer administrador:** se siembra al arrancar desde `ADMIN_CORREO` y `ADMIN_CONTRASENA` (`.env`). Pasa por el dominio, es idempotente y publica `UsuarioRegistrado`.
+  - **Identidad del gateway a los servicios** (resuelve el pendiente 5):
+    - JWT HS256 con un secreto que comparten identity y el gateway;
+    - claims `sub`, `correo`, `nombre`, `rol`, `iat` y `exp`;
+    - el gateway valida el token, borra los `X-Usuario-*` del cliente y reenvía `X-Usuario-Id`, `X-Usuario-Rol` y `X-Usuario-Nombre` (codificado para URL);
+    - los servicios no validan el JWT.
+  - **Duración del token:** 1 hora, sin refresh token.
+  - **Moderación de usuarios** (resuelve el pendiente 6): **no se implementa**, para no apartarse del event storming, que no tiene comandos de moderación de usuarios. *Riesgo anotado:* el enunciado, que es la fuente de mayor prioridad, pide "Moderación de campañas, usuarios y estados desde administración", y la parte de usuarios queda sin cubrir.
+  - **notification-service no consume `campana.cerrada`** (resuelve el pendiente 8, que compartía con Arturo). El catálogo de eventos no cambia. *Riesgo anotado:* el enunciado pide avisos ante cambios de estado, y así no se avisan la cancelación ni el plazo vencido (sí la publicación, el rechazo y la meta alcanzada).
 - **2026-11-07 · Raul**, sobre la propuesta de Gabo · Un solo documento de contratos: `docs/contratos-de-eventos.md` (el de Gabo, commit `1266ac3`). La ficha `AporteRegistrado` combina la propuesta de Gabo con el diseño de contribution-service:
   - `idAportante` obligatorio;
   - se agregan `esAnonimo`, `nombreAportante` y `mensajeApoyo`;
@@ -39,6 +53,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-07 | Efrain | **identity-service.** Documento de diseño; decisiones de roles, primer administrador, contrato del token y los headers, y pendientes 6 y 8; roles de identity actualizados en el README. | Rama `docs/identity-diseno` |
 | 2026-11-07 | Raul | **Unificación de contratos.** Se integró la propuesta de Gabo como único documento de contratos; ficha `AporteRegistrado` ajustada; nota en `CampanaCerrada` sobre el ADR 0003; enlace al event storming corregido. | Subido directo a `main`, sin PR |
 | 2026-11-07 | Gabo | **Contratos de eventos:** propuesta v1 de los 7 eventos, con el uso de cada consumidor, reentregas y orden de llegada, y las decisiones para aprobarla. | `1266ac3` |
 | 2026-11-07 | Raul | **Reorganización de la documentación.** Carpetas `docs/enunciado/` y `docs/diagramas/` (event storming renombrado); este historial separado del estado; `AGENTS.md` y `README.md` más cortos; se borró el `.html`; la skill pasó a checklist. | Subido directo a `main`, sin PR |
@@ -57,16 +72,16 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 
 | Ruta | Quién lo hizo |
 |---|---|
-| `docs/servicios/` | Índice, plantilla y `contribution-service.md`: Raul (2026-11-07) |
+| `docs/servicios/` | Índice, plantilla y `contribution-service.md`: Raul (2026-11-07). `identity-service.md`: Efrain (2026-11-07) |
 | `docs/contratos-de-eventos.md` | Gabo (2026-11-07, propuesta v1 de los 7 eventos); Raul (2026-11-07: ficha `AporteRegistrado`, nota en `CampanaCerrada`, encabezado de responsables y enlace al event storming) |
 | `docs/adr/` | Raul (2026-11-07) |
-| `docs/enunciado/` | Raul (2026-11-07): transcripción del PDF del docente |
+| `docs/enunciado/` | Raul (2026-11-07): transcripción del PDF del docente. Efrain (2026-11-07): fila "Moderación de usuarios" de la sección 4, pendiente de revisión de Raul |
 | `docs/estado-del-proyecto.md` y `docs/historial.md` | Creados por Raul (2026-11-07) |
 | `docs/stack-y-convenciones.md` | Raul (2026-11-04); Efrain (2026-11-06, paso al español); Raul (2026-11-07). El `.html` que lo acompañaba se borró el 2026-11-07. |
 | `docs/diagramas/arquitectura.excalidraw` y `despliegue.excalidraw` | Raul (2026-11-04, como `docs/diagrama-*.excalidraw`); Raul (2026-11-07, paso al español y movidos) |
 | `docs/diagramas/event-storming.excalidraw` | Primera versión subida por Raul (2026-11-04, como `docs/event-storming-suertudometro.excalidraw`); Arturo (2026-11-04, renombrado a `-updated`); Gabo (2026-11-06: agregados, read models y sistemas externos); Raul (2026-11-07: opción A y movido) |
-| `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07) |
-| `AGENTS.md` | Arturo (2026-10-16); Efrain (2026-11-06); Raul (2026-11-07) |
+| `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, roles de identity) |
+| `AGENTS.md` | Arturo (2026-10-16); Efrain (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, fila del contrato de identidad) |
 | `CLAUDE.md` | Arturo (2026-10-16); Raul (2026-11-07) |
 | `.agents/skills/` y `skills-lock.json` | Arturo (2026-10-16, primeras skills); Efrain (2026-11-06, skill propia y skills nuevas); Raul (2026-11-07, quitó 4 skills y convirtió la skill propia en checklist) |
 | `.gitignore` | Arturo (2026-10-16); Raul (2026-11-07) |

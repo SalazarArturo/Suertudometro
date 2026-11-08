@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-07.** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-07 (Efrain: diseño de identity-service y pendientes 5, 6 y 8).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -74,7 +74,7 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 - `docker-compose.yml` y `.env.example`;
 - el CI;
 - aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos);
-- los documentos de diseño de 6 servicios.
+- los documentos de diseño de 5 servicios.
 
 ## Avance por servicio
 
@@ -82,7 +82,7 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 |---|---|---|---|
 | `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Sin empezar |
 | `api-gateway` | Efrain | Sin documento | Sin empezar |
-| `identity-service` | Efrain | Sin documento | Sin empezar |
+| `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Sin empezar |
 | `notification-service` | Efrain | Sin documento | Sin empezar |
 | `campaign-service` | Arturo | Sin documento | Sin empezar |
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Sin empezar |
@@ -104,17 +104,19 @@ Valores posibles:
     - *Avance:*
       - Gabo propuso la v1 de los 7 eventos (commit `1266ac3`).
       - Raul ajustó la ficha `AporteRegistrado` y dejó una nota en `CampanaCerrada` para alinearla con el ADR 0003; la decide Arturo.
-  - [ ] **Contrato de identidad y acceso** (pendientes 5 y 6). Responsable: Efrain.
-    - Roles y cómo se crea el primer administrador.
-    - Claims del JWT y headers que el gateway reenvía a los servicios.
-    - Qué rutas son públicas, cuáles requieren sesión y cuáles requieren un rol.
+  - [ ] **Contrato de identidad y acceso.** Responsable: Efrain.
+    - [x] Roles y cómo se crea el primer administrador.
+    - [x] Claims del JWT y headers que el gateway reenvía a los servicios (era el pendiente 5).
+    - [x] Moderación de usuarios (era el pendiente 6): no se implementa; el administrador solo modera campañas. Ver el riesgo en `historial.md`.
+    - [ ] Qué rutas son públicas, cuáles requieren sesión y cuáles requieren un rol (irá en `docs/servicios/api-gateway.md`).
+    - *Avance:* lo resuelto está en [`servicios/identity-service.md`](servicios/identity-service.md) §2 y §5.1 (Efrain, 2026-11-07).
   - [ ] **Reglas de negocio compartidas.** Responsables: Arturo y Raul, con el equipo.
     - Categorías y moneda.
     - Meta mínima y duración de una campaña.
     - Formato, tamaño y cantidad de imágenes; largo de la historia.
     - *Avance:* aportes sin monto mínimo y mensaje de apoyo de hasta 300 caracteres.
   - [ ] **Diseño de cada servicio** con la plantilla de `docs/servicios/README.md` (pendientes 10 y 11). Responsable: cada uno, de sus servicios.
-    - *Avance:* `contribution-service` está en borrador.
+    - *Avance:* `contribution-service` e `identity-service` están en borrador.
   - [ ] **Infraestructura para desarrollar.** Responsable: Efrain.
     - Topología de RabbitMQ: nombres de colas y DLQ, reintentos y quién declara qué.
     - Modo de desarrollo local: cómo correr un servicio desde el IDE contra la base y RabbitMQ del compose.
@@ -152,10 +154,7 @@ Mientras sigan aquí, **nadie las asume**, ni las personas ni los agentes de IA:
 | 2 | `CompartirCampana` (lo pide el enunciado): ¿es solo del frontend (enlace, Web Share) o se registra en el backend, por ejemplo para medir popularidad? ¿En qué servicio? | frontend, search | Equipo |
 | 3 | `EnviarComentario`: los comentarios son una mejora opcional; el mensaje de apoyo ya va en `RealizarAporte`. ¿Se implementa? ¿Dónde? | Por definir | Equipo |
 | 4 | Aprobar los contratos de `docs/contratos-de-eventos.md` (propuesta v1 de Gabo). En `campana.cerrada`, el motivo `CANCELACION` debe dejar la campaña en `CANCELADA` (ADR 0003): falta decidir si además se envía el estado final de forma explícita. | Todos | Quien publica cada evento: Arturo (`campana.*`, `meta.alcanzada`), Raul (`aporte.registrado`), Efrain (`usuario.registrado`) y Gabo (`campana.actualizada`) |
-| 5 | Cómo viaja la identidad del usuario del gateway a cada servicio (claims del JWT, headers). contribution-service necesita el id, el nombre y el rol. | Todos | Efrain |
-| 6 | Moderación de usuarios desde la administración (la pide el enunciado): qué comandos tiene identity-service. | identity, frontend | Efrain |
 | 7 | Criterio de "popularidad" para explorar campañas. | search | Gabo |
-| 8 | ¿notification-service consume `campana.cerrada`? El enunciado pide avisos ante cambios de estado. | notification, campaign | Efrain y Arturo |
 | 9 | Aportes que llegan después de alcanzada la meta pero antes de `campana.cerrada`: ¿se aceptan? | contribution, campaign | Raul y Arturo |
 | 10 | Estructura de carpetas DDD por tecnología. Efrain compartió una propuesta para NestJS. Raul propone Maven multimódulo, como el docente, y debe acordarlo con Arturo. | Todos los servicios | Efrain y Gabo; Raul y Arturo |
 | 11 | Modelo de dominio detallado de cada servicio. contribution-service ya tiene borrador. | Cada servicio | Su responsable |
