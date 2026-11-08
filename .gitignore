@@ -21,6 +21,7 @@ node_modules/
 dist/
 .angular/
 coverage/
+*.tsbuildinfo
 
 # Python / Django (update-service, search-service)
 __pycache__/

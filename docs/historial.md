@@ -53,6 +53,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-07 | Efrain | **Esqueleto de identity-service** (fase 1): NestJS 12 en ESM con TypeScript 6, capas con reglas de importación en ESLint (y una prueba que lo comprueba), `sharedkernel`, configuración validada, `GET /salud`, Dockerfile y el primer workflow de CI. Usa Vitest porque NestJS 12 solo se publica en ESM; el stack dice Jest y hay que actualizarlo (lo decide Raul). | Rama `feat/identity-esqueleto` |
 | 2026-11-07 | Efrain | **identity-service.** Documento de diseño; decisiones de roles, primer administrador, contrato del token y los headers, y pendientes 6 y 8; roles de identity actualizados en el README. | Rama `docs/identity-diseno` |
 | 2026-11-07 | Raul | **Unificación de contratos.** Se integró la propuesta de Gabo como único documento de contratos; ficha `AporteRegistrado` ajustada; nota en `CampanaCerrada` sobre el ADR 0003; enlace al event storming corregido. | Subido directo a `main`, sin PR |
 | 2026-11-07 | Gabo | **Contratos de eventos:** propuesta v1 de los 7 eventos, con el uso de cada consumidor, reentregas y orden de llegada, y las decisiones para aprobarla. | `1266ac3` |
@@ -85,3 +86,4 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 | `CLAUDE.md` | Arturo (2026-10-16); Raul (2026-11-07) |
 | `.agents/skills/` y `skills-lock.json` | Arturo (2026-10-16, primeras skills); Efrain (2026-11-06, skill propia y skills nuevas); Raul (2026-11-07, quitó 4 skills y convirtió la skill propia en checklist) |
 | `.gitignore` | Arturo (2026-10-16); Raul (2026-11-07) |
+| `identity-service/` y `.github/workflows/identity-service.yml` | Efrain (2026-11-07, esqueleto) |

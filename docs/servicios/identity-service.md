@@ -247,8 +247,10 @@ identity-service/
 
 **Nombres de archivo** en kebab-case (§5.4): `registrar-usuario.comando.ts` contiene `RegistrarUsuarioComando`, y `registrar-usuario.comando-manejador.ts` contiene `RegistrarUsuarioComandoManejador`.
 
+**ESM.** Los paquetes de NestJS 12 solo se publican como módulos ES, así que el proyecto también es ESM (`"type": "module"`): las importaciones relativas terminan en `.js` y no hay alias de rutas. Las reglas de capas de ESLint (`eslint.capas.mjs`) reconocen cada capa por el nombre de su carpeta, y una prueba (`test/arquitectura/capas.spec.ts`) comprueba que fallan cuando deben.
+
 **Pruebas:**
-- dominio y aplicación con Jest, sin base de datos ni red, usando dobles en memoria de los puertos (las pruebas unitarias van junto al código, en `*.spec.ts`);
+- dominio y aplicación con Vitest (el runner oficial de NestJS 12; Jest no funciona bien con ESM), sin base de datos ni red, usando dobles en memoria de los puertos (las pruebas unitarias van junto al código, en `*.spec.ts`);
 - persistencia y mensajería con Testcontainers (PostgreSQL 18 y RabbitMQ);
 - API de punta a punta con Supertest.
 
@@ -312,8 +314,8 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 
 - [ ] **Fase 0 · Diseño** (`docs/identity-diseno`): este documento y las decisiones en el historial.
 - [ ] **Fase 1 · Esqueleto** (`feat/identity-esqueleto`):
-  - proyecto NestJS 12 con TypeScript estricto, carpetas por capa, alias y reglas de importación en ESLint;
-  - Jest, configuración validada, `sharedkernel`, `GET /salud`, Dockerfile y workflow de CI (lo revisa Arturo).
+  - proyecto NestJS 12 (ESM) con TypeScript 6 estricto, carpetas por capa y reglas de importación en ESLint;
+  - Vitest, configuración validada, `sharedkernel`, `GET /salud`, Dockerfile y workflow de CI (lo revisa Arturo).
   - *Pruebas:* humo de `/salud`, ESLint falla si `domain` importa NestJS, y `docker build`.
 - [ ] **Fase 2 · Dominio y aplicación en aislado** (`feat/identity-dominio`):
   - objetos de valor, `PoliticaContrasena`, `CuentaUsuario`, eventos, los tres comandos, la consulta y los puertos con sus dobles en memoria.

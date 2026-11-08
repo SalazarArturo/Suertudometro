@@ -1,0 +1,50 @@
+# CI de identity-service (docs/stack-y-convenciones.md §5.9): formato, linter,
+# pruebas y compilación en cada PR que lo toque, y la imagen de Docker.
+name: identity-service
+
+on:
+  pull_request:
+    paths:
+      - 'identity-service/**'
+      - '.github/workflows/identity-service.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'identity-service/**'
+      - '.github/workflows/identity-service.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: identity-service-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  calidad:
+    name: Formato, linter, pruebas y compilación
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: identity-service
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: identity-service/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm test
+      - run: npm run test:e2e
+      - run: npm run build
+
+  imagen:
+    name: Imagen de Docker
+    runs-on: ubuntu-latest
+    needs: calidad
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build --tag identity-service:ci identity-service

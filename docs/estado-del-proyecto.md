@@ -67,12 +67,12 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar. Todavía no hay código.**
+**Fase 0: diseño y documentación, por cerrar.** El único código es el esqueleto de `identity-service` (rama `feat/identity-esqueleto`, de Efrain).
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
-- las carpetas de los servicios y del frontend;
+- las carpetas de los servicios (salvo `identity-service`) y del frontend;
 - `docker-compose.yml` y `.env.example`;
-- el CI;
+- el CI de los demás servicios (`identity-service` ya tiene su workflow, pendiente de que Arturo lo revise);
 - aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos);
 - los documentos de diseño de 5 servicios.
 
