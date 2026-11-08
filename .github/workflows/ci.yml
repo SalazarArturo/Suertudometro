@@ -1,0 +1,161 @@
+name: CI · Suertudometro
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # 1. Verificación base del repositorio (siempre corre, requerido en Branch Protection)
+  # ============================================================================
+  verificar-repositorio:
+    name: Verificar estructura y convenciones base
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Verificar documentos canónicos del proyecto
+        run: |
+          for file in README.md AGENTS.md docs/estado-del-proyecto.md docs/historial.md docs/stack-y-convenciones.md docs/contratos-de-eventos.md; do
+            if [ ! -f "$file" ]; then
+              echo "Falta el documento obligatorio: $file"
+              exit 1
+            fi
+          done
+          echo "Documentos canónicos verificados correctamente."
+
+  # ============================================================================
+  # 2. Servicios Spring Boot 4.1 · Java 21 (Spotless + JUnit 5)
+  #    Se ejecuta automáticamente para cada servicio Java que ya tenga pom.xml
+  # ============================================================================
+  ci-spring-boot:
+    name: Spring Boot (${{ matrix.servicio }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        servicio:
+          - api-gateway
+          - campaign-service
+          - contribution-service
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Comprobar si existe pom.xml en ${{ matrix.servicio }}
+        id: check_pom
+        run: |
+          if [ -f "${{ matrix.servicio }}/pom.xml" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Todavía no existe ${{ matrix.servicio }}/pom.xml; se omite."
+          fi
+
+      - name: Configurar Java 21
+        if: steps.check_pom.outputs.exists == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Validar formato con Spotless y ejecutar pruebas
+        if: steps.check_pom.outputs.exists == 'true'
+        working-directory: ${{ matrix.servicio }}
+        run: |
+          mvn -B spotless:check
+          mvn -B test
+
+  # ============================================================================
+  # 3. Servicios NestJS 12 y Angular 22 · Node.js 24 LTS (ESLint + Tests)
+  #    Se ejecuta automáticamente para cada proyecto Node que tenga package.json
+  # ============================================================================
+  ci-node:
+    name: Node.js (${{ matrix.servicio }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        servicio:
+          - identity-service
+          - notification-service
+          - frontend
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Comprobar si existe package.json en ${{ matrix.servicio }}
+        id: check_pkg
+        run: |
+          if [ -f "${{ matrix.servicio }}/package.json" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Todavía no existe ${{ matrix.servicio }}/package.json; se omite."
+          fi
+
+      - name: Configurar Node.js 24 LTS
+        if: steps.check_pkg.outputs.exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Instalar dependencias, ejecutar linter y pruebas
+        if: steps.check_pkg.outputs.exists == 'true'
+        working-directory: ${{ matrix.servicio }}
+        run: |
+          npm ci
+          npm run lint --if-present
+          npm test --if-present -- --watch=false
+
+  # ============================================================================
+  # 4. Servicios Django 5.2 · Python 3.13 (Ruff + pytest)
+  #    Se ejecuta automáticamente para cada servicio Python que tenga pyproject.toml o requirements.txt
+  # ============================================================================
+  ci-python:
+    name: Python Django (${{ matrix.servicio }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        servicio:
+          - update-service
+          - search-service
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Comprobar si existe proyecto Python en ${{ matrix.servicio }}
+        id: check_py
+        run: |
+          if [ -f "${{ matrix.servicio }}/pyproject.toml" ] || [ -f "${{ matrix.servicio }}/requirements.txt" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Todavía no existe proyecto Python en ${{ matrix.servicio }}; se omite."
+          fi
+
+      - name: Configurar Python 3.13
+        if: steps.check_py.outputs.exists == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Instalar dependencias, validar con Ruff y ejecutar pytest
+        if: steps.check_py.outputs.exists == 'true'
+        working-directory: ${{ matrix.servicio }}
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then pip install -e .; fi
+          pip install ruff pytest pytest-django
+          ruff check .
+          pytest
