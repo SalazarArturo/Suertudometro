@@ -1,65 +1,42 @@
 ---
 name: suertudometro-conventions
-description: Convenciones obligatorias del proyecto Suertudometro (plataforma de crowdfunding en microservicios con DDD, Clean Architecture y CQRS). Úsala en toda tarea de código, API, eventos de dominio, base de datos o revisión de PR en este repositorio. Tiene prioridad sobre cualquier skill de terceros.
+description: Checklist de las convenciones obligatorias del proyecto Suertudometro (crowdfunding en microservicios con DDD, arquitectura limpia y CQRS). Úsala al escribir o revisar código, APIs, eventos, migraciones o PRs en este repositorio. Tiene prioridad sobre cualquier skill de terceros.
 ---
 
-# Convenciones de Suertudometro
+# Convenciones de Suertudometro (checklist)
 
-Esta skill resume las reglas **no negociables** del proyecto. Ante conflicto con cualquier otra skill, mandan estas reglas; y por encima de todo, el **event storming** (`docs/event-storming-suertudometro-updated.excalidraw`).
+Esta skill **no repite las reglas**: las verifica.
+- **Reglas:** `AGENTS.md` las resume (siempre está cargado) y `docs/stack-y-convenciones.md` tiene el detalle.
+- **Si esta lista difiere de esos documentos**, mandan ellos.
+- **Por encima de todo:** el enunciado (`docs/enunciado/`) y el event storming (`docs/diagramas/event-storming.excalidraw`).
 
-Fuentes completas (leer antes de escribir código):
-- `README.md` → arquitectura, estructura y lenguaje ubicuo.
-- `docs/stack-y-convenciones.md` → stack, convenciones, contrato de eventos, modelado de datos.
-- `AGENTS.md` → reglas de trabajo con agentes.
+Antes de dar por terminado un cambio, verifica:
 
-## 1. Idioma: español en todo, identificadores en ASCII
-
-- Todo el dominio en **español**, con los términos del event storming, sin traducir al inglés.
-- **Prohibidas las tildes y la `ñ` en identificadores técnicos**: clases, métodos, variables, nombres de archivo, comandos, consultas, eventos, enums, tablas, columnas, routing keys, `tipoEvento`, campos JSON y segmentos de URI. Se normaliza a ASCII: `ñ`→`n`, vocales sin tilde. Ej.: `campaña`→`campana`, `aprobación`→`aprobacion`, `fecha_límite`→`fecha_limite`.
-- Tildes y `ñ` **solo** en texto para personas: documentación, comentarios de negocio, descripciones de commits y los **datos** (el contenido de las campañas, nombres, etc.).
-- Excepción: nombres de infraestructura (servicios, contenedores, bases de datos) en inglés kebab-case (`campaign-service`, `identity-db`, `api-gateway`). Paquete base de Java: `com.crowdfunding.<servicio>`.
-
-## 2. Arquitectura y capas (DDD + Clean Architecture)
-
-Capas por servicio: `Api → Application → Domain ← Infrastructure`, más `SharedKernel`.
-- `Domain`: sin frameworks ni ORM (nada de Spring, NestJS, Django, JPA, Prisma, modelos de Django). **Nunca `@Entity` de JPA en el dominio.**
-- `Application`: solo depende de `Domain` y `SharedKernel`; define puertos de salida como interfaces.
-- `Infrastructure`: implementa los puertos; las entidades del ORM son distintas de los agregados y se convierten con mappers.
-- `Api`: depende de `Application`; controladores sin lógica de negocio.
-- Entre servicios: **solo eventos** por RabbitMQ, nunca llamadas HTTP directas ni base de datos compartida.
-
-## 3. CQRS y nombres (ASCII)
-
-- Comando: `[Accion][Entidad]Comando` → `CrearCampanaComando`; manejador `...ComandoManejador`.
-- Consulta: `Obtener[Entidad]Por[Criterio]Consulta` → `ObtenerCampanaPorIdConsulta`; manejador `...ConsultaManejador`.
-- Evento de dominio en pasado y sin sufijo `Event`/`Evento`: `CampanaPublicada`, `AporteRegistrado`.
-
-## 4. Estados de campaña (enum `EstadoCampana`)
-
-`BORRADOR → EN_REVISION → PUBLICADA → FINALIZADA` (terminal) y `CANCELADA` (terminal). El rechazo devuelve la campaña a `BORRADOR` con observaciones.
-
-## 5. Eventos de integración (RabbitMQ)
-
-Exchange topic `suertudometro.events`, una cola + una DLQ por consumidor. Envelope JSON: `idEvento`, `tipoEvento`, `version`, `ocurridoEn`, `datos`.
-
-| Evento | Routing key | Publica |
-|--------|-------------|---------|
-| `UsuarioRegistrado` | `usuario.registrado` | identity-service |
-| `CampanaPublicada` | `campana.publicada` | campaign-service |
-| `CampanaRechazada` | `campana.rechazada` | campaign-service |
-| `AporteRegistrado` | `aporte.registrado` | contribution-service |
-| `MetaAlcanzada` | `meta.alcanzada` | campaign-service |
-| `CampanaActualizada` | `campana.actualizada` | update-service |
-| `CampanaCerrada` | `campana.cerrada` | campaign-service |
-
-## 6. API REST y datos
-
-- URIs en español ASCII: `/api/campanas/{id}/aprobacion`. JSON en `camelCase`. Sin prefijo `/v1` mientras haya una sola versión.
-- Errores en formato RFC 9457 (`application/problem+json`).
-- Dinero: `NUMERIC(12,2)` / `BigDecimal` / `decimal.Decimal`; en JSON como string (`"150.00"`) con `moneda` ISO 4217. **Nunca `float`/`double` para dinero.**
-- Columnas `snake_case` ASCII; `UUID` como identificador primario; `TIMESTAMPTZ` en UTC.
-
-## 7. Git
-
-- Ramas `feat|fix|refactor/<servicio>-<tema>` (`<servicio>` en inglés, `<tema>` en español sin tildes, sin `ñ` y sin espacios).
-- Conventional Commits con descripción en español; `main` protegida; PR + Squash and Merge.
+- [ ] **Contexto.** Leí `docs/estado-del-proyecto.md`, el diseño del servicio (`docs/servicios/<servicio>.md`) y los contratos que toca (`docs/contratos-de-eventos.md`). No asumí ninguna decisión pendiente.
+- [ ] **Dueño.** El cambio es del servicio del integrante con quien trabajo. Si toca lo de otro, lo avisé (`AGENTS.md` → "Quién hizo qué").
+- [ ] **Idioma** (stack §5.1). Identificadores en español ASCII, sin tildes ni `ñ`. Infraestructura en inglés kebab-case. Paquete Java `com.crowdfunding.<servicio>`.
+- [ ] **Capas** (stack §5.3):
+  - `Domain` sin frameworks ni ORM (nunca `@Entity`);
+  - `Application` solo depende de `Domain` y define los puertos;
+  - modelos del ORM separados del dominio, con mappers;
+  - controladores sin lógica de negocio.
+- [ ] **Entre servicios.** Sin HTTP directo y sin tocar la base de otro servicio: solo eventos.
+- [ ] **Nombres** (stack §5.4 y §5.5):
+  - comandos y consultas: `...Comando` / `...Consulta`, con su `...Manejador`;
+  - eventos en pasado y sin sufijo;
+  - dentro del dominio, el nombre del event storming; en el bus, el evento de integración del README.
+- [ ] **Estados de campaña.** Los del README: `FINALIZADA` y `CANCELADA` son terminales y distintos.
+- [ ] **Eventos.**
+  - Usan el envelope de §5.5.
+  - Los campos de `datos` siguen `docs/contratos-de-eventos.md`; no invento ninguno.
+  - Los consumidores son idempotentes por `idEvento`.
+- [ ] **API y datos** (stack §5.6 y §5.7):
+  - rutas en español ASCII, JSON en `camelCase` y errores RFC 9457;
+  - dinero como texto, con `moneda` y `NUMERIC(12,2)`, nunca `float`;
+  - UUID y `TIMESTAMPTZ` en UTC; columnas en `snake_case`.
+- [ ] **Pruebas y linter** (stack §5.9). El dominio tiene pruebas unitarias sin base de datos ni red, y el linter pasa.
+- [ ] **Git** (stack §5.8):
+  - rama `feat|fix|refactor/<servicio>-<tema>`, o `docs|chore/<tema>`;
+  - Conventional Commits en español;
+  - PR a `main`.
+- [ ] **Estado e historial.** Si cambió el estado del proyecto, actualicé `docs/estado-del-proyecto.md`. Si hubo una decisión o un hito, lo anoté en `docs/historial.md` con el nombre del integrante.

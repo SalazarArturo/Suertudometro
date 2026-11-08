@@ -1,0 +1,72 @@
+# Historial del proyecto
+
+> Lo que ya pasó: decisiones tomadas, bitácora de hitos y quién hizo cada archivo. Se consulta cuando hace falta saber por qué algo es como es o a quién preguntar. Lo vigente está en [`estado-del-proyecto.md`](estado-del-proyecto.md).
+> Cada integrante agrega sus entradas, con su nombre, al tomar una decisión o terminar algo importante. La fuente exacta de autoría es git (ver `AGENTS.md` → "Quién hizo qué").
+> Documento creado por Raul el 2026-11-07.
+
+## Decisiones tomadas
+
+Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
+
+- **2026-11-07 · Raul**, sobre la propuesta de Gabo · Un solo documento de contratos: `docs/contratos-de-eventos.md` (el de Gabo, commit `1266ac3`). La ficha `AporteRegistrado` combina la propuesta de Gabo con el diseño de contribution-service:
+  - `idAportante` obligatorio;
+  - se agregan `esAnonimo`, `nombreAportante` y `mensajeApoyo`;
+  - el instante va en `ocurridoEn` (idea de Gabo) y no en un campo aparte.
+- **2026-11-07 · Raul** · Organización de la documentación:
+  - cada tema vive en un solo documento (tabla "Dónde vive cada cosa" en `AGENTS.md`);
+  - el estado guarda el presente y este historial, el pasado;
+  - el enunciado y los diagramas pasan a carpetas propias (`docs/enunciado/` y `docs/diagramas/`);
+  - se borró `stack-y-convenciones.html`, que era una copia del `.md`;
+  - la skill `suertudometro-conventions` pasa a ser un checklist.
+- **2026-11-07 · Raul** · Decisiones de `contribution-service` (→ `docs/servicios/contribution-service.md`):
+  - aportar requiere iniciar sesión (resuelve el pendiente 1);
+  - no hay monto mínimo de aporte, solo tiene que ser mayor que 0;
+  - el mensaje de apoyo es opcional y tiene hasta 300 caracteres.
+- **2026-11-07 · Propusieron Efrain (README del 2026-11-06) y Raul; decidió Raul** · Opción A: `FINALIZADA` (meta alcanzada o plazo vencido) y `CANCELADA` (cierre por el organizador o la administración) son dos estados terminales distintos, y un solo evento `CampanaCerrada` lleva el estado final y el motivo. Se subió a `main` sin PR; el equipo la revisa después. → [ADR 0003](adr/0003-estados-terminales-de-campana.md)
+- **2026-11-07 · Raul** · Orden de las fuentes de verdad: enunciado > event storming > README > stack > diagramas. → `AGENTS.md`
+- **2026-11-07 · Equipo** (por mensaje del grupo) · Reparto del trabajo y orden de arranque. → `estado-del-proyecto.md` → Equipo
+- **2026-11-07 · Equipo** (confirmado por Raul) · Arquitectura limpia, una PostgreSQL por microservicio y todo el sistema dockerizado. → [ADR 0002](adr/0002-base-de-datos-por-servicio.md)
+- **2026-11-07 · Equipo** (lo decidió el 2026-11-05 y lo documentó Efrain; lo aplicó Raul) · Se quitaron del repo las skills `spring-boot-engineer`, `api-design-principles`, `code-review-excellence` y `ui-ux-pro-max`. → `stack-y-convenciones.md` §4
+- **2026-11-07 · Raul** (a partir del event storming) · Dentro de cada servicio, los eventos de dominio llevan el nombre del event storming (`AporteRealizado`). Al bus sale el evento de integración del catálogo (`AporteRegistrado`). → `README.md`
+- **2026-11-05 · Equipo** (documentó Efrain) · Español en todo el código y los contratos, con identificadores solo en ASCII. Los nombres de infraestructura van en inglés kebab-case. → `stack-y-convenciones.md` §5.1
+- **2026-11-05 · Equipo** (documentó Efrain, que además creó la skill `suertudometro-conventions`) · Lenguaje ubicuo canónico: estados, comandos, eventos, routing keys y envelope. → `README.md`
+- **2026-11-04 · Equipo** (documentó Raul) · Tecnología de cada servicio y un solo motor de base de datos (PostgreSQL 18). Imágenes en un volumen Docker (se descartó MinIO), Mailpit para el correo de prueba y `amqplib` en NestJS. → [ADR 0001](adr/0001-tecnologias-por-servicio.md) y [ADR 0002](adr/0002-base-de-datos-por-servicio.md)
+- **2026-11-03 · Raul** · Diagramas de arquitectura y de despliegue. → `diagramas/`
+
+## Bitácora
+
+Hitos del proyecto, los más recientes arriba.
+
+| Fecha | Quién | Qué | Commit o rama |
+|---|---|---|---|
+| 2026-11-07 | Raul | **Unificación de contratos.** Se integró la propuesta de Gabo como único documento de contratos; ficha `AporteRegistrado` ajustada; nota en `CampanaCerrada` sobre el ADR 0003; enlace al event storming corregido. | Subido directo a `main`, sin PR |
+| 2026-11-07 | Gabo | **Contratos de eventos:** propuesta v1 de los 7 eventos, con el uso de cada consumidor, reentregas y orden de llegada, y las decisiones para aprobarla. | `1266ac3` |
+| 2026-11-07 | Raul | **Reorganización de la documentación.** Carpetas `docs/enunciado/` y `docs/diagramas/` (event storming renombrado); este historial separado del estado; `AGENTS.md` y `README.md` más cortos; se borró el `.html`; la skill pasó a checklist. | Subido directo a `main`, sin PR |
+| 2026-11-07 | Raul | **contribution-service.** Diseño del servicio, ADR 0001 a 0003 y plantillas de `docs/servicios/` y `docs/adr/`. | Subido directo a `main`, sin PR |
+| 2026-11-07 | Raul | **Alineación de la documentación.** Enunciado transcrito; documento de estado; orden de las fuentes de verdad; opción A en el README y en el event storming; diagrama de arquitectura en español; se quitaron 4 skills; `.gitignore`. | Subido directo a `main`, sin PR |
+| 2026-11-06 | Gabo | README: la cancelación pasaba a `FINALIZADA`. Se revirtió el 2026-11-07 por la opción A (ADR 0003). | `8ae1a6e`, `9168028` |
+| 2026-11-06 | Gabo | Event storming: agregados, read models y sistemas externos. | `912f8b4` |
+| 2026-11-06 | Efrain | Documentación al español con identificadores en ASCII (README, AGENTS y stack). Skill propia `suertudometro-conventions` y skills `angular-developer`, `domain-driven-design` y `supabase-postgres-best-practices`. | `931cac3` |
+| 2026-11-04 | Arturo | Event storming actualizado (renombrado a `-updated`). | `9b9f269` |
+| 2026-11-04 | Raul | Diagramas de arquitectura y de despliegue, primera versión del event storming y `stack-y-convenciones` (.md y .html). | `fd2e7be` |
+| 2026-10-16 | Arturo | Repositorio inicial: README, AGENTS.md, CLAUDE.md, `.gitignore` y las primeras skills de IA. | `171038e` |
+
+## Autoría por archivo
+
+Quién creó o cambió cada archivo, según git. Los archivos movidos o renombrados conservan su historial; para verlo, usa `git log --follow -- <archivo>`.
+
+| Ruta | Quién lo hizo |
+|---|---|
+| `docs/servicios/` | Índice, plantilla y `contribution-service.md`: Raul (2026-11-07) |
+| `docs/contratos-de-eventos.md` | Gabo (2026-11-07, propuesta v1 de los 7 eventos); Raul (2026-11-07: ficha `AporteRegistrado`, nota en `CampanaCerrada`, encabezado de responsables y enlace al event storming) |
+| `docs/adr/` | Raul (2026-11-07) |
+| `docs/enunciado/` | Raul (2026-11-07): transcripción del PDF del docente |
+| `docs/estado-del-proyecto.md` y `docs/historial.md` | Creados por Raul (2026-11-07) |
+| `docs/stack-y-convenciones.md` | Raul (2026-11-04); Efrain (2026-11-06, paso al español); Raul (2026-11-07). El `.html` que lo acompañaba se borró el 2026-11-07. |
+| `docs/diagramas/arquitectura.excalidraw` y `despliegue.excalidraw` | Raul (2026-11-04, como `docs/diagrama-*.excalidraw`); Raul (2026-11-07, paso al español y movidos) |
+| `docs/diagramas/event-storming.excalidraw` | Primera versión subida por Raul (2026-11-04, como `docs/event-storming-suertudometro.excalidraw`); Arturo (2026-11-04, renombrado a `-updated`); Gabo (2026-11-06: agregados, read models y sistemas externos); Raul (2026-11-07: opción A y movido) |
+| `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07) |
+| `AGENTS.md` | Arturo (2026-10-16); Efrain (2026-11-06); Raul (2026-11-07) |
+| `CLAUDE.md` | Arturo (2026-10-16); Raul (2026-11-07) |
+| `.agents/skills/` y `skills-lock.json` | Arturo (2026-10-16, primeras skills); Efrain (2026-11-06, skill propia y skills nuevas); Raul (2026-11-07, quitó 4 skills y convirtió la skill propia en checklist) |
+| `.gitignore` | Arturo (2026-10-16); Raul (2026-11-07) |
