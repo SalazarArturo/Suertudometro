@@ -53,7 +53,7 @@ Suertudometro/
 | Servicio | Tecnología | Rol DDD | Ruta en el gateway | Responsabilidad |
 |----------|------------|---------|--------------------|-----------------|
 | `api-gateway` | Spring Cloud Gateway | Perimetral | `/api/**` | Punto de entrada único: valida el JWT, aplica CORS y límite de peticiones, y enruta |
-| `identity-service` | NestJS | Subdominio genérico | `/api/identidad` | Registro, login, JWT, roles (VISITANTE, ORGANIZADOR, ADMINISTRADOR) y moderación de usuarios |
+| `identity-service` | NestJS | Subdominio genérico | `/api/identidad` | Registro, login, JWT y roles (`USUARIO`, `ADMINISTRADOR`) |
 | `campaign-service` | Spring Boot | Core | `/api/campanas` | Campañas, estados y su historial, moderación, imágenes, metas y categorías |
 | `contribution-service` | Spring Boot | Core | `/api/aportes` | Aportes simulados, anonimato y mensajes de apoyo |
 | `update-service` | Django + DRF | Soporte | `/api/novedades` | Actualizaciones y novedades publicadas por el organizador |
@@ -166,7 +166,9 @@ Mientras está `PUBLICADA`, la campaña puede recibir varios aportes y actualiza
 
 ## 🚀 Cómo ejecutar el proyecto
 
-> Todavía no hay código ni `docker-compose.yml`. Esta sección describe el objetivo.
+> `update-service` ya cuenta con implementación, pruebas y Compose propios. Consulta
+> [su guía de ejecución](update-service/README.md). El Compose global de la plataforma
+> todavía está pendiente; los comandos siguientes describen ese objetivo.
 
 ```bash
 git clone https://github.com/SalazarArturo/Suertudometro.git

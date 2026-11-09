@@ -1,0 +1,72 @@
+name: suertudometro-update
+
+x-servicio: &servicio
+  image: suertudometro-update:local
+  build:
+    context: .
+    target: ejecucion
+  env_file: .env
+  depends_on:
+    update-db:
+      condition: service_healthy
+
+services:
+  update-db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-update-db}
+      POSTGRES_USER: ${POSTGRES_USER:-novedades}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configura POSTGRES_PASSWORD en .env}
+    volumes:
+      - update-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:4.3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USUARIO:-novedades}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_CLAVE:?Configura RABBITMQ_CLAVE en .env}
+    volumes:
+      - update-rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  migraciones:
+    <<: *servicio
+    command: ["python", "manage.py", "migrate", "--noinput"]
+
+  update-service:
+    <<: *servicio
+    depends_on:
+      migraciones:
+        condition: service_completed_successfully
+    expose: ["8000"]
+
+  consumidor:
+    <<: *servicio
+    command: ["python", "manage.py", "consumir_eventos"]
+    depends_on:
+      migraciones:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
+  publicador:
+    <<: *servicio
+    command: ["python", "manage.py", "publicar_eventos"]
+    depends_on:
+      migraciones:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  update-data:
+  update-rabbitmq:

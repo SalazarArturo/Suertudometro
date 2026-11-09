@@ -9,10 +9,10 @@
 |---|---|---|---|
 | `contribution-service` | [contribution-service.md](contribution-service.md) | Raul | Borrador (en revisión) |
 | `campaign-service` | [campaign-service.md](campaign-service.md) | Arturo | Borrador (en revisión) |
-| `identity-service` | `identity-service.md` | Efrain | Sin documento |
+| `identity-service` | [identity-service.md](identity-service.md) | Efrain | Borrador (en revisión) |
 | `notification-service` | `notification-service.md` | Efrain | Sin documento |
 | `api-gateway` | `api-gateway.md` (corto: rutas, seguridad y CORS) | Efrain | Sin documento |
-| `update-service` | `update-service.md` | Gabo | Sin documento |
+| `update-service` | [update-service.md](update-service.md) | Gabo | Borrador (en revisión) |
 | `search-service` | `search-service.md` | Gabo | Sin documento |
 
 Cuando crees un documento o cambie su estado, actualiza esta tabla y la de "Avance por servicio" en `docs/estado-del-proyecto.md`.

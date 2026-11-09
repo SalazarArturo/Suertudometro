@@ -8,13 +8,27 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-09 · Gabo** · Compatibilidad de `update-service` con el CI general: empaquetado explícito para `pip install -e .`, pruebas rápidas por defecto y selección explícita de PostgreSQL en el Compose de pruebas. Se conserva el flujo de dependencias con `uv` y el workflow global. El evento interno se alinea con `ActualizacionPublicada`; su traducción al bus sigue siendo `CampanaActualizada`, sin cambiar contratos. → [Diseño de Novedades](servicios/update-service.md).
+
 - **2026-11-08 · Arturo** · Decisiones de `campaign-service` y contratos de sus eventos (→ `docs/contratos-de-eventos.md` y `docs/estado-del-proyecto.md`):
   - `CampanaCerrada` incluye explícitamente tanto `"estadoFinal"` (`"FINALIZADA"` | `"CANCELADA"`) como `"motivoCierre"` (`"META_ALCANZADA"` | `"PLAZO_VENCIDO"` | `"CANCELACION"`), alineado con el ADR 0003 y el event storming.
   - Reglas de negocio de campaña: moneda única `"BOB"`, meta mínima `100.00 BOB` (> 0), `fechaLimite` obligatoria futura en toda campaña, categorías como enum en español ASCII (`EDUCACION`, `SALUD`, `APOYO_COMUNITARIO`, `EMERGENCIAS`, `PROYECTOS_PERSONALES`, `OTROS`) y hasta 5 imágenes por campaña (`JPG`, `PNG`, `WEBP`, máx. 5 MB c/u).
   - Cumplimiento de meta: al alcanzar o superar la meta se ejecuta automáticamente el cierre (`MetaAlcanzada` y `CampanaCerrada` con `FINALIZADA`), pero si llega un `aporte.registrado` en tránsito de un aporte ya aceptado antes del cierre, se suma igual a `montoRecaudado` para preservar la consistencia financiera (a confirmar con Raul para cerrar el pendiente #9).
-  - Propuesta para notificaciones (a confirmar con Efrain para el pendiente #8): que `notification-service` también consuma `campana.cerrada` y que `meta.alcanzada` avise al organizador y a los aportantes.
   - Estructura de `campaign-service`: un solo módulo Maven separando las 5 capas (`sharedkernel`, `domain`, `application`, `infrastructure`, `api`) por paquetes Java bajo `com.crowdfunding.campaign` (a conversar con Raul respecto al pendiente #10).
-
+- **2026-11-07 · Efrain** · Decisiones de `identity-service` y del contrato de identidad (→ [`servicios/identity-service.md`](servicios/identity-service.md)). Las revisan por PR Arturo, Raul y Gabo, porque los roles y los headers afectan a sus servicios.
+  - **Roles:** cada cuenta tiene un solo rol, `USUARIO` o `ADMINISTRADOR`. Reemplaza a VISITANTE, ORGANIZADOR y ADMINISTRADOR del README:
+    - "visitante" es quien no tiene sesión;
+    - "organizador" y "aportante" son papeles que cada servicio comprueba por id (por ejemplo, `idOrganizador`).
+  - **Qué hace el administrador:** solo aprueba, rechaza y cancela campañas, en campaign-service. No tiene endpoints propios en identity-service.
+  - **Primer administrador:** se siembra al arrancar desde `ADMIN_CORREO` y `ADMIN_CONTRASENA` (`.env`). Pasa por el dominio, es idempotente y publica `UsuarioRegistrado`.
+  - **Identidad del gateway a los servicios** (resuelve el pendiente 5):
+    - JWT HS256 con un secreto que comparten identity y el gateway;
+    - claims `sub`, `correo`, `nombre`, `rol`, `iat` y `exp`;
+    - el gateway valida el token, borra los `X-Usuario-*` del cliente y reenvía `X-Usuario-Id`, `X-Usuario-Rol` y `X-Usuario-Nombre` (codificado para URL);
+    - los servicios no validan el JWT.
+  - **Duración del token:** 1 hora, sin refresh token.
+  - **Moderación de usuarios** (resuelve el pendiente 6): **no se implementa**, para no apartarse del event storming, que no tiene comandos de moderación de usuarios. *Riesgo anotado:* el enunciado, que es la fuente de mayor prioridad, pide "Moderación de campañas, usuarios y estados desde administración", y la parte de usuarios queda sin cubrir.
+  - **notification-service no consume `campana.cerrada`** (resuelve el pendiente 8, que compartía con Arturo). El catálogo de eventos no cambia. *Riesgo anotado:* el enunciado pide avisos ante cambios de estado, y así no se avisan la cancelación ni el plazo vencido (sí la publicación, el rechazo y la meta alcanzada).
 - **2026-11-07 · Raul**, sobre la propuesta de Gabo · Un solo documento de contratos: `docs/contratos-de-eventos.md` (el de Gabo, commit `1266ac3`). La ficha `AporteRegistrado` combina la propuesta de Gabo con el diseño de contribution-service:
   - `idAportante` obligatorio;
   - se agregan `esAnonimo`, `nombreAportante` y `mensajeApoyo`;
@@ -46,7 +60,9 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-09 | Gabo | **Novedades: implementación y preparación para revisión.** Dominio, API, persistencia, inbox/outbox, JWT configurable, Compose autónomo y pruebas de PostgreSQL/RabbitMQ. Corrección de compatibilidad con CI general y del nombre del evento interno; diseño y estado documentados. Integración con servicios reales y frontend pendiente. | `feat/update-publicacion-novedades` |
 | 2026-11-08 | Arturo | **Proceso y CI + `campaign-service` (diseño y contratos).** Plantilla de PR (`.github/pull_request_template.md`) y workflow de CI (`.github/workflows/ci.yml`); documento de diseño `docs/servicios/campaign-service.md`; fichas `CampanaPublicada`, `CampanaCerrada` (con `estadoFinal` y `motivoCierre`), `MetaAlcanzada` y `CampanaRechazada` aprobadas por el productor; reglas de negocio de campaña y decisiones de cierre/estructura registradas. | `docs/campaign-contratos-y-diseno` |
+| 2026-11-07 | Efrain | **identity-service.** Documento de diseño; decisiones de roles, primer administrador, contrato del token y los headers, y pendientes 6 y 8; roles de identity actualizados en el README. | Rama `docs/identity-diseno` |
 | 2026-11-07 | Raul | **Unificación de contratos.** Se integró la propuesta de Gabo como único documento de contratos; ficha `AporteRegistrado` ajustada; nota en `CampanaCerrada` sobre el ADR 0003; enlace al event storming corregido. | Subido directo a `main`, sin PR |
 | 2026-11-07 | Gabo | **Contratos de eventos:** propuesta v1 de los 7 eventos, con el uso de cada consumidor, reentregas y orden de llegada, y las decisiones para aprobarla. | `1266ac3` |
 | 2026-11-07 | Raul | **Reorganización de la documentación.** Carpetas `docs/enunciado/` y `docs/diagramas/` (event storming renombrado); este historial separado del estado; `AGENTS.md` y `README.md` más cortos; se borró el `.html`; la skill pasó a checklist. | Subido directo a `main`, sin PR |
@@ -65,17 +81,18 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 
 | Ruta | Quién lo hizo |
 |---|---|
+| `update-service/`, `.github/workflows/update-service.yml` y `docs/servicios/update-service.md` | Gabo (2026-11-07 a 2026-11-09): implementación de novedades, workflow propio, diseño y compatibilidad con CI general |
 | `.github/` | Plantilla de PR (`pull_request_template.md`) y workflow de CI (`workflows/ci.yml`): Arturo (2026-11-08) |
-| `docs/servicios/` | Índice, plantilla y `contribution-service.md`: Raul (2026-11-07); `campaign-service.md` e índice actualizado: Arturo (2026-11-08) |
+| `docs/servicios/` | Índice, plantilla y `contribution-service.md`: Raul (2026-11-07); `identity-service.md`: Efrain (2026-11-07); `campaign-service.md` e índice actualizado: Arturo (2026-11-08) |
 | `docs/contratos-de-eventos.md` | Gabo (2026-11-07, propuesta v1 de los 7 eventos); Raul (2026-11-07: ficha `AporteRegistrado`, nota en `CampanaCerrada`, encabezado de responsables y enlace al event storming); Arturo (2026-11-08: fichas de `campaign-service` aprobadas por el productor, `estadoFinal` en `CampanaCerrada` y `categoria` en enum ASCII) |
 | `docs/adr/` | Raul (2026-11-07) |
-| `docs/enunciado/` | Raul (2026-11-07): transcripción del PDF del docente |
-| `docs/estado-del-proyecto.md` y `docs/historial.md` | Creados por Raul (2026-11-07); actualizados por Arturo (2026-11-08) |
+| `docs/enunciado/` | Raul (2026-11-07): transcripción del PDF del docente. Efrain (2026-11-07): fila "Moderación de usuarios" de la sección 4, pendiente de revisión de Raul |
+| `docs/estado-del-proyecto.md` y `docs/historial.md` | Creados por Raul (2026-11-07); actualizados por Efrain (2026-11-07) y Arturo (2026-11-08) |
 | `docs/stack-y-convenciones.md` | Raul (2026-11-04); Efrain (2026-11-06, paso al español); Raul (2026-11-07). El `.html` que lo acompañaba se borró el 2026-11-07. |
 | `docs/diagramas/arquitectura.excalidraw` y `despliegue.excalidraw` | Raul (2026-11-04, como `docs/diagrama-*.excalidraw`); Raul (2026-11-07, paso al español y movidos) |
 | `docs/diagramas/event-storming.excalidraw` | Primera versión subida por Raul (2026-11-04, como `docs/event-storming-suertudometro.excalidraw`); Arturo (2026-11-04, renombrado a `-updated`); Gabo (2026-11-06: agregados, read models y sistemas externos); Raul (2026-11-07: opción A y movido) |
-| `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07) |
-| `AGENTS.md` | Arturo (2026-10-16); Efrain (2026-11-06); Raul (2026-11-07) |
+| `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, roles de identity) |
+| `AGENTS.md` | Arturo (2026-10-16); Efrain (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, fila del contrato de identidad) |
 | `CLAUDE.md` | Arturo (2026-10-16); Raul (2026-11-07) |
 | `.agents/skills/` y `skills-lock.json` | Arturo (2026-10-16, primeras skills); Efrain (2026-11-06, skill propia y skills nuevas); Raul (2026-11-07, quitó 4 skills y convirtió la skill propia en checklist) |
 | `.gitignore` | Arturo (2026-10-16); Raul (2026-11-07) |
