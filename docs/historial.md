@@ -68,6 +68,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-09 | Efrain | **`docker-compose.yml`**: `docker compose up --build` levanta `identity-db`, `identity-service`, `api-gateway` y `frontend`. Solo publica los puertos 4200 y 8080, y las variables van en `.env` (plantilla `.env.example`). Probado de punta a punta por el gateway: crear cuenta, iniciar sesión, perfil, CORS, `401` sin token, `404` y `503` con identity caído. | Rama `chore/compose-base` |
 | 2026-11-08 | Efrain | **Base del api-gateway**: Spring Cloud Gateway (WebFlux) con Spring Boot 4.1 y Java 21. Enruta `/api/identidad/**`, valida el JWT HS256, borra los `X-Usuario-*` del cliente y pone los del token, aplica CORS para el frontend y responde sus errores en RFC 9457. Pruebas con JUnit 5 contra un servicio simulado, Spotless, Dockerfile y workflow de CI. | Rama `feat/gateway-base` |
 | 2026-11-08 | Efrain | **Base del frontend**: borrador de `docs/frontend.md` (zonas, rutas, carpetas, sesión e inventario de pantallas) y la aplicación Angular 22 con Angular Material. Tiene el shell, la sesión con el token (interceptores y guards) y las pantallas de identidad: crear cuenta, iniciar sesión y mi perfil. Pruebas con Vitest, lint, Dockerfile con Nginx y workflow de CI. Falta el gateway para probarla contra el API. | Rama `feat/frontend-base` |
 | 2026-11-08 | Efrain | **Autenticación de identity-service** (fase 5): `POST /api/identidad/sesiones` emite el JWT HS256 con los claims del contrato (§5.1) y dura `JWT_DURACION`; `GET /api/identidad/perfil` lee los headers `X-Usuario-*` con un guard global (todo requiere sesión salvo lo `@Publico`); el primer administrador se siembra al arrancar y es idempotente. Variables nuevas: `JWT_SECRETO`, `JWT_DURACION`, `ADMIN_CORREO` y `ADMIN_CONTRASENA`. Probado con e2e y con la imagen de Docker. | Rama `feat/identity-autenticacion` |
@@ -102,7 +103,7 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 | `docs/stack-y-convenciones.md` | Raul (2026-11-04); Efrain (2026-11-06, paso al español); Raul (2026-11-07); Efrain (2026-11-08, Vitest en NestJS, pendiente de revisión de Raul). El `.html` que lo acompañaba se borró el 2026-11-07. |
 | `docs/diagramas/arquitectura.excalidraw` y `despliegue.excalidraw` | Raul (2026-11-04, como `docs/diagrama-*.excalidraw`); Raul (2026-11-07, paso al español y movidos) |
 | `docs/diagramas/event-storming.excalidraw` | Primera versión subida por Raul (2026-11-04, como `docs/event-storming-suertudometro.excalidraw`); Arturo (2026-11-04, renombrado a `-updated`); Gabo (2026-11-06: agregados, read models y sistemas externos); Raul (2026-11-07: opción A y movido) |
-| `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, roles de identity); Efrain (2026-11-08, enlace a `docs/frontend.md`) |
+| `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, roles de identity); Efrain (2026-11-08, enlace a `docs/frontend.md`); Efrain (2026-11-09, cómo ejecutar con Docker Compose) |
 | `AGENTS.md` | Arturo (2026-10-16); Efrain (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, fila del contrato de identidad); Efrain (2026-11-08, filas del frontend y del gateway) |
 | `CLAUDE.md` | Arturo (2026-10-16); Raul (2026-11-07) |
 | `.agents/skills/` y `skills-lock.json` | Arturo (2026-10-16, primeras skills); Efrain (2026-11-06, skill propia y skills nuevas); Raul (2026-11-07, quitó 4 skills y convirtió la skill propia en checklist) |
@@ -110,3 +111,4 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 | `identity-service/` y `.github/workflows/identity-service.yml` | Efrain (2026-11-07, esqueleto) |
 | `docs/frontend.md`, `frontend/` y `.github/workflows/frontend.yml` | Efrain (2026-11-08, base del frontend) |
 | `api-gateway/` y `.github/workflows/api-gateway.yml` | Efrain (2026-11-08, base del gateway) |
+| `docker-compose.yml` y `.env.example` | Efrain (2026-11-09: identity, gateway y frontend) |

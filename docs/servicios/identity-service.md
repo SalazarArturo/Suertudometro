@@ -1,6 +1,6 @@
 # identity-service
 
-> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-08 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-09 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Identidad** (subdominio genérico) · NestJS 12 · Node.js 24 · TypeScript · base de datos `identity-db` · ruta en el gateway `/api/identidad` · puerto interno 8081.
 
 ## 1. Responsabilidad
@@ -373,7 +373,7 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 - [ ] **Fase 6 · Mensajería** (`feat/identity-mensajeria`):
   - conexión a RabbitMQ con confirmaciones y reconexión, y `PublicadorEventosSalida`.
   - *Pruebas con Testcontainers:* llega el envelope de `usuario.registrado`; con RabbitMQ caído, el evento espera y se publica al volver; nada se publica dos veces.
-- [ ] **Fase 7 · Integración** (`chore/compose-identity`):
+- [ ] **Fase 7 · Integración** (`chore/compose-base`, junto con el gateway y el frontend; RabbitMQ entra con la fase 6):
   - `identity-db` e `identity-service` en `docker-compose.yml`, con healthchecks, y las variables en `.env.example`;
   - la ruta del gateway va en su propio PR.
   - *Verificación:* `docker compose up --build`; registro, inicio de sesión y perfil por `/api/identidad`; el admin sembrado puede iniciar sesión, y los dos eventos se ven en RabbitMQ.
@@ -383,6 +383,7 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-09 | Efrain | La fase 7 se hizo en `chore/compose-base`, junto con el gateway y el frontend. Falta RabbitMQ, que llega con la fase 6. |
 | 2026-11-08 | Efrain | El §5.1 enlaza a `api-gateway.md`, que aplica el contrato y tiene la tabla de rutas públicas. |
 | 2026-11-08 | Efrain | El §11 enlaza a `docs/frontend.md`, donde están las pantallas y la sesión del frontend. |
 | 2026-11-08 | Efrain | Fase 5: cómo aplica identity-service el contrato de headers (guard global, `@Publico`, los tres headers obligatorios). |

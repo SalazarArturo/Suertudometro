@@ -166,13 +166,18 @@ Mientras está `PUBLICADA`, la campaña puede recibir varios aportes y actualiza
 
 ## 🚀 Cómo ejecutar el proyecto
 
-> Todavía no hay código ni `docker-compose.yml`. Esta sección describe el objetivo.
+Requisito: Docker con Docker Compose.
 
 ```bash
 git clone https://github.com/SalazarArturo/Suertudometro.git
 cd Suertudometro
+cp .env.example .env      # una sola vez; puedes cambiar los valores
 docker compose up --build
 ```
+
+Después abre `http://localhost:4200`. El administrador inicial tiene el correo y la contraseña de `ADMIN_CORREO` y `ADMIN_CONTRASENA` en el `.env`.
+
+> **Por ahora** se levantan identity-service (con su base), el api-gateway y el frontend: crear cuenta, iniciar sesión y ver el perfil. Cada servicio nuevo se agrega a `docker-compose.yml` cuando está listo.
 
 Puertos publicados en la máquina (según el diagrama de despliegue):
 
@@ -180,8 +185,8 @@ Puertos publicados en la máquina (según el diagrama de despliegue):
 |--------|----------|
 | `4200` | Aplicación web (Angular) |
 | `8080` | API Gateway (entrada a `/api/**`) |
-| `15672` | Consola de RabbitMQ |
-| `8025` | Mailpit (bandeja de correos de prueba) |
+| `15672` | Consola de RabbitMQ (cuando se agregue) |
+| `8025` | Mailpit, la bandeja de correos de prueba (cuando se agregue) |
 
 Las bases de datos y los servicios internos **no** se publican al host.
 

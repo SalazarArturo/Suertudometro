@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-08 (Efrain: base del frontend y del api-gateway).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-09 (Efrain: `docker-compose.yml` con identity, el api-gateway y el frontend).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -67,11 +67,11 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar.** Todo el código que hay es de Efrain. En `identity-service`: el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS.
+**Fase 0: diseño y documentación, por cerrar.** Todo el código que hay es de Efrain. En `identity-service`: el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS. `docker compose up --build` (rama `chore/compose-base`) levanta las tres piezas, y crear cuenta, iniciar sesión y ver el perfil ya funcionan de punta a punta.
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 - las carpetas de los demás servicios (ya existen `identity-service`, `api-gateway` y `frontend`);
-- `docker-compose.yml` y `.env.example`;
+- sumar a `docker-compose.yml` los demás servicios, RabbitMQ y Mailpit;
 - el CI de los demás servicios (`identity-service`, `api-gateway` y `frontend` ya tienen su workflow, pendiente de que Arturo lo revise);
 - aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos);
 - los documentos de diseño de 5 servicios.
@@ -80,15 +80,15 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 
 | Servicio / pieza | Responsable | Documento | Código |
 |---|---|---|---|
-| `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Sin empezar |
-| `api-gateway` | Efrain | [Borrador](servicios/api-gateway.md) | Base (ruta de identity, JWT, headers y CORS); falta el límite de peticiones |
+| `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Con identity, el gateway y el frontend; faltan los demás servicios, RabbitMQ y Mailpit |
+| `api-gateway` | Efrain | [Borrador](servicios/api-gateway.md) | Integrado (probado con Docker Compose); falta el límite de peticiones |
 | `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Persistencia y API |
 | `notification-service` | Efrain | Sin documento | Sin empezar |
 | `campaign-service` | Arturo | Sin documento | Sin empezar |
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Sin empezar |
 | `update-service` | Gabo | Sin documento | Sin empezar |
 | `search-service` | Gabo | Sin documento | Sin empezar |
-| `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Base (shell y sesión) |
+| `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Integrado (probado con Docker Compose) |
 | `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Sin empezar |
 
 Valores posibles:
@@ -122,7 +122,9 @@ Valores posibles:
     - Topología de RabbitMQ: nombres de colas y DLQ, reintentos y quién declara qué.
     - Modo de desarrollo local: cómo correr un servicio desde el IDE contra la base y RabbitMQ del compose.
     - Variables de `.env.example`.
-    - *Avance:* `identity-service/.env.example` explica cómo correr el servicio desde el IDE contra una base local en Docker (Efrain).
+    - *Avance:*
+      - `identity-service/.env.example` explica cómo correr el servicio desde el IDE contra una base local en Docker (Efrain).
+      - El `.env.example` de la raíz tiene las variables de `docker-compose.yml`: `JWT_SECRETO`, `JWT_DURACION`, `ADMIN_CORREO`, `ADMIN_CONTRASENA` e `IDENTITY_DB_CONTRASENA` (Efrain, 2026-11-09).
   - [ ] **Frontend** (`docs/frontend.md`). Responsable: Efrain, con todos.
     - Zonas, rutas y estructura de carpetas de Angular.
     - Inventario de pantallas, con su responsable y los endpoints que usa cada una.
@@ -139,6 +141,7 @@ Valores posibles:
   - gateway ruteando `/api/**`;
   - identity con JWT;
   - base de Angular según `docs/frontend.md`.
+  - *Avance:* las cuatro cosas están hechas y probadas juntas con Docker Compose (ramas `feat/frontend-base`, `feat/gateway-base` y `chore/compose-base`). Faltan RabbitMQ en el compose y el límite de peticiones del gateway (Efrain, 2026-11-09).
 - **Fase 2 · Dominio en aislado (todos, en paralelo):** agregados, objetos de valor, reglas y tests unitarios.
 - **Fase 3 · Persistencia, API y eventos:** migraciones, endpoints por el gateway y eventos con idempotencia por `idEvento`.
 - **Fase 4 · Frontend:** las pantallas de cada dominio.
