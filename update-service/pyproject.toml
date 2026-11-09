@@ -37,7 +37,7 @@ markers = ["postgres: verifica concurrencia real en PostgreSQL", "rabbitmq: usa 
 [tool.ruff]
 target-version = "py313"
 line-length = 100
-exclude = [".herramientas"]
+extend-exclude = [".herramientas"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
