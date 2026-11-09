@@ -3,7 +3,7 @@ from types import TracebackType
 from typing import Protocol, Self
 from uuid import UUID
 
-from novedades.dominio.actualizacion import Actualizacion, CampanaActualizada
+from novedades.dominio.actualizacion import Actualizacion, ActualizacionPublicada
 from novedades.dominio.campana_para_novedades import CampanaParaNovedades
 
 
@@ -42,4 +42,4 @@ class UnidadDeTrabajo(Protocol):
         self, id_evento: UUID, tipo_evento: str, ocurrido_en: datetime
     ) -> bool: ...
 
-    def agregar_pendiente(self, evento: CampanaActualizada) -> None: ...
+    def agregar_pendiente(self, evento: ActualizacionPublicada) -> None: ...

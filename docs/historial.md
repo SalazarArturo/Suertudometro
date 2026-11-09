@@ -8,6 +8,8 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-09 · Gabo** · Compatibilidad de `update-service` con el CI general: empaquetado explícito para `pip install -e .`, pruebas rápidas por defecto y selección explícita de PostgreSQL en el Compose de pruebas. Se conserva el flujo de dependencias con `uv` y el workflow global. El evento interno se alinea con `ActualizacionPublicada`; su traducción al bus sigue siendo `CampanaActualizada`, sin cambiar contratos. → [Diseño de Novedades](servicios/update-service.md).
+
 - **2026-11-08 · Arturo** · Decisiones de `campaign-service` y contratos de sus eventos (→ `docs/contratos-de-eventos.md` y `docs/estado-del-proyecto.md`):
   - `CampanaCerrada` incluye explícitamente tanto `"estadoFinal"` (`"FINALIZADA"` | `"CANCELADA"`) como `"motivoCierre"` (`"META_ALCANZADA"` | `"PLAZO_VENCIDO"` | `"CANCELACION"`), alineado con el ADR 0003 y el event storming.
   - Reglas de negocio de campaña: moneda única `"BOB"`, meta mínima `100.00 BOB` (> 0), `fechaLimite` obligatoria futura en toda campaña, categorías como enum en español ASCII (`EDUCACION`, `SALUD`, `APOYO_COMUNITARIO`, `EMERGENCIAS`, `PROYECTOS_PERSONALES`, `OTROS`) y hasta 5 imágenes por campaña (`JPG`, `PNG`, `WEBP`, máx. 5 MB c/u).
@@ -46,6 +48,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-09 | Gabo | **Novedades: implementación y preparación para revisión.** Dominio, API, persistencia, inbox/outbox, JWT configurable, Compose autónomo y pruebas de PostgreSQL/RabbitMQ. Corrección de compatibilidad con CI general y del nombre del evento interno; diseño y estado documentados. Integración con servicios reales y frontend pendiente. | `feat/update-publicacion-novedades` |
 | 2026-11-08 | Arturo | **Proceso y CI + `campaign-service` (diseño y contratos).** Plantilla de PR (`.github/pull_request_template.md`) y workflow de CI (`.github/workflows/ci.yml`); documento de diseño `docs/servicios/campaign-service.md`; fichas `CampanaPublicada`, `CampanaCerrada` (con `estadoFinal` y `motivoCierre`), `MetaAlcanzada` y `CampanaRechazada` aprobadas por el productor; reglas de negocio de campaña y decisiones de cierre/estructura registradas. | `docs/campaign-contratos-y-diseno` |
 | 2026-11-07 | Raul | **Unificación de contratos.** Se integró la propuesta de Gabo como único documento de contratos; ficha `AporteRegistrado` ajustada; nota en `CampanaCerrada` sobre el ADR 0003; enlace al event storming corregido. | Subido directo a `main`, sin PR |
 | 2026-11-07 | Gabo | **Contratos de eventos:** propuesta v1 de los 7 eventos, con el uso de cada consumidor, reentregas y orden de llegada, y las decisiones para aprobarla. | `1266ac3` |
@@ -65,6 +68,7 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 
 | Ruta | Quién lo hizo |
 |---|---|
+| `update-service/`, `.github/workflows/update-service.yml` y `docs/servicios/update-service.md` | Gabo (2026-11-07 a 2026-11-09): implementación de novedades, workflow propio, diseño y compatibilidad con CI general |
 | `.github/` | Plantilla de PR (`pull_request_template.md`) y workflow de CI (`workflows/ci.yml`): Arturo (2026-11-08) |
 | `docs/servicios/` | Índice, plantilla y `contribution-service.md`: Raul (2026-11-07); `campaign-service.md` e índice actualizado: Arturo (2026-11-08) |
 | `docs/contratos-de-eventos.md` | Gabo (2026-11-07, propuesta v1 de los 7 eventos); Raul (2026-11-07: ficha `AporteRegistrado`, nota en `CampanaCerrada`, encabezado de responsables y enlace al event storming); Arturo (2026-11-08: fichas de `campaign-service` aprobadas por el productor, `estadoFinal` en `CampanaCerrada` y `categoria` en enum ASCII) |

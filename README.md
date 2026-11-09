@@ -169,7 +169,6 @@ Mientras está `PUBLICADA`, la campaña puede recibir varios aportes y actualiza
 > `update-service` ya cuenta con implementación, pruebas y Compose propios. Consulta
 > [su guía de ejecución](update-service/README.md). El Compose global de la plataforma
 > todavía está pendiente; los comandos siguientes describen ese objetivo.
-> Todavía no hay `docker-compose.yml`. Esta sección describe el objetivo.
 
 ```bash
 git clone https://github.com/SalazarArturo/Suertudometro.git

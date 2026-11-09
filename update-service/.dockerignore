@@ -1,5 +1,8 @@
 .git
 .venv
+*.egg-info
+build
+dist
 .herramientas
 **/__pycache__
 .pytest_cache

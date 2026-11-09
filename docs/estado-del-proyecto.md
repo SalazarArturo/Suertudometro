@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-08 (Arturo).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-09 (Gabo).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -67,13 +67,13 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar. Todavía no hay código.**
+**Fase 0: diseño y documentación, por cerrar; implementación de `update-service` en paralelo (Persistencia y API, pendiente de integración).**
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
-- las carpetas de los servicios y del frontend;
+- las carpetas de los demás servicios y del frontend (`update-service` ya tiene implementación y Compose autónomo);
 - `docker-compose.yml` y `.env.example`;
 - aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos; Arturo ya aprobó los 4 de `campaign-service` y Raul el de `contribution-service`);
-- los documentos de diseño de 5 servicios (`contribution-service` y `campaign-service` ya están en borrador).
+- los documentos de diseño de 4 servicios (`contribution-service`, `campaign-service` y `update-service` ya están en borrador).
 
 ## Avance por servicio
 
@@ -85,7 +85,7 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 | `notification-service` | Efrain | Sin documento | Sin empezar |
 | `campaign-service` | Arturo | [Borrador](servicios/campaign-service.md) | Sin empezar |
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Sin empezar |
-| `update-service` | Gabo | Sin documento | Sin empezar |
+| `update-service` | Gabo | [Borrador](servicios/update-service.md) | Persistencia y API |
 | `search-service` | Gabo | Sin documento | Sin empezar |
 | `frontend` (base: auth y shell) | Efrain | Sin documento (`docs/frontend.md`) | Sin empezar |
 | `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Sin empezar |
@@ -116,7 +116,7 @@ Valores posibles:
       - Raul (2026-11-07): aportes sin monto mínimo (> 0) y mensaje de apoyo de hasta 300 caracteres.
       - Arturo (2026-11-08): moneda única `BOB`; meta financiera mínima `100.00 BOB`; `fechaLimite` obligatoria futura; categorías en enum ASCII (`EDUCACION`, `SALUD`, `APOYO_COMUNITARIO`, `EMERGENCIAS`, `PROYECTOS_PERSONALES`, `OTROS`); hasta 5 imágenes por campaña (`JPG`, `PNG`, `WEBP`, máx. 5 MB c/u); título de 10 a 120 caracteres e historia de 50 a 5000 caracteres.
   - [ ] **Diseño de cada servicio** con la plantilla de `docs/servicios/README.md` (pendientes 10 y 11). Responsable: cada uno, de sus servicios.
-    - *Avance:* `contribution-service` y `campaign-service` están en borrador.
+    - *Avance:* `contribution-service`, `campaign-service` y `update-service` están en borrador.
   - [ ] **Infraestructura para desarrollar.** Responsable: Efrain.
     - Topología de RabbitMQ: nombres de colas y DLQ, reintentos y quién declara qué.
     - Modo de desarrollo local: cómo correr un servicio desde el IDE contra la base y RabbitMQ del compose.
@@ -138,6 +138,7 @@ Valores posibles:
   - base de Angular según `docs/frontend.md`.
 - **Fase 2 · Dominio en aislado (todos, en paralelo):** agregados, objetos de valor, reglas y tests unitarios.
 - **Fase 3 · Persistencia, API y eventos:** migraciones, endpoints por el gateway y eventos con idempotencia por `idEvento`.
+  - Gabo (2026-11-09): `update-service` tiene API, persistencia y adaptadores de eventos con pruebas aisladas. Falta integrar JWT, gateway, broker compartido y Notificaciones reales, confirmar contratos con Arturo/Efrain y comprobar el CI remoto. Diseño y pendientes: [update-service](servicios/update-service.md).
 - **Fase 4 · Frontend:** las pantallas de cada dominio.
 - **Fase 5 · Entrega:**
   - flujo completo de punta a punta;
@@ -160,7 +161,7 @@ Mientras sigan aquí, **nadie las asume**, ni las personas ni los agentes de IA:
 | 8 | ¿notification-service consume `campana.cerrada`? El enunciado pide avisos ante cambios de estado. Arturo propone que sí (y que `meta.alcanzada` avise al organizador y a los aportantes); falta que confirme Efrain. | notification, campaign | Efrain y Arturo |
 | 9 | Aportes que llegan después de alcanzada la meta pero antes de `campana.cerrada`: Arturo propone cierre automático al alcanzar la meta (`MetaAlcanzada` + `CampanaCerrada`), pero sumando en `campaign-service` cualquier `aporte.registrado` en tránsito que ya haya sido aceptado. Falta que confirme Raul. | contribution, campaign | Raul y Arturo |
 | 10 | Estructura de carpetas DDD por tecnología. Efrain compartió una propuesta para NestJS. En Spring Boot, Raul propuso Maven multimódulo en `contribution-service` y Arturo prefiere un solo módulo Maven separando las 5 capas por paquetes Java (`com.crowdfunding.campaign.<capa>`) en `campaign-service`; queda acordar entre Raul y Arturo si unifican o cada servicio mantiene su variante. | Todos los servicios | Efrain y Gabo; Raul y Arturo |
-| 11 | Modelo de dominio detallado de cada servicio. `contribution-service` y `campaign-service` ya tienen borrador. | Cada servicio | Su responsable |
+| 11 | Modelo de dominio detallado de cada servicio. `contribution-service`, `campaign-service` y `update-service` ya tienen borrador. | Cada servicio | Su responsable |
 | 12 | ADR 0001: falta el motivo para usar tres tecnologías y no una. | Documentación | Raul, con el equipo |
 | 13 | `CONTRIBUTING.md` con el detalle de cada tecnología (opcional). | Documentación | Equipo |
 | 14 | Campañas cerradas en el catálogo: ¿las `FINALIZADA` siguen visibles y marcadas? ¿Las `CANCELADA` se ocultan o se muestran con su estado? El enunciado pide explorar por estado. | search, frontend | Gabo |

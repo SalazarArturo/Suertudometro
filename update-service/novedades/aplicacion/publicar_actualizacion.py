@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from novedades.aplicacion.puertos import UnidadDeTrabajo
-from novedades.dominio.actualizacion import Actualizacion, CampanaActualizada
+from novedades.dominio.actualizacion import Actualizacion, ActualizacionPublicada
 from novedades.shared_kernel.errores import CampanaNoEncontrada
 
 
@@ -33,5 +33,5 @@ class PublicarActualizacionComandoManejador:
                 publicado_en=datetime.now(UTC),
             )
             unidad.actualizaciones.guardar(actualizacion)
-            unidad.agregar_pendiente(CampanaActualizada(uuid4(), actualizacion))
+            unidad.agregar_pendiente(ActualizacionPublicada(uuid4(), actualizacion))
         return actualizacion

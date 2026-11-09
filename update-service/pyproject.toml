@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "update-service"
 version = "0.1.0"
@@ -16,8 +20,15 @@ dependencies = [
 [project.optional-dependencies]
 desarrollo = ["pytest>=8,<10", "pytest-django>=4.11,<5", "ruff>=0.11,<1"]
 
+[tool.setuptools.packages.find]
+include = ["novedades*", "configuracion*"]
+
+[tool.uv]
+# Docker copia el código después de instalar las dependencias.
+package = false
+
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "configuracion.ajustes"
+DJANGO_SETTINGS_MODULE = "configuracion.ajustes_pruebas"
 pythonpath = ["."]
 testpaths = ["pruebas"]
 python_files = ["test_*.py"]

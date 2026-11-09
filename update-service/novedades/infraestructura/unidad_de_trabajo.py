@@ -1,6 +1,6 @@
 from django.db import transaction
 
-from novedades.dominio.actualizacion import CampanaActualizada
+from novedades.dominio.actualizacion import ActualizacionPublicada
 from novedades.infraestructura.models import EventoPendienteModelo, EventoRecibidoModelo
 from novedades.infraestructura.repositorios import (
     RepositorioActualizacionesDjango,
@@ -26,7 +26,7 @@ class UnidadDeTrabajoDjango:
         )
         return creado
 
-    def agregar_pendiente(self, evento: CampanaActualizada):
+    def agregar_pendiente(self, evento: ActualizacionPublicada):
         actualizacion = evento.actualizacion
         EventoPendienteModelo.objects.create(
             id_evento=evento.id_evento,

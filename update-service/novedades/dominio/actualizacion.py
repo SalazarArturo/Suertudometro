@@ -19,6 +19,6 @@ class Actualizacion:
 
 
 @dataclass(frozen=True)
-class CampanaActualizada:
+class ActualizacionPublicada:
     id_evento: UUID
     actualizacion: Actualizacion

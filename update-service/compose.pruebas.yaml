@@ -35,6 +35,7 @@ services:
       target: pruebas
     environment:
       DJANGO_CLAVE_SECRETA: clave-exclusiva-pruebas
+      DJANGO_SETTINGS_MODULE: configuracion.ajustes
       DJANGO_HOSTS_PERMITIDOS: testserver,localhost
       POSTGRES_DB: update-db
       POSTGRES_USER: pruebas
