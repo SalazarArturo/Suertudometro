@@ -45,7 +45,7 @@ Cada tema vive en **un solo** documento. Si lo cambias, actualiza en el mismo PR
 | Contenido (`datos`) de cada evento | `docs/contratos-de-eventos.md` (cada ficha la mantiene quien publica el evento) | — |
 | Diseño de cada servicio | `docs/servicios/<servicio>.md` (lo mantiene su responsable) | `docs/servicios/README.md` (índice) |
 | Diseño del frontend: zonas, rutas, sesión y convenciones para las pantallas | `docs/frontend.md` (la base la mantiene Efrain; cada responsable, las filas de sus pantallas) | — |
-| Contrato de identidad: roles, claims del JWT y headers `X-Usuario-*` que el gateway reenvía | `docs/servicios/identity-service.md` §2 (roles) y §5.1 (token y headers) | `docs/servicios/api-gateway.md` (cuando exista) |
+| Contrato de identidad: roles, claims del JWT y headers `X-Usuario-*` que el gateway reenvía | `docs/servicios/identity-service.md` §2 (roles) y §5.1 (token y headers) | `docs/servicios/api-gateway.md` §4 (cómo los aplica el gateway) |
 | Decisiones de arquitectura | `docs/adr/` | `docs/historial.md` |
 | Contenedores, puertos y volúmenes | `docs/diagramas/despliegue.excalidraw` | `docker-compose.yml` (cuando exista) |
 | Equipo, fase, avance, próximos pasos y pendientes | `docs/estado-del-proyecto.md` | `README.md` → Equipo (solo si cambia el reparto) |

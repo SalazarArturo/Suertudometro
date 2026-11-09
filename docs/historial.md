@@ -10,6 +10,13 @@ Las más recientes van arriba. Cada una indica quién la propuso o la decidió y
 
 - **2026-11-08 · Efrain** · La página se llama **«Go Fund Me»** y usa la paleta del mockup del equipo: azul marino `#22364e` como marca, naranja `#db8943` para la acción principal y tres colores de acento. El proyecto y el repositorio siguen llamándose Suertudómetro. → [`frontend.md`](frontend.md) §6
   - *Riesgo anotado:* GoFundMe es una marca registrada de otra empresa. Para el curso no hay problema, pero si el sistema se publica conviene un nombre propio.
+- **2026-11-08 · Efrain** · Diseño del api-gateway (→ [`servicios/api-gateway.md`](servicios/api-gateway.md)). Lo revisa el equipo por PR, porque decide quién llega a sus servicios.
+  - **Solo autentica:** valida el token y pone los headers `X-Usuario-*`. El rol lo revisa cada servicio, que conoce sus reglas.
+  - **Todo requiere sesión** salvo las rutas públicas declaradas en `application.yaml`. Así una ruta nueva nace protegida. Hoy son públicos el registro, el inicio de sesión y el Swagger de identity.
+  - **Un token inválido o vencido da `401` aunque la ruta sea pública.**
+  - **No reenvía el `Authorization`:** los servicios nunca ven el token.
+  - **Sin capas DDD:** el gateway no tiene dominio; los paquetes se ordenan por responsabilidad.
+  - **El límite de peticiones** (Bucket4j + Caffeine) va en un PR aparte.
 - **2026-11-08 · Efrain** · Base del frontend (→ [`frontend.md`](frontend.md)). La revisa el equipo por PR, porque todos montan sus pantallas sobre ella.
   - **Librería visual: Angular Material 22.** Todas las pantallas usan los mismos componentes (campos, botones, tarjetas, barra de progreso, diálogos y avisos). Así se parecen aunque las haga cada integrante, y son accesibles. Material 22 ya funciona con Signal Forms. Se descartaron Tailwind CSS (cada uno armaría sus componentes) y el CSS propio (más trabajo para cada uno).
   - **Sesión en `localStorage`:** sobrevive a una recarga durante la hora del token. Una cookie `HttpOnly` obligaría al gateway a manejar cookies y CSRF.
@@ -61,6 +68,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-08 | Efrain | **Base del api-gateway**: Spring Cloud Gateway (WebFlux) con Spring Boot 4.1 y Java 21. Enruta `/api/identidad/**`, valida el JWT HS256, borra los `X-Usuario-*` del cliente y pone los del token, aplica CORS para el frontend y responde sus errores en RFC 9457. Pruebas con JUnit 5 contra un servicio simulado, Spotless, Dockerfile y workflow de CI. | Rama `feat/gateway-base` |
 | 2026-11-08 | Efrain | **Base del frontend**: borrador de `docs/frontend.md` (zonas, rutas, carpetas, sesión e inventario de pantallas) y la aplicación Angular 22 con Angular Material. Tiene el shell, la sesión con el token (interceptores y guards) y las pantallas de identidad: crear cuenta, iniciar sesión y mi perfil. Pruebas con Vitest, lint, Dockerfile con Nginx y workflow de CI. Falta el gateway para probarla contra el API. | Rama `feat/frontend-base` |
 | 2026-11-08 | Efrain | **Autenticación de identity-service** (fase 5): `POST /api/identidad/sesiones` emite el JWT HS256 con los claims del contrato (§5.1) y dura `JWT_DURACION`; `GET /api/identidad/perfil` lee los headers `X-Usuario-*` con un guard global (todo requiere sesión salvo lo `@Publico`); el primer administrador se siembra al arrancar y es idempotente. Variables nuevas: `JWT_SECRETO`, `JWT_DURACION`, `ADMIN_CORREO` y `ADMIN_CONTRASENA`. Probado con e2e y con la imagen de Docker. | Rama `feat/identity-autenticacion` |
 | 2026-11-08 | Efrain | **API REST de identity-service** (fase 4): `POST /api/identidad/usuarios`, con validación global de la forma de la petición, errores RFC 9457 en un solo filtro (catálogo de códigos a estados HTTP) y Swagger en `/api/identidad/docs`. Las pruebas e2e corren contra PostgreSQL 18 con Testcontainers. Probado también con la imagen de Docker. | Rama `feat/identity-api` |
@@ -86,7 +94,7 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 
 | Ruta | Quién lo hizo |
 |---|---|
-| `docs/servicios/` | Índice, plantilla y `contribution-service.md`: Raul (2026-11-07). `identity-service.md`: Efrain (2026-11-07) |
+| `docs/servicios/` | Índice, plantilla y `contribution-service.md`: Raul (2026-11-07). `identity-service.md`: Efrain (2026-11-07). `api-gateway.md`: Efrain (2026-11-08) |
 | `docs/contratos-de-eventos.md` | Gabo (2026-11-07, propuesta v1 de los 7 eventos); Raul (2026-11-07: ficha `AporteRegistrado`, nota en `CampanaCerrada`, encabezado de responsables y enlace al event storming) |
 | `docs/adr/` | Raul (2026-11-07) |
 | `docs/enunciado/` | Raul (2026-11-07): transcripción del PDF del docente. Efrain (2026-11-07): fila "Moderación de usuarios" de la sección 4, pendiente de revisión de Raul |
@@ -95,9 +103,10 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 | `docs/diagramas/arquitectura.excalidraw` y `despliegue.excalidraw` | Raul (2026-11-04, como `docs/diagrama-*.excalidraw`); Raul (2026-11-07, paso al español y movidos) |
 | `docs/diagramas/event-storming.excalidraw` | Primera versión subida por Raul (2026-11-04, como `docs/event-storming-suertudometro.excalidraw`); Arturo (2026-11-04, renombrado a `-updated`); Gabo (2026-11-06: agregados, read models y sistemas externos); Raul (2026-11-07: opción A y movido) |
 | `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, roles de identity); Efrain (2026-11-08, enlace a `docs/frontend.md`) |
-| `AGENTS.md` | Arturo (2026-10-16); Efrain (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, fila del contrato de identidad); Efrain (2026-11-08, fila del frontend) |
+| `AGENTS.md` | Arturo (2026-10-16); Efrain (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, fila del contrato de identidad); Efrain (2026-11-08, filas del frontend y del gateway) |
 | `CLAUDE.md` | Arturo (2026-10-16); Raul (2026-11-07) |
 | `.agents/skills/` y `skills-lock.json` | Arturo (2026-10-16, primeras skills); Efrain (2026-11-06, skill propia y skills nuevas); Raul (2026-11-07, quitó 4 skills y convirtió la skill propia en checklist) |
 | `.gitignore` | Arturo (2026-10-16); Raul (2026-11-07) |
 | `identity-service/` y `.github/workflows/identity-service.yml` | Efrain (2026-11-07, esqueleto) |
 | `docs/frontend.md`, `frontend/` y `.github/workflows/frontend.yml` | Efrain (2026-11-08, base del frontend) |
+| `api-gateway/` y `.github/workflows/api-gateway.yml` | Efrain (2026-11-08, base del gateway) |

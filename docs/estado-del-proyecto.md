@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-08 (Efrain: base del frontend).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-08 (Efrain: base del frontend y del api-gateway).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -67,12 +67,12 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar.** Todo el código que hay es de Efrain. En `identity-service`: el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además está la base del frontend (rama `feat/frontend-base`): Angular 22 con Angular Material, la sesión y las pantallas de identidad.
+**Fase 0: diseño y documentación, por cerrar.** Todo el código que hay es de Efrain. En `identity-service`: el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS.
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
-- las carpetas de los demás servicios (ya existen `identity-service` y `frontend`);
+- las carpetas de los demás servicios (ya existen `identity-service`, `api-gateway` y `frontend`);
 - `docker-compose.yml` y `.env.example`;
-- el CI de los demás servicios (`identity-service` y `frontend` ya tienen su workflow, pendiente de que Arturo lo revise);
+- el CI de los demás servicios (`identity-service`, `api-gateway` y `frontend` ya tienen su workflow, pendiente de que Arturo lo revise);
 - aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos);
 - los documentos de diseño de 5 servicios.
 
@@ -81,20 +81,20 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 | Servicio / pieza | Responsable | Documento | Código |
 |---|---|---|---|
 | `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Sin empezar |
-| `api-gateway` | Efrain | Sin documento | Sin empezar |
+| `api-gateway` | Efrain | [Borrador](servicios/api-gateway.md) | Base (ruta de identity, JWT, headers y CORS); falta el límite de peticiones |
 | `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Persistencia y API |
 | `notification-service` | Efrain | Sin documento | Sin empezar |
 | `campaign-service` | Arturo | Sin documento | Sin empezar |
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Sin empezar |
 | `update-service` | Gabo | Sin documento | Sin empezar |
 | `search-service` | Gabo | Sin documento | Sin empezar |
-| `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Base (shell y sesión); falta el gateway para probarla contra el API |
+| `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Base (shell y sesión) |
 | `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Sin empezar |
 
 Valores posibles:
 - **Documento:** Sin documento · Borrador · Vigente.
 - **Código:** Sin empezar · Dominio en aislado · Persistencia y API · Integrado por eventos · Terminado.
-- **Código de la base del frontend:** Sin empezar · Base (shell y sesión) · Integrado con el gateway · Terminado.
+- **Código del api-gateway y de la base del frontend** (no tienen dominio): Sin empezar · Base · Integrado (probado de punta a punta con Docker Compose) · Terminado.
 
 ## Próximos pasos (propuesta; se ajusta por PR)
 
@@ -105,11 +105,11 @@ Valores posibles:
     - *Avance:*
       - Gabo propuso la v1 de los 7 eventos (commit `1266ac3`).
       - Raul ajustó la ficha `AporteRegistrado` y dejó una nota en `CampanaCerrada` para alinearla con el ADR 0003; la decide Arturo.
-  - [ ] **Contrato de identidad y acceso.** Responsable: Efrain.
+  - [x] **Contrato de identidad y acceso.** Responsable: Efrain.
     - [x] Roles y cómo se crea el primer administrador.
     - [x] Claims del JWT y headers que el gateway reenvía a los servicios (era el pendiente 5).
     - [x] Moderación de usuarios (era el pendiente 6): no se implementa; el administrador solo modera campañas. Ver el riesgo en `historial.md`.
-    - [ ] Qué rutas son públicas, cuáles requieren sesión y cuáles requieren un rol (irá en `docs/servicios/api-gateway.md`).
+    - [x] Qué rutas son públicas, cuáles requieren sesión y cuáles requieren un rol: [`servicios/api-gateway.md`](servicios/api-gateway.md) §3. Todo requiere sesión salvo las rutas públicas declaradas, y el rol lo revisa cada servicio. Las rutas públicas de cada servicio las confirma su responsable (Efrain, 2026-11-08).
     - *Avance:* lo resuelto está en [`servicios/identity-service.md`](servicios/identity-service.md) §2 y §5.1 (Efrain, 2026-11-07).
   - [ ] **Reglas de negocio compartidas.** Responsables: Arturo y Raul, con el equipo.
     - Categorías y moneda.

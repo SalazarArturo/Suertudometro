@@ -173,7 +173,7 @@ Ejemplo (`409`):
 
 ### 5.1 Contrato del token y de los headers
 
-> Esta sección es la **fuente única** del contrato de identidad entre el gateway y los servicios (decisión #5 del 2026-11-07, ver `docs/historial.md`). `api-gateway.md` la referenciará.
+> Esta sección es la **fuente única** del contrato de identidad entre el gateway y los servicios (decisión #5 del 2026-11-07, ver `docs/historial.md`). Cómo la aplica el gateway: [`api-gateway.md`](api-gateway.md) §4.
 
 **El token (lo emite este servicio):**
 - JWT firmado con **HS256** y el secreto `JWT_SECRETO`, de al menos 32 bytes. Lo comparten identity-service y api-gateway por `.env`.
@@ -199,7 +199,7 @@ Ejemplo (`409`):
 - **Un `Authorization: Bearer` sin los headers no alcanza** (`401`): el token solo lo valida el gateway.
 - **`@UsuarioActual`** entrega al controlador `{ id, rol, nombre }`, con el nombre ya decodificado.
 
-**Rutas públicas de identity-service** (el gateway las deja pasar sin token): `POST /api/identidad/usuarios` y `POST /api/identidad/sesiones`. La tabla completa de rutas públicas del sistema irá en `api-gateway.md`.
+**Rutas públicas de identity-service** (el gateway las deja pasar sin token): `POST /api/identidad/usuarios` y `POST /api/identidad/sesiones`. La tabla completa de rutas públicas del sistema está en [`api-gateway.md`](api-gateway.md) §3.
 
 ## 6. Eventos
 
@@ -383,6 +383,7 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-08 | Efrain | El §5.1 enlaza a `api-gateway.md`, que aplica el contrato y tiene la tabla de rutas públicas. |
 | 2026-11-08 | Efrain | El §11 enlaza a `docs/frontend.md`, donde están las pantallas y la sesión del frontend. |
 | 2026-11-08 | Efrain | Fase 5: cómo aplica identity-service el contrato de headers (guard global, `@Publico`, los tres headers obligatorios). |
 | 2026-11-08 | Efrain | Fase 4: los dos niveles de validación, la tabla de errores completa (con `about:blank` y `500`), el `title` en español y el catálogo de errores; el administrador sembrado tiene el nombre fijo «Administrador»; estructura de carpetas actualizada. |
