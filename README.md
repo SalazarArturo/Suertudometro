@@ -205,6 +205,7 @@ Cada integrante puede usar la herramienta de IA que prefiera; las reglas son las
 | [`docs/estado-del-proyecto.md`](docs/estado-del-proyecto.md) | Presente: equipo, fase, avance, próximos pasos y decisiones pendientes. |
 | [`docs/historial.md`](docs/historial.md) | Pasado: decisiones tomadas, bitácora y quién hizo cada archivo. |
 | [`docs/servicios/`](docs/servicios/README.md) | Diseño de cada servicio (uno por servicio, a cargo de su responsable). |
+| [`docs/frontend.md`](docs/frontend.md) | Diseño del frontend: zonas, rutas, sesión, errores y convenciones para las pantallas. |
 | [`docs/contratos-de-eventos.md`](docs/contratos-de-eventos.md) | Campos de cada evento del bus (propuesta v1) y lo que falta acordar. |
 | [`docs/adr/`](docs/adr/README.md) | Decisiones de arquitectura y por qué se tomaron. |
 | [`docs/stack-y-convenciones.md`](docs/stack-y-convenciones.md) | Versiones, librerías, bases de datos, skills y convenciones de código, API, datos y Git. |

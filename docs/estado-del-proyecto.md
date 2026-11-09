@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-08 (Efrain: API REST y autenticación de identity-service).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-08 (Efrain: base del frontend).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -67,12 +67,12 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar.** El único código es el de `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`).
+**Fase 0: diseño y documentación, por cerrar.** Todo el código que hay es de Efrain. En `identity-service`: el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además está la base del frontend (rama `feat/frontend-base`): Angular 22 con Angular Material, la sesión y las pantallas de identidad.
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
-- las carpetas de los servicios (salvo `identity-service`) y del frontend;
+- las carpetas de los demás servicios (ya existen `identity-service` y `frontend`);
 - `docker-compose.yml` y `.env.example`;
-- el CI de los demás servicios (`identity-service` ya tiene su workflow, pendiente de que Arturo lo revise);
+- el CI de los demás servicios (`identity-service` y `frontend` ya tienen su workflow, pendiente de que Arturo lo revise);
 - aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos);
 - los documentos de diseño de 5 servicios.
 
@@ -88,12 +88,13 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Sin empezar |
 | `update-service` | Gabo | Sin documento | Sin empezar |
 | `search-service` | Gabo | Sin documento | Sin empezar |
-| `frontend` (base: auth y shell) | Efrain | Sin documento (`docs/frontend.md`) | Sin empezar |
+| `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Base (shell y sesión); falta el gateway para probarla contra el API |
 | `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Sin empezar |
 
 Valores posibles:
 - **Documento:** Sin documento · Borrador · Vigente.
 - **Código:** Sin empezar · Dominio en aislado · Persistencia y API · Integrado por eventos · Terminado.
+- **Código de la base del frontend:** Sin empezar · Base (shell y sesión) · Integrado con el gateway · Terminado.
 
 ## Próximos pasos (propuesta; se ajusta por PR)
 
@@ -125,6 +126,7 @@ Valores posibles:
   - [ ] **Frontend** (`docs/frontend.md`). Responsable: Efrain, con todos.
     - Zonas, rutas y estructura de carpetas de Angular.
     - Inventario de pantallas, con su responsable y los endpoints que usa cada una.
+    - *Avance:* borrador de [`frontend.md`](frontend.md) con todo lo anterior. Las rutas de cada dominio son una propuesta que confirma su responsable (Efrain, 2026-11-08).
   - [ ] **Proceso.** Responsable: Arturo.
     - Plantilla de PR.
     - Proteger `main` en GitHub.

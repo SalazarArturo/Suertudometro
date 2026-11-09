@@ -1,0 +1,35 @@
+.barra {
+  gap: 8px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mat-sys-primary);
+  font: var(--mat-sys-title-large);
+  text-decoration: none;
+}
+
+.separador {
+  flex: 1;
+}
+
+.nombre {
+  display: inline-block;
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+// En pantallas angostas solo queda "Iniciar sesión"; su pantalla lleva a crear cuenta.
+.crear-cuenta {
+  display: none;
+
+  @media (min-width: 600px) {
+    display: inline-flex;
+  }
+}

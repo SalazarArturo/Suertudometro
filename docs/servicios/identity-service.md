@@ -329,7 +329,7 @@ Mientras no esté el gateway, las pruebas envían los headers `X-Usuario-*` a ma
 
 ## 11. Pantallas del frontend (identidad y acceso)
 
-Son parte de la base de Angular, que también es de Efrain. El detalle irá en `docs/frontend.md`.
+Son parte de la base de Angular, que también es de Efrain. El detalle está en [`docs/frontend.md`](../frontend.md): las rutas en el §2 y la sesión en el §4.
 
 - **Registro:** nombre, correo, contraseña y confirmación de la contraseña. Al terminar, inicia sesión automáticamente.
 - **Iniciar sesión:** correo y contraseña.
@@ -383,6 +383,7 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-08 | Efrain | El §11 enlaza a `docs/frontend.md`, donde están las pantallas y la sesión del frontend. |
 | 2026-11-08 | Efrain | Fase 5: cómo aplica identity-service el contrato de headers (guard global, `@Publico`, los tres headers obligatorios). |
 | 2026-11-08 | Efrain | Fase 4: los dos niveles de validación, la tabla de errores completa (con `about:blank` y `500`), el `title` en español y el catálogo de errores; el administrador sembrado tiene el nombre fijo «Administrador»; estructura de carpetas actualizada. |
 | 2026-11-07 | Efrain | Primera versión, con las decisiones de roles, primer administrador, contrato del token (#5), sin moderación de usuarios (#6) y #8. |

@@ -1,0 +1,38 @@
+<mat-toolbar class="barra">
+  <a class="marca" routerLink="/">
+    <mat-icon aria-hidden="true">volunteer_activism</mat-icon>
+    <span>Suertudómetro</span>
+  </a>
+
+  <span class="separador"></span>
+
+  @if (sesion.usuario(); as usuario) {
+    <button matButton type="button" class="cuenta" [matMenuTriggerFor]="menuCuenta">
+      <mat-icon aria-hidden="true">account_circle</mat-icon>
+      <span class="nombre">{{ usuario.nombre }}</span>
+    </button>
+    <mat-menu #menuCuenta="matMenu" xPosition="before">
+      <a mat-menu-item routerLink="/perfil">
+        <mat-icon aria-hidden="true">person</mat-icon>
+        <span>Mi perfil</span>
+      </a>
+      <a mat-menu-item routerLink="/panel">
+        <mat-icon aria-hidden="true">dashboard</mat-icon>
+        <span>Mi panel</span>
+      </a>
+      @if (sesion.esAdministrador()) {
+        <a mat-menu-item routerLink="/administracion">
+          <mat-icon aria-hidden="true">admin_panel_settings</mat-icon>
+          <span>Administración</span>
+        </a>
+      }
+      <button mat-menu-item type="button" (click)="cerrarSesion()">
+        <mat-icon aria-hidden="true">logout</mat-icon>
+        <span>Cerrar sesión</span>
+      </button>
+    </mat-menu>
+  } @else {
+    <a matButton routerLink="/ingresar">Iniciar sesión</a>
+    <a matButton="filled" class="crear-cuenta" routerLink="/registro">Crear cuenta</a>
+  }
+</mat-toolbar>

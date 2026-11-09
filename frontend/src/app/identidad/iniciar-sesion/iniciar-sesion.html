@@ -1,0 +1,50 @@
+<section class="pagina-formulario">
+  <mat-card class="tarjeta-formulario" appearance="outlined">
+    <mat-card-header>
+      <h1 mat-card-title>Iniciar sesión</h1>
+    </mat-card-header>
+    <mat-card-content>
+      @if (sesionVencida()) {
+        <p class="mensaje-aviso" role="status">
+          Tu sesión venció. Vuelve a iniciar sesión para continuar.
+        </p>
+      }
+
+      <form class="formulario" [formRoot]="formulario">
+        <mat-form-field>
+          <mat-label>Correo</mat-label>
+          <input matInput type="email" autocomplete="email" [formField]="formulario.correo" />
+          @if (formulario.correo().errors()[0]; as error) {
+            <mat-error>{{ error.message }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Contraseña</mat-label>
+          <input
+            matInput
+            type="password"
+            autocomplete="current-password"
+            [formField]="formulario.contrasena"
+          />
+          @if (formulario.contrasena().errors()[0]; as error) {
+            <mat-error>{{ error.message }}</mat-error>
+          }
+        </mat-form-field>
+
+        @if (formulario().errors()[0]; as error) {
+          <p class="mensaje-error" role="alert">{{ error.message }}</p>
+        }
+
+        <button matButton="filled" type="submit" [disabled]="formulario().submitting()">
+          {{ formulario().submitting() ? 'Ingresando…' : 'Ingresar' }}
+        </button>
+      </form>
+
+      <p class="alternativa">
+        ¿No tienes cuenta?
+        <a routerLink="/registro" [queryParams]="{ volverA: volverA() }">Crea una</a>
+      </p>
+    </mat-card-content>
+  </mat-card>
+</section>

@@ -7,7 +7,7 @@ Instrucciones para agentes de IA (Claude Code, Cursor, Codex, Copilot, etc.) que
 1. **Lee `docs/estado-del-proyecto.md`.** Claude Code ya lo carga desde `CLAUDE.md`. Ahí están la meta, el equipo, la fase, el avance, los próximos pasos y las decisiones pendientes. **Si arriba hay un aviso, cuéntaselo primero a la persona con quien trabajas.**
 2. **Identifica con quién trabajas.** Compara `git config user.name` con la tabla "Equipo" de ese documento y trabaja en los servicios de esa persona. Si la tarea toca el servicio, la base de datos, un contrato o un documento de otro integrante, avisa antes de cambiar nada.
 3. **Antes de escribir código**, lee:
-   - el documento de diseño del servicio (`docs/servicios/`);
+   - el documento de diseño del servicio (`docs/servicios/`), o `docs/frontend.md` si la tarea toca el frontend;
    - los contratos de los eventos que publica o consume (`docs/contratos-de-eventos.md`);
    - el módulo que vas a tocar.
 
@@ -44,6 +44,7 @@ Cada tema vive en **un solo** documento. Si lo cambias, actualiza en el mismo PR
 | Convenciones técnicas: idioma, versiones, capas, nombres, API, datos, Git y skills | `docs/stack-y-convenciones.md` | Este archivo (resumen) y la skill (checklist) |
 | Contenido (`datos`) de cada evento | `docs/contratos-de-eventos.md` (cada ficha la mantiene quien publica el evento) | — |
 | Diseño de cada servicio | `docs/servicios/<servicio>.md` (lo mantiene su responsable) | `docs/servicios/README.md` (índice) |
+| Diseño del frontend: zonas, rutas, sesión y convenciones para las pantallas | `docs/frontend.md` (la base la mantiene Efrain; cada responsable, las filas de sus pantallas) | — |
 | Contrato de identidad: roles, claims del JWT y headers `X-Usuario-*` que el gateway reenvía | `docs/servicios/identity-service.md` §2 (roles) y §5.1 (token y headers) | `docs/servicios/api-gateway.md` (cuando exista) |
 | Decisiones de arquitectura | `docs/adr/` | `docs/historial.md` |
 | Contenedores, puertos y volúmenes | `docs/diagramas/despliegue.excalidraw` | `docker-compose.yml` (cuando exista) |
