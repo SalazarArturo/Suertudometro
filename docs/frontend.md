@@ -1,7 +1,7 @@
 # frontend
 
 > **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-08 · **Estado:** Borrador (en revisión del equipo)
-> Angular 22 · TypeScript 6 · Angular Material 22 · Vitest · contenedor `frontend` (Nginx, host `4200` → `80`).
+> Angular 22 · TypeScript 6 · Angular Material 22 · Vitest · contenedor `frontend` (Nginx, host `4200` → `80`) · nombre visible: **Go Fund Me** (el proyecto y el repositorio siguen llamándose Suertudómetro).
 
 ## 1. Qué es
 
@@ -110,14 +110,28 @@ Los formularios ponen el error **en el campo** que corresponde (por ejemplo, `co
   - lecturas con `httpResource` y escrituras con `HttpClient`, dentro de `<dominio>-api.ts`;
   - servicios con `@Service()`, que es el reemplazo de `@Injectable({ providedIn: 'root' })` en la versión 22.
 - **Angular Material 22** para los componentes visuales: campos, botones, tarjetas, barra de progreso, diálogos y avisos.
-  - El tema está en `src/styles.scss` (Material 3).
-  - Para colores propios se usan las variables `--mat-sys-*`, no colores fijos. Así, si cambia el tema, cambia toda la aplicación.
+  - El tema está en `src/styles.scss` (Material 3). Las paletas de `src/_theme-colors.scss` se generaron con `ng generate @angular/material:theme-color` a partir del azul marino y del naranja.
+  - Para colores propios se usan las variables `--color-*` y `--mat-sys-*`, nunca colores fijos. Así, si cambia el tema, cambia toda la aplicación.
+  - Los campos llevan `appearance="outline"` en cada `mat-form-field`. No se configura de forma global porque el token de Material metería el módulo de formularios en el bundle inicial (unos 150 kB).
+- **Marca y colores**, tomados del mockup del equipo:
+
+  | Variable | Color | Uso |
+  |---|---|---|
+  | `--color-marca` | `#22364e` (azul marino) | Barra superior, botones con contorno y foco de los campos. Es el `primary` de Material. |
+  | `--color-accion` | `#db8943` (naranja) | Acción principal: el botón relleno (`matButton="filled"`). Su texto va en azul marino, porque el blanco sobre este naranja no se lee bien (2,7:1). |
+  | `--color-acento-azul`, `--color-acento-verde`, `--color-acento-rojo` | `#426897`, `#4a8388`, `#bf5b5f` | Acentos, por ejemplo uno por categoría de campaña. El verde y el rojo no alcanzan 4,5:1 sobre blanco: úsalos en barras, bordes o texto grande. |
+  | `--color-fondo-suave` | `#f0f4f6` | Bloques destacados, como la portada |
+  | `--color-borde` | `#dde3e7` | Bordes de tarjetas y bloques |
+  | `--color-pista` | `#e8ebee` | Pista de las barras de progreso |
+
+  - **Letra:** Lato para el texto y Noto Serif en negrita para los títulos.
+  - **Nombre visible:** `NOMBRE_APLICACION` en `core/titulo/estrategia-titulo.ts`. Lo usan la barra superior y el título de la pestaña.
 - **Configuración regional `es-BO`:** `DatePipe` y `CurrencyPipe` formatean en español de Bolivia (`{{ monto | currency: moneda }}`).
 - **Nombres:**
   - en español ASCII y con los términos del event storming (`docs/stack-y-convenciones.md` §5.1);
   - archivos en *kebab-case* sin sufijo de rol, como genera el CLI de Angular 22: `registro.ts` contiene `class Registro`;
   - los tipos van en `<dominio>.model.ts` y las pruebas en `<archivo>.spec.ts`.
-- **Rutas en español ASCII** (`/ingresar`, `/campanas/:id`). El `title` de cada ruta es solo el nombre de la pantalla, y `EstrategiaTitulo` le agrega " · Suertudómetro".
+- **Rutas en español ASCII** (`/ingresar`, `/campanas/:id`). El `title` de cada ruta es solo el nombre de la pantalla, y `EstrategiaTitulo` le agrega " · Go Fund Me".
 
 ## 7. Configuración
 
@@ -152,4 +166,5 @@ El workflow `.github/workflows/frontend.yml` corre lint, formato, pruebas y buil
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-08 | Efrain | Nombre visible «Go Fund Me» y la paleta y las letras del mockup del equipo (§6). |
 | 2026-11-08 | Efrain | Primera versión: zonas y rutas, estructura de carpetas, sesión, errores, convenciones (Angular Material, Signal Forms, `es-BO`), configuración, pruebas y Docker. |

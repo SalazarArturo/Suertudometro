@@ -8,6 +8,8 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-08 · Efrain** · La página se llama **«Go Fund Me»** y usa la paleta del mockup del equipo: azul marino `#22364e` como marca, naranja `#db8943` para la acción principal y tres colores de acento. El proyecto y el repositorio siguen llamándose Suertudómetro. → [`frontend.md`](frontend.md) §6
+  - *Riesgo anotado:* GoFundMe es una marca registrada de otra empresa. Para el curso no hay problema, pero si el sistema se publica conviene un nombre propio.
 - **2026-11-08 · Efrain** · Base del frontend (→ [`frontend.md`](frontend.md)). La revisa el equipo por PR, porque todos montan sus pantallas sobre ella.
   - **Librería visual: Angular Material 22.** Todas las pantallas usan los mismos componentes (campos, botones, tarjetas, barra de progreso, diálogos y avisos). Así se parecen aunque las haga cada integrante, y son accesibles. Material 22 ya funciona con Signal Forms. Se descartaron Tailwind CSS (cada uno armaría sus componentes) y el CSS propio (más trabajo para cada uno).
   - **Sesión en `localStorage`:** sobrevive a una recarga durante la hora del token. Una cookie `HttpOnly` obligaría al gateway a manejar cookies y CSRF.

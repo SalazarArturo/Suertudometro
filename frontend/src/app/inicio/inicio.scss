@@ -1,21 +1,32 @@
+// La portada del mockup: un bloque claro con borde, el título en serif y la
+// acción principal en naranja.
 .portada {
-  padding-block: 64px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 32px;
+  padding: 24px 28px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--mat-sys-corner-large);
+  background-color: var(--color-fondo-suave);
 
   h1 {
-    font: var(--mat-sys-display-small);
-    margin: 0 0 16px;
+    margin: 0 0 8px;
+    font-size: 1.75rem;
+    line-height: 1.25;
   }
 }
 
 .bajada {
-  font: var(--mat-sys-body-large);
-  color: var(--mat-sys-on-surface-variant);
   max-width: 60ch;
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-large);
 }
 
 .acciones {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 24px;
 }

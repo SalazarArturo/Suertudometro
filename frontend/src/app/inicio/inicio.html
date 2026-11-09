@@ -1,19 +1,20 @@
-<section class="pagina portada">
-  <h1>Campañas solidarias, aportes simulados</h1>
-  <p class="bajada">
-    Crea una campaña para una causa (educación, emergencias, apoyo comunitario o un proyecto
-    personal), cuenta su historia y recibe aportes de la comunidad.
-  </p>
+<section class="pagina">
+  <div class="portada">
+    <div>
+      <h1>Ayuda a convertir una causa en acción</h1>
+      <p class="bajada">
+        Crea una campaña para una causa (educación, emergencias, apoyo comunitario o un proyecto
+        personal), cuenta su historia y recibe aportes de la comunidad.
+      </p>
+    </div>
 
-  @if (sesion.usuario(); as usuario) {
-    <p>Hola, {{ usuario.nombre }}.</p>
     <div class="acciones">
-      <a matButton="filled" routerLink="/perfil">Ver mi perfil</a>
+      @if (sesion.usuario()) {
+        <a matButton="filled" routerLink="/perfil">Ver mi perfil</a>
+      } @else {
+        <a matButton="filled" routerLink="/registro">Crear una cuenta</a>
+        <a matButton="outlined" routerLink="/ingresar">Iniciar sesión</a>
+      }
     </div>
-  } @else {
-    <div class="acciones">
-      <a matButton="filled" routerLink="/registro">Crear una cuenta</a>
-      <a matButton="outlined" routerLink="/ingresar">Iniciar sesión</a>
-    </div>
-  }
+  </div>
 </section>

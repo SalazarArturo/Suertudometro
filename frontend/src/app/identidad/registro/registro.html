@@ -5,7 +5,7 @@
     </mat-card-header>
     <mat-card-content>
       <form class="formulario" [formRoot]="formulario">
-        <mat-form-field>
+        <mat-form-field appearance="outline">
           <mat-label>Nombre</mat-label>
           <input matInput autocomplete="name" [formField]="formulario.nombre" />
           <mat-hint>Así te verán en las campañas y en tus aportes con nombre.</mat-hint>
@@ -14,7 +14,7 @@
           }
         </mat-form-field>
 
-        <mat-form-field>
+        <mat-form-field appearance="outline">
           <mat-label>Correo</mat-label>
           <input matInput type="email" autocomplete="email" [formField]="formulario.correo" />
           @if (formulario.correo().errors()[0]; as error) {
@@ -22,7 +22,7 @@
           }
         </mat-form-field>
 
-        <mat-form-field>
+        <mat-form-field appearance="outline">
           <mat-label>Contraseña</mat-label>
           <input
             matInput
@@ -36,7 +36,7 @@
           }
         </mat-form-field>
 
-        <mat-form-field>
+        <mat-form-field appearance="outline">
           <mat-label>Repite la contraseña</mat-label>
           <input
             matInput

@@ -11,7 +11,7 @@
       }
 
       <form class="formulario" [formRoot]="formulario">
-        <mat-form-field>
+        <mat-form-field appearance="outline">
           <mat-label>Correo</mat-label>
           <input matInput type="email" autocomplete="email" [formField]="formulario.correo" />
           @if (formulario.correo().errors()[0]; as error) {
@@ -19,7 +19,7 @@
           }
         </mat-form-field>
 
-        <mat-form-field>
+        <mat-form-field appearance="outline">
           <mat-label>Contraseña</mat-label>
           <input
             matInput

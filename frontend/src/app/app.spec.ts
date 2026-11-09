@@ -17,7 +17,7 @@ describe('App', () => {
     await fixture.whenStable();
 
     const pantalla = fixture.nativeElement as HTMLElement;
-    expect(pantalla.querySelector('app-barra-superior')?.textContent).toContain('Suertudómetro');
+    expect(pantalla.querySelector('app-barra-superior')?.textContent).toContain('Go Fund Me');
     expect(pantalla.querySelector('main')).not.toBeNull();
   });
 });

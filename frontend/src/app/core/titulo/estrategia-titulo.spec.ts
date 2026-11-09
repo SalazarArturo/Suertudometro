@@ -23,9 +23,9 @@ describe('EstrategiaTitulo', () => {
     const titulo = TestBed.inject(Title);
 
     await harness.navigateByUrl('/perfil');
-    expect(titulo.getTitle()).toBe('Mi perfil · Suertudómetro');
+    expect(titulo.getTitle()).toBe('Mi perfil · Go Fund Me');
 
     await harness.navigateByUrl('/');
-    expect(titulo.getTitle()).toBe('Suertudómetro');
+    expect(titulo.getTitle()).toBe('Go Fund Me');
   });
 });

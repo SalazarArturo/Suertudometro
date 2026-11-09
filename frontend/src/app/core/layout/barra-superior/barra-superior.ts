@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatToolbar } from '@angular/material/toolbar';
 import { Router, RouterLink } from '@angular/router';
 import { Sesion } from '../../sesion/sesion';
+import { NOMBRE_APLICACION } from '../../titulo/estrategia-titulo';
 
 /** Barra superior del shell: la marca y, según la sesión, el acceso o el menú de la cuenta. */
 @Component({
@@ -16,6 +17,7 @@ import { Sesion } from '../../sesion/sesion';
 })
 export class BarraSuperior {
   protected readonly sesion = inject(Sesion);
+  protected readonly nombreAplicacion = NOMBRE_APLICACION;
   private readonly router = inject(Router);
   private readonly avisos = inject(MatSnackBar);
 
