@@ -1,7 +1,7 @@
 # Stack Tecnológico y Convenciones del Proyecto · Suertudómetro
 
 > [!NOTE]
-> **Estado:** Vigente (los cambios se proponen por PR) · **Última revisión:** 2026-11-07 · **Responsable:** Raul
+> **Estado:** Vigente (los cambios se proponen por PR) · **Última revisión:** 2026-11-08 (Efrain: Vitest en NestJS, en revisión de Raul) · **Responsable:** Raul
 > **Para qué sirve:** es la única fuente de las reglas técnicas. `AGENTS.md` las resume y la skill `suertudometro-conventions` las convierte en checklist.
 > **Fuentes de mayor prioridad:** el enunciado (`docs/enunciado/enunciado.md`) y el event storming (`docs/diagramas/event-storming.excalidraw`). El orden completo está en `AGENTS.md`.
 > **Ver también:** qué servicio hace qué y el lenguaje ubicuo en `README.md`; los diagramas en `docs/diagramas/`; las decisiones en `docs/adr/`.
@@ -76,11 +76,14 @@ Qué hace cada servicio, su rol DDD y su ruta en el gateway: `README.md` → Arq
 | **Migraciones de BD** | Flyway | Prisma Migrate | Migraciones nativas de Django |
 | **Integración RabbitMQ** | Spring AMQP | `amqplib` nativo * | `pika` |
 | **Documentación OpenAPI** | `springdoc-openapi` | `@nestjs/swagger` | `drf-spectacular` |
-| **Testing Suite** | JUnit 5 + Testcontainers | Runner oficial NestJS / Jest | `pytest` + `pytest-django` |
+| **Testing Suite** | JUnit 5 + Testcontainers | Vitest (runner oficial de NestJS 12) ** + Supertest + Testcontainers | `pytest` + `pytest-django` |
 | **Linter y Formato** | Spotless (`google-java-format`) | ESLint + Prettier | Ruff |
 
 > [!WARNING]
 > \* **RabbitMQ en NestJS:** No se usa el paquete `@nestjs/microservices` porque envuelve los mensajes en `{ pattern, data }`, formato incompatible con Java y Python. Se usa directamente `amqplib`.
+
+> [!NOTE]
+> \*\* **Vitest y no Jest en NestJS:** NestJS 12 solo se publica como módulos ES (ESM), así que los servicios NestJS también son ESM (`"type": "module"`). Jest no maneja bien ESM, y por eso NestJS 12 adoptó Vitest como runner oficial; la API de las pruebas es casi la misma (`describe`, `it`, `expect`, y `vi.fn()` en lugar de `jest.fn()`). Lo aplica `identity-service` (Efrain, 2026-11-08).
 
 ---
 
@@ -376,7 +379,7 @@ Ejemplo de columnas de la tabla `campanas`: `id`, `titulo`, `historia`, `meta_fi
 
 | Nivel de Control | Alcance y Cobertura | Herramientas Utilizadas | Restricciones de Ejecución |
 |:---|:---|:---|:---|
-| **Pruebas Unitarias de Dominio** | Agregados, entidades y reglas puras | JUnit 5, Jest, pytest | Aisladas: sin base de datos, sin contexto web y sin red. |
+| **Pruebas Unitarias de Dominio** | Agregados, entidades y reglas puras | JUnit 5, Vitest (NestJS), pytest | Aisladas: sin base de datos, sin contexto web y sin red. |
 | **Pruebas de Integración** | Repositorios, persistencia y eventos | Testcontainers, Supertest, pytest-django | Uso de contenedores efímeros Docker para PostgreSQL y RabbitMQ. |
 | **Linter y Formato** | Análisis estático y estilo de código | Spotless (Java), ESLint + Prettier (TS), Ruff (Python) | Obligatorio antes de commit y validado en CI. |
 | **Integración Continua (CI Gates)** | Verificación integral en cada PR | GitHub Actions | Bloquea la fusión si hay pruebas fallidas o errores de linter. |

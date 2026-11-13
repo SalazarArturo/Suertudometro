@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-09 (Gabo, Arturo y Efrain).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-12 (Efrain: se integra `main`, y a identity, el api-gateway y el frontend los valida el CI general).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -67,32 +67,33 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar; implementación de `update-service` en paralelo (Persistencia y API, pendiente de integración).**
+**Fase 0: diseño y documentación, por cerrar; implementación en paralelo.** `update-service` (Gabo) está en Persistencia y API, pendiente de integración. En `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS. `docker compose up --build` (rama `chore/compose-base`) levanta las tres piezas, y crear cuenta, iniciar sesión y ver el perfil ya funcionan de punta a punta.
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
-- las carpetas de los demás servicios y del frontend (`update-service` ya tiene implementación y Compose autónomo);
-- `docker-compose.yml` y `.env.example`;
+- las carpetas de los demás servicios (ya existen `identity-service`, `api-gateway`, `frontend` y `update-service`, que tiene implementación y Compose autónomo);
+- sumar a `docker-compose.yml` los demás servicios, RabbitMQ y Mailpit;
 - aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos; Arturo ya aprobó los 4 de `campaign-service` y Raul el de `contribution-service`);
-- los documentos de diseño de 3 servicios (`contribution-service`, `campaign-service`, `identity-service` y `update-service` ya están en borrador).
+- los documentos de diseño de 2 servicios, `notification-service` y `search-service` (`contribution-service`, `campaign-service`, `identity-service`, `update-service` y `api-gateway` ya están en borrador).
 
 ## Avance por servicio
 
 | Servicio / pieza | Responsable | Documento | Código |
 |---|---|---|---|
-| `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Sin empezar |
-| `api-gateway` | Efrain | Sin documento | Sin empezar |
-| `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Sin empezar |
+| `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Con identity, el gateway y el frontend; faltan los demás servicios, RabbitMQ y Mailpit |
+| `api-gateway` | Efrain | [Borrador](servicios/api-gateway.md) | Integrado (probado con Docker Compose); falta el límite de peticiones |
+| `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Persistencia y API |
 | `notification-service` | Efrain | Sin documento | Sin empezar |
 | `campaign-service` | Arturo | [Borrador](servicios/campaign-service.md) | Sin empezar |
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Sin empezar |
 | `update-service` | Gabo | [Borrador](servicios/update-service.md) | Persistencia y API |
 | `search-service` | Gabo | Sin documento | Sin empezar |
-| `frontend` (base: auth y shell) | Efrain | Sin documento (`docs/frontend.md`) | Sin empezar |
+| `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Integrado (probado con Docker Compose) |
 | `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Sin empezar |
 
 Valores posibles:
 - **Documento:** Sin documento · Borrador · Vigente.
 - **Código:** Sin empezar · Dominio en aislado · Persistencia y API · Integrado por eventos · Terminado.
+- **Código del api-gateway y de la base del frontend** (no tienen dominio): Sin empezar · Base · Integrado (probado de punta a punta con Docker Compose) · Terminado.
 
 ## Próximos pasos (propuesta; se ajusta por PR)
 
@@ -104,11 +105,11 @@ Valores posibles:
       - Gabo propuso la v1 de los 7 eventos (commit `1266ac3`).
       - Raul ajustó la ficha `AporteRegistrado`.
       - Arturo actualizó y aprobó como productor las fichas de `CampanaPublicada`, `CampanaCerrada` (incluyendo `estadoFinal` y `motivoCierre`), `MetaAlcanzada` y `CampanaRechazada` (2026-11-08).
-  - [ ] **Contrato de identidad y acceso.** Responsable: Efrain.
+  - [x] **Contrato de identidad y acceso.** Responsable: Efrain.
     - [x] Roles y cómo se crea el primer administrador.
     - [x] Claims del JWT y headers que el gateway reenvía a los servicios (era el pendiente 5).
     - [x] Moderación de usuarios (era el pendiente 6): no se implementa; el administrador solo modera campañas. Ver el riesgo en `historial.md`.
-    - [ ] Qué rutas son públicas, cuáles requieren sesión y cuáles requieren un rol (irá en `docs/servicios/api-gateway.md`).
+    - [x] Qué rutas son públicas, cuáles requieren sesión y cuáles requieren un rol: [`servicios/api-gateway.md`](servicios/api-gateway.md) §3. Todo requiere sesión salvo las rutas públicas declaradas, y el rol lo revisa cada servicio. Las rutas públicas de cada servicio las confirma su responsable (Efrain, 2026-11-08).
     - *Avance:* lo resuelto está en [`servicios/identity-service.md`](servicios/identity-service.md) §2 y §5.1 (Efrain, 2026-11-07).
   - [x] **Reglas de negocio compartidas.** Responsables: Arturo y Raul, con el equipo.
     - Categorías y moneda.
@@ -118,14 +119,18 @@ Valores posibles:
       - Raul (2026-11-07): aportes sin monto mínimo (> 0) y mensaje de apoyo de hasta 300 caracteres.
       - Arturo (2026-11-08): moneda única `BOB`; meta financiera mínima `100.00 BOB`; `fechaLimite` obligatoria futura; categorías en enum ASCII (`EDUCACION`, `SALUD`, `APOYO_COMUNITARIO`, `EMERGENCIAS`, `PROYECTOS_PERSONALES`, `OTROS`); hasta 5 imágenes por campaña (`JPG`, `PNG`, `WEBP`, máx. 5 MB c/u); título de 10 a 120 caracteres e historia de 50 a 5000 caracteres.
   - [ ] **Diseño de cada servicio** con la plantilla de `docs/servicios/README.md` (pendientes 10 y 11). Responsable: cada uno, de sus servicios.
-    - *Avance:* `contribution-service`, `campaign-service`, `identity-service` y `update-service` están en borrador.
+    - *Avance:* `contribution-service`, `campaign-service`, `identity-service`, `update-service` y `api-gateway` están en borrador.
   - [ ] **Infraestructura para desarrollar.** Responsable: Efrain.
     - Topología de RabbitMQ: nombres de colas y DLQ, reintentos y quién declara qué.
     - Modo de desarrollo local: cómo correr un servicio desde el IDE contra la base y RabbitMQ del compose.
     - Variables de `.env.example`.
+    - *Avance:*
+      - `identity-service/.env.example` explica cómo correr el servicio desde el IDE contra una base local en Docker (Efrain).
+      - El `.env.example` de la raíz tiene las variables de `docker-compose.yml`: `JWT_SECRETO`, `JWT_DURACION`, `ADMIN_CORREO`, `ADMIN_CONTRASENA` e `IDENTITY_DB_CONTRASENA` (Efrain, 2026-11-09).
   - [ ] **Frontend** (`docs/frontend.md`). Responsable: Efrain, con todos.
     - Zonas, rutas y estructura de carpetas de Angular.
     - Inventario de pantallas, con su responsable y los endpoints que usa cada una.
+    - *Avance:* borrador de [`frontend.md`](frontend.md) con todo lo anterior. Las rutas de cada dominio son una propuesta que confirma su responsable (Efrain, 2026-11-08).
   - [x] **Proceso.** Responsable: Arturo.
     - Plantilla de PR (`.github/pull_request_template.md`).
     - Definir qué valida el CI en cada servicio (`.github/workflows/ci.yml`).
@@ -138,6 +143,8 @@ Valores posibles:
   - gateway ruteando `/api/**`;
   - identity con JWT;
   - base de Angular según `docs/frontend.md`.
+  - *Avance:* las cuatro cosas están hechas y probadas juntas con Docker Compose (ramas `feat/frontend-base`, `feat/gateway-base` y `chore/compose-base`). Faltan RabbitMQ en el compose y el límite de peticiones del gateway (Efrain, 2026-11-09).
+  - *CI:* identity-service, el api-gateway y el frontend no tienen workflow propio; los valida el CI general (`.github/workflows/ci.yml`), a pedido de Arturo. Ese CI no corre el formato con Prettier, la revisión de tipos, las pruebas e2e y de integración, los builds ni las imágenes de Docker: Efrain los corre a mano antes de cada PR (Efrain, 2026-11-12).
 - **Fase 2 · Dominio en aislado (todos, en paralelo):** agregados, objetos de valor, reglas y tests unitarios.
 - **Fase 3 · Persistencia, API y eventos:** migraciones, endpoints por el gateway y eventos con idempotencia por `idEvento`.
   - Gabo (2026-11-09): `update-service` tiene API, persistencia y adaptadores de eventos con pruebas aisladas. Falta integrar JWT, gateway, broker compartido y Notificaciones reales, confirmar contratos con Arturo/Efrain y comprobar el CI remoto. Diseño y pendientes: [update-service](servicios/update-service.md).

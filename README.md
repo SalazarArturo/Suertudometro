@@ -166,15 +166,20 @@ Mientras está `PUBLICADA`, la campaña puede recibir varios aportes y actualiza
 
 ## 🚀 Cómo ejecutar el proyecto
 
-> `update-service` ya cuenta con implementación, pruebas y Compose propios. Consulta
-> [su guía de ejecución](update-service/README.md). El Compose global de la plataforma
-> todavía está pendiente; los comandos siguientes describen ese objetivo.
+Requisito: Docker con Docker Compose.
 
 ```bash
 git clone https://github.com/SalazarArturo/Suertudometro.git
 cd Suertudometro
+cp .env.example .env      # una sola vez; puedes cambiar los valores
 docker compose up --build
 ```
+
+Después abre `http://localhost:4200`. El administrador inicial tiene el correo y la contraseña de `ADMIN_CORREO` y `ADMIN_CONTRASENA` en el `.env`.
+
+> **Por ahora** se levantan identity-service (con su base), el api-gateway y el frontend: crear cuenta, iniciar sesión y ver el perfil. Cada servicio nuevo se agrega a `docker-compose.yml` cuando está listo.
+>
+> `update-service` ya cuenta con implementación, pruebas y Compose propios, pero todavía no está en el `docker-compose.yml` global. Consulta [su guía de ejecución](update-service/README.md).
 
 Puertos publicados en la máquina (según el diagrama de despliegue):
 
@@ -182,8 +187,8 @@ Puertos publicados en la máquina (según el diagrama de despliegue):
 |--------|----------|
 | `4200` | Aplicación web (Angular) |
 | `8080` | API Gateway (entrada a `/api/**`) |
-| `15672` | Consola de RabbitMQ |
-| `8025` | Mailpit (bandeja de correos de prueba) |
+| `15672` | Consola de RabbitMQ (cuando se agregue) |
+| `8025` | Mailpit, la bandeja de correos de prueba (cuando se agregue) |
 
 Las bases de datos y los servicios internos **no** se publican al host.
 
@@ -207,6 +212,7 @@ Cada integrante puede usar la herramienta de IA que prefiera; las reglas son las
 | [`docs/estado-del-proyecto.md`](docs/estado-del-proyecto.md) | Presente: equipo, fase, avance, próximos pasos y decisiones pendientes. |
 | [`docs/historial.md`](docs/historial.md) | Pasado: decisiones tomadas, bitácora y quién hizo cada archivo. |
 | [`docs/servicios/`](docs/servicios/README.md) | Diseño de cada servicio (uno por servicio, a cargo de su responsable). |
+| [`docs/frontend.md`](docs/frontend.md) | Diseño del frontend: zonas, rutas, sesión, errores y convenciones para las pantallas. |
 | [`docs/contratos-de-eventos.md`](docs/contratos-de-eventos.md) | Campos de cada evento del bus (propuesta v1) y lo que falta acordar. |
 | [`docs/adr/`](docs/adr/README.md) | Decisiones de arquitectura y por qué se tomaron. |
 | [`docs/stack-y-convenciones.md`](docs/stack-y-convenciones.md) | Versiones, librerías, bases de datos, skills y convenciones de código, API, datos y Git. |

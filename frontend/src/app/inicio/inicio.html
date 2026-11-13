@@ -1,0 +1,20 @@
+<section class="pagina">
+  <div class="portada">
+    <div>
+      <h1>Ayuda a convertir una causa en acción</h1>
+      <p class="bajada">
+        Crea una campaña para una causa (educación, emergencias, apoyo comunitario o un proyecto
+        personal), cuenta su historia y recibe aportes de la comunidad.
+      </p>
+    </div>
+
+    <div class="acciones">
+      @if (sesion.usuario()) {
+        <a matButton="filled" routerLink="/perfil">Ver mi perfil</a>
+      } @else {
+        <a matButton="filled" routerLink="/registro">Crear una cuenta</a>
+        <a matButton="outlined" routerLink="/ingresar">Iniciar sesión</a>
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,67 @@
+<section class="pagina-formulario">
+  <mat-card class="tarjeta-formulario" appearance="outlined">
+    <mat-card-header>
+      <h1 mat-card-title>Crear cuenta</h1>
+    </mat-card-header>
+    <mat-card-content>
+      <form class="formulario" [formRoot]="formulario">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre</mat-label>
+          <input matInput autocomplete="name" [formField]="formulario.nombre" />
+          <mat-hint>Así te verán en las campañas y en tus aportes con nombre.</mat-hint>
+          @if (formulario.nombre().errors()[0]; as error) {
+            <mat-error>{{ error.message }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Correo</mat-label>
+          <input matInput type="email" autocomplete="email" [formField]="formulario.correo" />
+          @if (formulario.correo().errors()[0]; as error) {
+            <mat-error>{{ error.message }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña</mat-label>
+          <input
+            matInput
+            type="password"
+            autocomplete="new-password"
+            [formField]="formulario.contrasena"
+          />
+          <mat-hint>De 8 a 128 caracteres. Una frase larga es más segura.</mat-hint>
+          @if (formulario.contrasena().errors()[0]; as error) {
+            <mat-error>{{ error.message }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Repite la contraseña</mat-label>
+          <input
+            matInput
+            type="password"
+            autocomplete="new-password"
+            [formField]="formulario.confirmacion"
+          />
+          @if (formulario.confirmacion().errors()[0]; as error) {
+            <mat-error>{{ error.message }}</mat-error>
+          }
+        </mat-form-field>
+
+        @if (formulario().errors()[0]; as error) {
+          <p class="mensaje-error" role="alert">{{ error.message }}</p>
+        }
+
+        <button matButton="filled" type="submit" [disabled]="formulario().submitting()">
+          {{ formulario().submitting() ? 'Creando tu cuenta…' : 'Crear cuenta' }}
+        </button>
+      </form>
+
+      <p class="alternativa">
+        ¿Ya tienes cuenta?
+        <a routerLink="/ingresar" [queryParams]="{ volverA: volverA() }">Inicia sesión</a>
+      </p>
+    </mat-card-content>
+  </mat-card>
+</section>

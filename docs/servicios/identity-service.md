@@ -1,6 +1,6 @@
 # identity-service
 
-> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-07 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-12 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Identidad** (subdominio genérico) · NestJS 12 · Node.js 24 · TypeScript · base de datos `identity-db` · ruta en el gateway `/api/identidad` · puerto interno 8081.
 
 ## 1. Responsabilidad
@@ -79,7 +79,7 @@ Cada cuenta tiene **un solo rol**:
 |---|---|---|---|
 | `RegistrarUsuarioComando` | Visitante, sin sesión | R1 a R6 | Guarda la `CuentaUsuario`, emite `UsuarioCreado` y publica `UsuarioRegistrado` (mediante outbox, §6) |
 | `IniciarSesionComando` | Visitante con cuenta | R7 | Emite `SesionIniciada` y devuelve el token (§5.1). Es un comando y no una consulta porque cambia la cuenta (`ultimoInicioSesionEn`). |
-| `CrearAdministradorInicialComando` | El propio servicio, al arrancar | R1 a R5 | Si no existe una cuenta con `ADMIN_CORREO`, la crea con rol `ADMINISTRADOR`, emite `UsuarioCreado` y publica `UsuarioRegistrado`. Si ya existe, no hace nada y lo deja en el log (es idempotente). |
+| `CrearAdministradorInicialComando` | El propio servicio, al arrancar | R1 a R5 | Si no existe una cuenta con `ADMIN_CORREO`, la crea con la contraseña `ADMIN_CONTRASENA`, rol `ADMINISTRADOR` y el nombre fijo «Administrador». Emite `UsuarioCreado` y publica `UsuarioRegistrado`. Si ya existe, no hace nada y lo deja en el log (es idempotente). |
 
 Cada comando tiene su `...ComandoManejador` con `@nestjs/cqrs`. `CrearAdministradorInicialComando` no es un comando del event storming, porque no lo decide ningún actor: es la inicialización técnica que hace falta para que exista quien apruebe las campañas.
 
@@ -91,11 +91,11 @@ Convenciones (`docs/stack-y-convenciones.md` §5.6): JSON en `camelCase` y error
 
 | Método y ruta | Quién puede usarlo | Comando o consulta | Respuesta |
 |---|---|---|---|
-| `POST /api/identidad/usuarios` | Cualquiera, sin sesión | `RegistrarUsuarioComando` | `201 Created` con el usuario |
+| `POST /api/identidad/usuarios` | Cualquiera, sin sesión | `RegistrarUsuarioComando` | `201 Created` con el usuario. No lleva `Location`, porque no hay un endpoint para leer una cuenta por id: su dueño la ve en `/perfil`. |
 | `POST /api/identidad/sesiones` | Cualquiera, sin sesión | `IniciarSesionComando` | `200` con el token |
 | `GET /api/identidad/perfil` | Usuario autenticado | `ObtenerUsuarioPorIdConsulta`, con el id de `X-Usuario-Id` | `200` con el usuario |
 | `GET /salud` | Healthcheck de Docker (interno: sin prefijo y no pasa por el gateway) | — | `200` |
-| `GET /api/identidad/docs` | Desarrollo | Documentación OpenAPI (`@nestjs/swagger`) | Swagger UI |
+| `GET /api/identidad/docs` | Desarrollo | Documentación OpenAPI (`@nestjs/swagger`) | Swagger UI. El documento en JSON está en `/api/identidad/docs-json`. |
 
 Cuerpo de `POST /api/identidad/usuarios`:
 
@@ -141,17 +141,39 @@ Cuerpo de `POST /api/identidad/sesiones` y su respuesta (`200`):
 
 El registro no devuelve un token: el frontend inicia sesión justo después con los mismos datos.
 
-| Error | Código y `type` |
+La validación tiene dos niveles, y cada regla vive en un solo lugar:
+- **El DTO** (`ValidationPipe` global) solo revisa la forma: que estén los campos, que sean texto y que no sobre ninguno. Por ejemplo, un `rol` en el registro es un campo de más (R6).
+- **El dominio** revisa el formato del correo y los largos (R1, R3 y R4). Esos límites no se repiten en el DTO.
+
+| Error | Estado y código (`type`) |
 |---|---|
-| Datos mal formados: correo inválido, nombre o contraseña fuera de rango, campos de más | `400`, `validacion` (con la extensión `errores: [{ "campo", "mensaje" }]`) |
+| Falta un campo, no es texto o sobra uno | `400`, `validacion`, con la extensión `errores: [{ "campo", "mensaje" }]` |
+| Un dato incumple una regla del dominio | `400`, con el código de la regla: `correo-invalido` (R1), `nombre-invalido` (R3) o `contrasena-invalida` (R4) |
 | El correo ya tiene una cuenta | `409`, `correo-ya-registrado` |
 | Correo inexistente o contraseña incorrecta | `401`, `credenciales-invalidas` |
 | Sin sesión en `/perfil` (normalmente lo corta antes el gateway) | `401`, `no-autenticado` |
 | La cuenta del token ya no existe (por ejemplo, tras reiniciar la base) | `404`, `usuario-no-encontrado` |
+| Error HTTP sin significado propio: ruta inexistente, JSON mal formado | Su estado, con `type: "about:blank"` (RFC 9457 §4.2.1) |
+| Error inesperado | `500`, `about:blank`. El `detail` es genérico, para no mostrar nada interno; el error completo queda en el log. |
+
+Ejemplo (`409`):
+
+```json
+{
+  "type": "https://api.suertudometro.com/errores/correo-ya-registrado",
+  "title": "Conflicto",
+  "status": 409,
+  "detail": "Ya existe una cuenta con ese correo.",
+  "instance": "/api/identidad/usuarios"
+}
+```
+
+- **`title`:** resume el estado HTTP en español, igual que el ejemplo del stack §5.6.
+- **Estado de cada código:** lo decide el catálogo de `api/errores/catalogo-errores.ts`. Un error de dominio que no está en el catálogo responde `400`. Un error de aplicación que no está responde `500`, y el log avisa que falta agregarlo.
 
 ### 5.1 Contrato del token y de los headers
 
-> Esta sección es la **fuente única** del contrato de identidad entre el gateway y los servicios (decisión #5 del 2026-11-07, ver `docs/historial.md`). `api-gateway.md` la referenciará.
+> Esta sección es la **fuente única** del contrato de identidad entre el gateway y los servicios (decisión #5 del 2026-11-07, ver `docs/historial.md`). Cómo la aplica el gateway: [`api-gateway.md`](api-gateway.md) §4.
 
 **El token (lo emite este servicio):**
 - JWT firmado con **HS256** y el secreto `JWT_SECRETO`, de al menos 32 bytes. Lo comparten identity-service y api-gateway por `.env`.
@@ -171,7 +193,13 @@ El registro no devuelve un token: el frontend inicia sesión justo después con 
 
 **Los servicios** no validan el JWT: confían en esos headers, porque ningún servicio se publica al host y solo el gateway llega a ellos. Si falta `X-Usuario-Id` en una ruta que requiere sesión, responden `401`. Si la ruta requiere `ADMINISTRADOR` y `X-Usuario-Rol` no lo es, responden `403`. identity-service lee los mismos headers para `/perfil`.
 
-**Rutas públicas de identity-service** (el gateway las deja pasar sin token): `POST /api/identidad/usuarios` y `POST /api/identidad/sesiones`. La tabla completa de rutas públicas del sistema irá en `api-gateway.md`.
+**Cómo lo hace identity-service** (sirve de referencia para los demás):
+- **`GuardIdentidad` es global:** toda ruta requiere los headers, salvo las marcadas con `@Publico` (el registro, el inicio de sesión y `/salud`). Así, una ruta nueva nace protegida.
+- **Exige los tres headers.** Responde `401 no-autenticado` si falta `X-Usuario-Id`, si `X-Usuario-Rol` no es `USUARIO` ni `ADMINISTRADOR`, o si `X-Usuario-Nombre` falta o no se puede decodificar. El formato del id (UUID) lo valida el dominio al usarlo (`400 id-usuario-invalido`).
+- **Un `Authorization: Bearer` sin los headers no alcanza** (`401`): el token solo lo valida el gateway.
+- **`@UsuarioActual`** entrega al controlador `{ id, rol, nombre }`, con el nombre ya decodificado.
+
+**Rutas públicas de identity-service** (el gateway las deja pasar sin token): `POST /api/identidad/usuarios` y `POST /api/identidad/sesiones`. La tabla completa de rutas públicas del sistema está en [`api-gateway.md`](api-gateway.md) §3.
 
 ## 6. Eventos
 
@@ -193,12 +221,16 @@ Se usa `amqplib` directamente, no `@nestjs/microservices`, porque ese paquete en
 
 ## 7. Base de datos (`identity-db`)
 
-Migraciones con Prisma Migrate. Los modelos de Prisma se mapean a tablas y columnas en `snake_case` con `@map` y `@@map`.
+Prisma 7.10 con Prisma Migrate, en `prisma/schema.prisma` y `prisma.config.ts`:
+- **Modelos del ORM.** Se llaman `CuentaUsuarioFila` y `EventoSalidaFila` para no confundirlos con el agregado, y se mapean a tablas y columnas en `snake_case` con `@map` y `@@map`.
+- **Conexión.** Prisma 7 se conecta con el driver `pg`, mediante `@prisma/adapter-pg`. La URL llega en la variable `DATABASE_URL`.
+- **Cliente generado.** Se genera en `src/infrastructure/persistencia/prisma/generado/`, que no se versiona: `npm install` lo genera solo, con el script `postinstall`.
+- **Migraciones.** En el contenedor se aplican al arrancar (`prisma migrate deploy`). Para desarrollar, `.env.example` explica cómo levantar una base local y migrarla con `npm run prisma:migrar`.
 
 | Tabla | Columnas principales | Para qué |
 |---|---|---|
 | `cuentas_usuario` | `id` (UUID, PK), `correo` `VARCHAR(254)` `UNIQUE`, `nombre` `VARCHAR(100)`, `hash_contrasena` `TEXT`, `rol` (enum `rol_usuario`), `ultimo_inicio_sesion_en` `TIMESTAMPTZ` (nulo hasta el primer inicio de sesión), `creado_en` y `actualizado_en` `TIMESTAMPTZ` | Las cuentas. El índice único de `correo` sirve también para buscar la cuenta al iniciar sesión. |
-| `eventos_salida` | `id_evento` (UUID, PK), `tipo_evento`, `version`, `contenido` `JSONB` (el envelope completo), `ocurrido_en` `TIMESTAMPTZ`, `publicado_en` `TIMESTAMPTZ` (nulo mientras está pendiente), `intentos` `INT`, `ultimo_error` `TEXT` | El outbox. Lleva un índice parcial sobre `ocurrido_en` con `WHERE publicado_en IS NULL`, para que el publicador encuentre rápido los pendientes. Prisma no modela índices parciales, así que va en SQL propio dentro de la migración. |
+| `eventos_salida` | `id_evento` (UUID, PK), `tipo_evento`, `version`, `contenido` `JSONB` (el envelope completo), `ocurrido_en` `TIMESTAMPTZ`, `publicado_en` `TIMESTAMPTZ` (nulo mientras está pendiente), `intentos` `INT`, `ultimo_error` `TEXT` | El outbox. Lleva el índice `ix_eventos_salida_pendientes` sobre (`publicado_en`, `ocurrido_en`), para que el publicador encuentre rápido los pendientes en orden de llegada. Se descartó un índice parcial (`WHERE publicado_en IS NULL`): en Prisma 7 es una función *preview*, y hecho a mano en la migración, Prisma lo vería como una diferencia con el esquema. Para una tabla pequeña, el compuesto rinde igual. |
 
 No hay tabla `eventos_procesados`, porque el servicio no consume eventos.
 
@@ -210,12 +242,14 @@ Un solo proyecto NestJS con las cinco capas en `src/<capa>/` (`docs/stack-y-conv
 identity-service/
 ├── package.json · tsconfig.json · nest-cli.json · eslint.config.mjs
 ├── Dockerfile                      # multi-stage con node:24; aplica `prisma migrate deploy` y arranca
+├── prisma.config.ts                # configuración de Prisma 7: esquema, migraciones y DATABASE_URL
 ├── prisma/
 │   ├── schema.prisma               # modelos del ORM, separados del dominio
 │   └── migrations/
 ├── src/
-│   ├── main.ts                     # prefijo global, ValidationPipe, filtro RFC 9457, Swagger
-│   ├── app.module.ts               # raíz de composición: une cada puerto con su adaptador
+│   ├── main.ts                     # arranca el servidor
+│   ├── configurar-aplicacion.ts    # prefijo global, ValidationPipe, filtro RFC 9457 y Swagger (también lo usan las e2e)
+│   ├── identidad.modulo.ts         # raíz de composición: une cada puerto con su adaptador
 │   ├── sharedkernel/               # RaizDeAgregado, EventoDeDominio, ObjetoDeValor, ReglaDeNegocio, ErrorDeDominio
 │   ├── domain/cuenta-usuario/      # CuentaUsuario, objetos de valor, PoliticaContrasena, eventos, reglas,
 │   │                               # errores e interfaz RepositorioCuentasUsuario. Sin NestJS ni Prisma.
@@ -224,7 +258,9 @@ identity-service/
 │   │   ├── consultas/              # obtener-usuario-por-id/
 │   │   └── puertos/                # CifradorContrasenas, EmisorTokens, LectorUsuarios, Reloj
 │   ├── infrastructure/
-│   │   ├── persistencia/           # PrismaService, repositorio, mapper dominio ↔ Prisma, LectorUsuarios
+│   │   ├── persistencia/           # PrismaServicio, repositorio, mapper dominio ↔ Prisma, LectorUsuarios
+│   │   │                           # y prisma/generado/ (el cliente generado, sin versionar)
+│   │   ├── reloj/                  # RelojSistema
 │   │   ├── mensajeria/             # conexión a RabbitMQ, PublicadorEventosSalida, MapeadorEventosIntegracion
 │   │   ├── seguridad/              # CifradorArgon2, EmisorTokensJwt
 │   │   ├── arranque/               # SembradorAdministrador (ejecuta CrearAdministradorInicialComando)
@@ -233,10 +269,13 @@ identity-service/
 │       ├── controladores/          # usuarios, sesiones, perfil, salud
 │       ├── dtos/                   # peticiones y respuestas, con class-validator y @ApiProperty
 │       ├── seguridad/              # GuardIdentidad (lee X-Usuario-*), @Publico, @UsuarioActual
-│       └── errores/                # FiltroProblemas (RFC 9457) y catálogo de errores
+│       └── errores/                # FiltroProblemas (RFC 9457), catálogo de errores y errores de validación
 └── test/
-    ├── integracion/                # Testcontainers: PostgreSQL y RabbitMQ
-    └── e2e/                        # Supertest
+    ├── base-datos/                 # PostgreSQL 18 con Testcontainers y migraciones, para integración y e2e
+    ├── integracion/                # repositorios y mensajería (Testcontainers: PostgreSQL y RabbitMQ)
+    ├── e2e/                        # la aplicación completa con Supertest, contra la base de Testcontainers
+    ├── arquitectura/               # comprueba que las reglas de capas de ESLint funcionan
+    └── dobles/                     # dobles en memoria de cada puerto, para las pruebas unitarias
 ```
 
 **Reglas de importación entre capas:**
@@ -247,12 +286,16 @@ identity-service/
 
 **Nombres de archivo** en kebab-case (§5.4): `registrar-usuario.comando.ts` contiene `RegistrarUsuarioComando`, y `registrar-usuario.comando-manejador.ts` contiene `RegistrarUsuarioComandoManejador`.
 
-**Pruebas:**
-- dominio y aplicación con Jest, sin base de datos ni red, usando dobles en memoria de los puertos (las pruebas unitarias van junto al código, en `*.spec.ts`);
-- persistencia y mensajería con Testcontainers (PostgreSQL 18 y RabbitMQ);
-- API de punta a punta con Supertest.
+**ESM.** Los paquetes de NestJS 12 solo se publican como módulos ES, así que el proyecto también es ESM (`"type": "module"`): las importaciones relativas terminan en `.js` y no hay alias de rutas. Las reglas de capas de ESLint (`eslint.capas.mjs`) reconocen cada capa por el nombre de su carpeta, y una prueba (`test/arquitectura/capas.spec.ts`) comprueba que fallan cuando deben.
 
-**Librerías propuestas:** `@nestjs/cqrs`, `@nestjs/config`, `@nestjs/swagger`, `@nestjs/jwt`, `class-validator`, `class-transformer`, `prisma` y `@prisma/client`, `amqplib` y `argon2`. Para pruebas: `@nestjs/testing`, `supertest`, `@testcontainers/postgresql` y `@testcontainers/rabbitmq`. Las versiones exactas se fijan al crear el esqueleto.
+**Pruebas:**
+- dominio y aplicación con Vitest (el runner oficial de NestJS 12; Jest no funciona bien con ESM), sin base de datos ni red, usando dobles en memoria de los puertos (las pruebas unitarias van junto al código, en `*.spec.ts`);
+- persistencia y mensajería con Testcontainers (PostgreSQL 18 y RabbitMQ);
+- API de punta a punta con Supertest, también contra PostgreSQL con Testcontainers.
+
+**Librerías propuestas:** `@nestjs/cqrs`, `@nestjs/config`, `@nestjs/swagger`, `@nestjs/jwt`, `class-validator`, `class-transformer`, `prisma`, `@prisma/client`, `@prisma/adapter-pg` y `pg`, `amqplib` y `argon2`. Para pruebas: `@nestjs/testing`, `supertest`, `@testcontainers/postgresql` y `@testcontainers/rabbitmq`. Las versiones exactas están en `package.json`.
+
+**Scripts de instalación.** npm 11 no ejecuta los scripts de instalación de las dependencias si no están aprobados. `package.json` → `allowScripts` aprueba solo `@prisma/engines` (descarga el motor de migraciones), `prisma` y `argon2`, y rechaza `ssh2` y `protobufjs`, dos dependencias de Testcontainers que no los necesitan. Al agregar una dependencia con scripts, se revisa con `npm install-scripts ls`.
 
 ## 9. Patrones de diseño y justificación
 
@@ -279,14 +322,14 @@ identity-service/
 | Que lean los headers `X-Usuario-Id`, `X-Usuario-Rol` y `X-Usuario-Nombre` (§5.1) y usen los roles `USUARIO` y `ADMINISTRADOR` | Arturo, Raul y Gabo | Saber quién hace cada petición: el administrador aprueba, rechaza y cancela campañas; el organizador se comprueba por id; el aportante viene en los headers |
 | Que decida qué roles pueden aportar (lo pregunta su §10) | Raul | Los permisos de `POST /api/aportes` |
 | Que revise el cambio en la fila "Moderación de usuarios" del enunciado §4 | Raul (responsable de `docs/enunciado/`) | Mantener alineado su documento |
-| Que defina qué valida el CI en cada servicio y proteja `main` | Arturo | Que el workflow de identity-service siga esa definición |
+| Que el CI general (`.github/workflows/ci.yml`) siga corriendo el linter y las pruebas unitarias de identity-service | Arturo | El servicio no tiene workflow propio. Ese CI no corre el formato, los tipos, las pruebas e2e y de integración ni el build: antes de abrir un PR se corren a mano `npm run format:check`, `npm run typecheck`, `npm run test:e2e`, `npm run test:integracion` y `npm run build` |
 | api-gateway, `docker-compose.yml`, RabbitMQ, `.env.example` y notification-service (consume `usuario.registrado`) | Efrain | Integrar el servicio; son piezas propias, pero de otros documentos |
 
 Mientras no esté el gateway, las pruebas envían los headers `X-Usuario-*` a mano.
 
 ## 11. Pantallas del frontend (identidad y acceso)
 
-Son parte de la base de Angular, que también es de Efrain. El detalle irá en `docs/frontend.md`.
+Son parte de la base de Angular, que también es de Efrain. El detalle está en [`docs/frontend.md`](../frontend.md): las rutas en el §2 y la sesión en el §4.
 
 - **Registro:** nombre, correo, contraseña y confirmación de la contraseña. Al terminar, inicia sesión automáticamente.
 - **Iniciar sesión:** correo y contraseña.
@@ -312,14 +355,14 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 
 - [ ] **Fase 0 · Diseño** (`docs/identity-diseno`): este documento y las decisiones en el historial.
 - [ ] **Fase 1 · Esqueleto** (`feat/identity-esqueleto`):
-  - proyecto NestJS 12 con TypeScript estricto, carpetas por capa, alias y reglas de importación en ESLint;
-  - Jest, configuración validada, `sharedkernel`, `GET /salud`, Dockerfile y workflow de CI (lo revisa Arturo).
+  - proyecto NestJS 12 (ESM) con TypeScript 6 estricto, carpetas por capa y reglas de importación en ESLint;
+  - Vitest, configuración validada, `sharedkernel`, `GET /salud` y Dockerfile.
   - *Pruebas:* humo de `/salud`, ESLint falla si `domain` importa NestJS, y `docker build`.
 - [ ] **Fase 2 · Dominio y aplicación en aislado** (`feat/identity-dominio`):
   - objetos de valor, `PoliticaContrasena`, `CuentaUsuario`, eventos, los tres comandos, la consulta y los puertos con sus dobles en memoria.
   - *Pruebas unitarias:* R1 a R7, los eventos emitidos (y que `reconstituir` no emita ninguno), y los manejadores: correo duplicado; correo inexistente y contraseña incorrecta dan el mismo error; siembra idempotente.
 - [ ] **Fase 3 · Persistencia** (`feat/identity-persistencia`):
-  - `schema.prisma`, la migración inicial (con el índice parcial), el repositorio con outbox en la misma transacción, el mapper, `LectorUsuarios` y `CifradorArgon2`.
+  - `schema.prisma`, la migración inicial, el repositorio con outbox en la misma transacción, el mapper, `LectorUsuarios` y `CifradorArgon2`.
   - *Pruebas con Testcontainers:* guardar y cargar, correo duplicado concurrente, fila de outbox con el envelope correcto y rollback conjunto.
 - [ ] **Fase 4 · API REST** (`feat/identity-api`):
   - prefijo global, `ValidationPipe`, `FiltroProblemas`, Swagger y `POST /usuarios`.
@@ -330,7 +373,7 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 - [ ] **Fase 6 · Mensajería** (`feat/identity-mensajeria`):
   - conexión a RabbitMQ con confirmaciones y reconexión, y `PublicadorEventosSalida`.
   - *Pruebas con Testcontainers:* llega el envelope de `usuario.registrado`; con RabbitMQ caído, el evento espera y se publica al volver; nada se publica dos veces.
-- [ ] **Fase 7 · Integración** (`chore/compose-identity`):
+- [ ] **Fase 7 · Integración** (`chore/compose-base`, junto con el gateway y el frontend; RabbitMQ entra con la fase 6):
   - `identity-db` e `identity-service` en `docker-compose.yml`, con healthchecks, y las variables en `.env.example`;
   - la ruta del gateway va en su propio PR.
   - *Verificación:* `docker compose up --build`; registro, inicio de sesión y perfil por `/api/identidad`; el admin sembrado puede iniciar sesión, y los dos eventos se ven en RabbitMQ.
@@ -340,4 +383,10 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-12 | Efrain | §10 y §13: sin workflow propio; al servicio lo valida el CI general, y lo que ese CI no corre se revisa a mano (pedido de Arturo). |
+| 2026-11-09 | Efrain | La fase 7 se hizo en `chore/compose-base`, junto con el gateway y el frontend. Falta RabbitMQ, que llega con la fase 6. |
+| 2026-11-08 | Efrain | El §5.1 enlaza a `api-gateway.md`, que aplica el contrato y tiene la tabla de rutas públicas. |
+| 2026-11-08 | Efrain | El §11 enlaza a `docs/frontend.md`, donde están las pantallas y la sesión del frontend. |
+| 2026-11-08 | Efrain | Fase 5: cómo aplica identity-service el contrato de headers (guard global, `@Publico`, los tres headers obligatorios). |
+| 2026-11-08 | Efrain | Fase 4: los dos niveles de validación, la tabla de errores completa (con `about:blank` y `500`), el `title` en español y el catálogo de errores; el administrador sembrado tiene el nombre fijo «Administrador»; estructura de carpetas actualizada. |
 | 2026-11-07 | Efrain | Primera versión, con las decisiones de roles, primer administrador, contrato del token (#5), sin moderación de usuarios (#6) y #8. |

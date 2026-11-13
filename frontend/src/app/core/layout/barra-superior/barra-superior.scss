@@ -1,0 +1,51 @@
+@use '@angular/material' as mat;
+
+// Como en el mockup: una barra azul marino con las esquinas redondeadas y un
+// margen alrededor.
+:host {
+  display: block;
+  padding: 12px 16px 0;
+}
+
+.barra {
+  gap: 4px;
+  border-radius: var(--mat-sys-corner-medium);
+  // Sobre el azul marino, los botones de texto van en blanco.
+  @include mat.button-overrides(
+    (
+      text-label-text-color: #ffffff,
+      text-state-layer-color: #ffffff,
+      text-ripple-color: rgb(255 255 255 / 12%),
+    )
+  );
+}
+
+.marca {
+  color: inherit;
+  font-family: var(--mat-sys-body-large-font);
+  font-size: 1.375rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.separador {
+  flex: 1;
+}
+
+.nombre {
+  display: inline-block;
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+// En pantallas angostas solo queda "Iniciar sesión"; su pantalla lleva a crear cuenta.
+.crear-cuenta {
+  display: none;
+
+  @media (min-width: 600px) {
+    display: inline-flex;
+  }
+}

@@ -1,0 +1,55 @@
+# Configuración del api-gateway (docs/servicios/api-gateway.md).
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            # Un servicio que no acepta la conexión da 503; uno que no responde a
+            # tiempo, 504 (§5).
+            connect-timeout: 2000
+            response-timeout: 10s
+          # Una ruta por servicio. Cada servicio monta su propio prefijo, así que
+          # no se reescribe la ruta (§2).
+          routes:
+            - id: identity-service
+              uri: ${IDENTITY_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/identidad/**
+
+server:
+  port: 8080
+
+logging:
+  level:
+    # Hibernate Validator avisa que Spring Cloud Gateway usa @Valid sobre listas en
+    # sus propias propiedades. No es de este código: se oculta para no ensuciar el log.
+    org.hibernate.validator.internal.metadata.aggregated.CascadingMetaDataBuilder: ERROR
+
+# GET /salud para el healthcheck de Docker; no se expone ningún otro endpoint de
+# Actuator.
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health
+      path-mapping:
+        health: salud
+
+suertudometro:
+  jwt:
+    # El mismo secreto con el que identity-service firma los tokens (32 bytes o más).
+    secreto: ${JWT_SECRETO:}
+  cors:
+    # Orígenes del frontend, separados por coma.
+    origenes: ${CORS_ORIGENES:http://localhost:4200}
+  # Rutas que no piden token, como "MÉTODO /patrón" (§3). Todo lo demás requiere
+  # sesión. Al activar la ruta de un servicio, se agregan aquí las suyas.
+  rutas-publicas:
+    - POST /api/identidad/usuarios
+    - POST /api/identidad/sesiones
+    - GET /api/identidad/docs/**
+    - GET /api/identidad/docs-json

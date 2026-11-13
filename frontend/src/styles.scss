@@ -1,0 +1,191 @@
+// Tema de Angular Material (Material 3) con la paleta del mockup del equipo
+// (docs/frontend.md §6). Define las variables --mat-sys-* y las --color-*, que
+// también usan las pantallas: si cambia el tema, cambia toda la aplicación.
+// Guía: https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+@use 'theme-colors' as paletas; // generado con `ng generate @angular/material:theme-color`
+
+// Colores del mockup.
+$azul-marino: #22364e; // marca: barra superior y títulos
+$naranja: #db8943; // acción principal: botón relleno
+$acento-azul: #426897;
+$acento-verde: #4a8388;
+$acento-rojo: #bf5b5f;
+$fondo-suave: #f0f4f6; // portada y bloques destacados
+$borde: #dde3e7;
+$pista: #e8ebee; // pista de las barras de progreso
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: paletas.$primary-palette,
+        tertiary: paletas.$tertiary-palette,
+      ),
+      typography: (
+        plain-family: Lato,
+        brand-family: 'Noto Serif',
+        bold-weight: 700,
+        // Lato no tiene peso 500: las etiquetas usan el 700.
+        medium-weight: 700,
+        regular-weight: 400,
+      ),
+      density: 0,
+    )
+  );
+
+  // Las paletas generadas aproximan los colores; aquí van los exactos del mockup.
+  @include mat.theme-overrides(
+    (
+      primary: $azul-marino,
+      on-primary: #ffffff,
+      tertiary: $naranja,
+      on-tertiary: $azul-marino,
+      secondary-container: $fondo-suave,
+      on-secondary-container: $azul-marino,
+      outline-variant: $borde,
+      surface: #ffffff,
+    )
+  );
+
+  @include mat.toolbar-overrides(
+    (
+      container-background-color: $azul-marino,
+      container-text-color: #ffffff,
+    )
+  );
+
+  // El botón relleno es la acción principal, en naranja. Su texto va en azul
+  // marino y no en blanco: blanco sobre este naranja no se lee bien (2,7:1).
+  @include mat.button-overrides(
+    (
+      filled-container-color: $naranja,
+      filled-label-text-color: $azul-marino,
+      outlined-outline-color: $borde,
+      outlined-label-text-color: $azul-marino,
+    )
+  );
+
+  @include mat.card-overrides(
+    (
+      title-text-weight: 700,
+    )
+  );
+
+  @include mat.progress-bar-overrides(
+    (
+      active-indicator-color: $azul-marino,
+      track-color: $pista,
+    )
+  );
+
+  @include mat.snack-bar-overrides(
+    (
+      container-color: $azul-marino,
+      supporting-text-color: #ffffff,
+      button-color: $naranja,
+    )
+  );
+
+  // Para las pantallas de cada dominio (por ejemplo, el color de una categoría).
+  // El verde y el rojo no alcanzan 4,5:1 sobre blanco: úsalos en barras, bordes
+  // o texto grande, no en texto chico.
+  --color-marca: #{$azul-marino};
+  --color-accion: #{$naranja};
+  --color-acento-azul: #{$acento-azul};
+  --color-acento-verde: #{$acento-verde};
+  --color-acento-rojo: #{$acento-rojo};
+  --color-fondo-suave: #{$fondo-suave};
+  --color-borde: #{$borde};
+  --color-pista: #{$pista};
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+}
+
+// Títulos con la letra serif del mockup.
+h1,
+h2,
+h3 {
+  font-family: var(--mat-sys-headline-small-font);
+  font-weight: 700;
+}
+
+a {
+  color: var(--color-acento-azul);
+}
+
+// ---------------------------------------------------------------------------
+// Clases compartidas por las pantallas de la base. Las de cada dominio van en
+// los estilos de su componente.
+// ---------------------------------------------------------------------------
+
+// Contenido de una página con ancho máximo y márgenes.
+.pagina {
+  box-sizing: border-box;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+// Página con una tarjeta centrada: iniciar sesión, registro, perfil.
+.pagina-formulario {
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.tarjeta-formulario {
+  width: 100%;
+  max-width: 440px;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.alternativa {
+  margin: 24px 0 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.mensaje-error {
+  margin: 0 0 8px;
+  color: var(--mat-sys-error);
+}
+
+.mensaje-aviso {
+  margin: 0 0 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--mat-sys-corner-medium);
+  background-color: var(--color-fondo-suave);
+  color: var(--color-marca);
+}
+
+// Lista de datos con su etiqueta: Mi perfil.
+.datos {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 12px 24px;
+  margin: 16px 0 0;
+
+  dt {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
