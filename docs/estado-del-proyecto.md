@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-09 (Efrain: `docker-compose.yml` con identity, el api-gateway y el frontend).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-09 (Gabo, Arturo y Efrain).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -67,14 +67,13 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar.** Todo el código que hay es de Efrain. En `identity-service`: el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS. `docker compose up --build` (rama `chore/compose-base`) levanta las tres piezas, y crear cuenta, iniciar sesión y ver el perfil ya funcionan de punta a punta.
+**Fase 0: diseño y documentación, por cerrar; implementación en paralelo.** `update-service` (Gabo) está en Persistencia y API, pendiente de integración. En `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS. `docker compose up --build` (rama `chore/compose-base`) levanta las tres piezas, y crear cuenta, iniciar sesión y ver el perfil ya funcionan de punta a punta.
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
-- las carpetas de los demás servicios (ya existen `identity-service`, `api-gateway` y `frontend`);
+- las carpetas de los demás servicios (ya existen `identity-service`, `api-gateway`, `frontend` y `update-service`, que tiene implementación y Compose autónomo);
 - sumar a `docker-compose.yml` los demás servicios, RabbitMQ y Mailpit;
-- el CI de los demás servicios (`identity-service`, `api-gateway` y `frontend` ya tienen su workflow, pendiente de que Arturo lo revise);
-- aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos);
-- los documentos de diseño de 5 servicios.
+- aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos; Arturo ya aprobó los 4 de `campaign-service` y Raul el de `contribution-service`);
+- los documentos de diseño de 2 servicios, `notification-service` y `search-service` (`contribution-service`, `campaign-service`, `identity-service`, `update-service` y `api-gateway` ya están en borrador).
 
 ## Avance por servicio
 
@@ -84,9 +83,9 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 | `api-gateway` | Efrain | [Borrador](servicios/api-gateway.md) | Integrado (probado con Docker Compose); falta el límite de peticiones |
 | `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Persistencia y API |
 | `notification-service` | Efrain | Sin documento | Sin empezar |
-| `campaign-service` | Arturo | Sin documento | Sin empezar |
+| `campaign-service` | Arturo | [Borrador](servicios/campaign-service.md) | Sin empezar |
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Sin empezar |
-| `update-service` | Gabo | Sin documento | Sin empezar |
+| `update-service` | Gabo | [Borrador](servicios/update-service.md) | Persistencia y API |
 | `search-service` | Gabo | Sin documento | Sin empezar |
 | `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Integrado (probado con Docker Compose) |
 | `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Sin empezar |
@@ -104,20 +103,23 @@ Valores posibles:
     - Responsables: Arturo (`campana.*` y `meta.alcanzada`), Raul (`aporte.registrado`), Efrain (`usuario.registrado`) y Gabo (`campana.actualizada`).
     - *Avance:*
       - Gabo propuso la v1 de los 7 eventos (commit `1266ac3`).
-      - Raul ajustó la ficha `AporteRegistrado` y dejó una nota en `CampanaCerrada` para alinearla con el ADR 0003; la decide Arturo.
+      - Raul ajustó la ficha `AporteRegistrado`.
+      - Arturo actualizó y aprobó como productor las fichas de `CampanaPublicada`, `CampanaCerrada` (incluyendo `estadoFinal` y `motivoCierre`), `MetaAlcanzada` y `CampanaRechazada` (2026-11-08).
   - [x] **Contrato de identidad y acceso.** Responsable: Efrain.
     - [x] Roles y cómo se crea el primer administrador.
     - [x] Claims del JWT y headers que el gateway reenvía a los servicios (era el pendiente 5).
     - [x] Moderación de usuarios (era el pendiente 6): no se implementa; el administrador solo modera campañas. Ver el riesgo en `historial.md`.
     - [x] Qué rutas son públicas, cuáles requieren sesión y cuáles requieren un rol: [`servicios/api-gateway.md`](servicios/api-gateway.md) §3. Todo requiere sesión salvo las rutas públicas declaradas, y el rol lo revisa cada servicio. Las rutas públicas de cada servicio las confirma su responsable (Efrain, 2026-11-08).
     - *Avance:* lo resuelto está en [`servicios/identity-service.md`](servicios/identity-service.md) §2 y §5.1 (Efrain, 2026-11-07).
-  - [ ] **Reglas de negocio compartidas.** Responsables: Arturo y Raul, con el equipo.
+  - [x] **Reglas de negocio compartidas.** Responsables: Arturo y Raul, con el equipo.
     - Categorías y moneda.
     - Meta mínima y duración de una campaña.
     - Formato, tamaño y cantidad de imágenes; largo de la historia.
-    - *Avance:* aportes sin monto mínimo y mensaje de apoyo de hasta 300 caracteres.
+    - *Avance:*
+      - Raul (2026-11-07): aportes sin monto mínimo (> 0) y mensaje de apoyo de hasta 300 caracteres.
+      - Arturo (2026-11-08): moneda única `BOB`; meta financiera mínima `100.00 BOB`; `fechaLimite` obligatoria futura; categorías en enum ASCII (`EDUCACION`, `SALUD`, `APOYO_COMUNITARIO`, `EMERGENCIAS`, `PROYECTOS_PERSONALES`, `OTROS`); hasta 5 imágenes por campaña (`JPG`, `PNG`, `WEBP`, máx. 5 MB c/u); título de 10 a 120 caracteres e historia de 50 a 5000 caracteres.
   - [ ] **Diseño de cada servicio** con la plantilla de `docs/servicios/README.md` (pendientes 10 y 11). Responsable: cada uno, de sus servicios.
-    - *Avance:* `contribution-service` e `identity-service` están en borrador.
+    - *Avance:* `contribution-service`, `campaign-service`, `identity-service`, `update-service` y `api-gateway` están en borrador.
   - [ ] **Infraestructura para desarrollar.** Responsable: Efrain.
     - Topología de RabbitMQ: nombres de colas y DLQ, reintentos y quién declara qué.
     - Modo de desarrollo local: cómo correr un servicio desde el IDE contra la base y RabbitMQ del compose.
@@ -129,10 +131,10 @@ Valores posibles:
     - Zonas, rutas y estructura de carpetas de Angular.
     - Inventario de pantallas, con su responsable y los endpoints que usa cada una.
     - *Avance:* borrador de [`frontend.md`](frontend.md) con todo lo anterior. Las rutas de cada dominio son una propuesta que confirma su responsable (Efrain, 2026-11-08).
-  - [ ] **Proceso.** Responsable: Arturo.
-    - Plantilla de PR.
-    - Proteger `main` en GitHub.
-    - Definir qué valida el CI en cada servicio.
+  - [x] **Proceso.** Responsable: Arturo.
+    - Plantilla de PR (`.github/pull_request_template.md`).
+    - Definir qué valida el CI en cada servicio (`.github/workflows/ci.yml`).
+    - Proteger `main` en GitHub (en configuración del repositorio).
   - [ ] **ADR.** Responsable: Raul.
     - *Avance:* 0001 a 0003 escritos. Falta un motivo en el 0001 (pendiente 12).
   - [ ] **Fechas de entrega y rúbrica** del docente, anotadas aquí. Responsable: quien las tenga.
@@ -144,6 +146,7 @@ Valores posibles:
   - *Avance:* las cuatro cosas están hechas y probadas juntas con Docker Compose (ramas `feat/frontend-base`, `feat/gateway-base` y `chore/compose-base`). Faltan RabbitMQ en el compose y el límite de peticiones del gateway (Efrain, 2026-11-09).
 - **Fase 2 · Dominio en aislado (todos, en paralelo):** agregados, objetos de valor, reglas y tests unitarios.
 - **Fase 3 · Persistencia, API y eventos:** migraciones, endpoints por el gateway y eventos con idempotencia por `idEvento`.
+  - Gabo (2026-11-09): `update-service` tiene API, persistencia y adaptadores de eventos con pruebas aisladas. Falta integrar JWT, gateway, broker compartido y Notificaciones reales, confirmar contratos con Arturo/Efrain y comprobar el CI remoto. Diseño y pendientes: [update-service](servicios/update-service.md).
 - **Fase 4 · Frontend:** las pantallas de cada dominio.
 - **Fase 5 · Entrega:**
   - flujo completo de punta a punta;
@@ -159,11 +162,11 @@ Mientras sigan aquí, **nadie las asume**, ni las personas ni los agentes de IA:
 |---|---|---|---|
 | 2 | `CompartirCampana` (lo pide el enunciado): ¿es solo del frontend (enlace, Web Share) o se registra en el backend, por ejemplo para medir popularidad? ¿En qué servicio? | frontend, search | Equipo |
 | 3 | `EnviarComentario`: los comentarios son una mejora opcional; el mensaje de apoyo ya va en `RealizarAporte`. ¿Se implementa? ¿Dónde? | Por definir | Equipo |
-| 4 | Aprobar los contratos de `docs/contratos-de-eventos.md` (propuesta v1 de Gabo). En `campana.cerrada`, el motivo `CANCELACION` debe dejar la campaña en `CANCELADA` (ADR 0003): falta decidir si además se envía el estado final de forma explícita. | Todos | Quien publica cada evento: Arturo (`campana.*`, `meta.alcanzada`), Raul (`aporte.registrado`), Efrain (`usuario.registrado`) y Gabo (`campana.actualizada`) |
+| 4 | Aprobar los contratos de `docs/contratos-de-eventos.md` (propuesta v1 de Gabo). Arturo ya aprobó como productor las 4 fichas de `campaign-service` (`CampanaCerrada` envía `estadoFinal` y `motivoCierre`) y Raul ajustó `AporteRegistrado`. Falta la confirmación final de los consumidores y de las fichas de Efrain y Gabo. | Todos | Quien publica cada evento: Arturo (`campana.*`, `meta.alcanzada`), Raul (`aporte.registrado`), Efrain (`usuario.registrado`) y Gabo (`campana.actualizada`) |
 | 7 | Criterio de "popularidad" para explorar campañas. | search | Gabo |
-| 9 | Aportes que llegan después de alcanzada la meta pero antes de `campana.cerrada`: ¿se aceptan? | contribution, campaign | Raul y Arturo |
-| 10 | Estructura de carpetas DDD por tecnología. Efrain compartió una propuesta para NestJS. Raul propone Maven multimódulo, como el docente, y debe acordarlo con Arturo. | Todos los servicios | Efrain y Gabo; Raul y Arturo |
-| 11 | Modelo de dominio detallado de cada servicio. contribution-service ya tiene borrador. | Cada servicio | Su responsable |
+| 9 | Aportes que llegan después de alcanzada la meta pero antes de `campana.cerrada`: Arturo propone cierre automático al alcanzar la meta (`MetaAlcanzada` + `CampanaCerrada`), pero sumando en `campaign-service` cualquier `aporte.registrado` en tránsito que ya haya sido aceptado. Falta que confirme Raul. | contribution, campaign | Raul y Arturo |
+| 10 | Estructura de carpetas DDD por tecnología. Efrain compartió una propuesta para NestJS. En Spring Boot, Raul propuso Maven multimódulo en `contribution-service` y Arturo prefiere un solo módulo Maven separando las 5 capas por paquetes Java (`com.crowdfunding.campaign.<capa>`) en `campaign-service`; queda acordar entre Raul y Arturo si unifican o cada servicio mantiene su variante. | Todos los servicios | Efrain y Gabo; Raul y Arturo |
+| 11 | Modelo de dominio detallado de cada servicio. `contribution-service`, `campaign-service`, `identity-service` y `update-service` ya tienen borrador. | Cada servicio | Su responsable |
 | 12 | ADR 0001: falta el motivo para usar tres tecnologías y no una. | Documentación | Raul, con el equipo |
 | 13 | `CONTRIBUTING.md` con el detalle de cada tecnología (opcional). | Documentación | Equipo |
 | 14 | Campañas cerradas en el catálogo: ¿las `FINALIZADA` siguen visibles y marcadas? ¿Las `CANCELADA` se ocultan o se muestran con su estado? El enunciado pide explorar por estado. | search, frontend | Gabo |

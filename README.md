@@ -178,6 +178,8 @@ docker compose up --build
 Después abre `http://localhost:4200`. El administrador inicial tiene el correo y la contraseña de `ADMIN_CORREO` y `ADMIN_CONTRASENA` en el `.env`.
 
 > **Por ahora** se levantan identity-service (con su base), el api-gateway y el frontend: crear cuenta, iniciar sesión y ver el perfil. Cada servicio nuevo se agrega a `docker-compose.yml` cuando está listo.
+>
+> `update-service` ya cuenta con implementación, pruebas y Compose propios, pero todavía no está en el `docker-compose.yml` global. Consulta [su guía de ejecución](update-service/README.md).
 
 Puertos publicados en la máquina (según el diagrama de despliegue):
 

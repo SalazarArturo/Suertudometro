@@ -8,6 +8,8 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-09 · Gabo** · Compatibilidad de `update-service` con el CI general: empaquetado explícito para `pip install -e .`, pruebas rápidas por defecto y selección explícita de PostgreSQL en el Compose de pruebas. Se conserva el flujo de dependencias con `uv` y el workflow global. El evento interno se alinea con `ActualizacionPublicada`; su traducción al bus sigue siendo `CampanaActualizada`, sin cambiar contratos. → [Diseño de Novedades](servicios/update-service.md).
+
 - **2026-11-08 · Efrain** · La página se llama **«Go Fund Me»** y usa la paleta del mockup del equipo: azul marino `#22364e` como marca, naranja `#db8943` para la acción principal y tres colores de acento. El proyecto y el repositorio siguen llamándose Suertudómetro. → [`frontend.md`](frontend.md) §6
   - *Riesgo anotado:* GoFundMe es una marca registrada de otra empresa. Para el curso no hay problema, pero si el sistema se publica conviene un nombre propio.
 - **2026-11-08 · Efrain** · Diseño del api-gateway (→ [`servicios/api-gateway.md`](servicios/api-gateway.md)). Lo revisa el equipo por PR, porque decide quién llega a sus servicios.
@@ -23,6 +25,11 @@ Las más recientes van arriba. Cada una indica quién la propuso o la decidió y
   - **El navegador llama directo al gateway** (`http://localhost:8080/api`, con CORS), como dice el diagrama de despliegue.
   - **Configuración regional `es-BO`** para fechas y montos.
 - **2026-11-08 · Efrain** · El administrador sembrado se llama «Administrador», un valor fijo en el código: no hay variable `ADMIN_NOMBRE`. El rol `ADMINISTRADOR` ya lo pone la siembra, y en `.env` solo van `ADMIN_CORREO` y `ADMIN_CONTRASENA`. → [`servicios/identity-service.md`](servicios/identity-service.md) §4
+- **2026-11-08 · Arturo** · Decisiones de `campaign-service` y contratos de sus eventos (→ `docs/contratos-de-eventos.md` y `docs/estado-del-proyecto.md`):
+  - `CampanaCerrada` incluye explícitamente tanto `"estadoFinal"` (`"FINALIZADA"` | `"CANCELADA"`) como `"motivoCierre"` (`"META_ALCANZADA"` | `"PLAZO_VENCIDO"` | `"CANCELACION"`), alineado con el ADR 0003 y el event storming.
+  - Reglas de negocio de campaña: moneda única `"BOB"`, meta mínima `100.00 BOB` (> 0), `fechaLimite` obligatoria futura en toda campaña, categorías como enum en español ASCII (`EDUCACION`, `SALUD`, `APOYO_COMUNITARIO`, `EMERGENCIAS`, `PROYECTOS_PERSONALES`, `OTROS`) y hasta 5 imágenes por campaña (`JPG`, `PNG`, `WEBP`, máx. 5 MB c/u).
+  - Cumplimiento de meta: al alcanzar o superar la meta se ejecuta automáticamente el cierre (`MetaAlcanzada` y `CampanaCerrada` con `FINALIZADA`), pero si llega un `aporte.registrado` en tránsito de un aporte ya aceptado antes del cierre, se suma igual a `montoRecaudado` para preservar la consistencia financiera (a confirmar con Raul para cerrar el pendiente #9).
+  - Estructura de `campaign-service`: un solo módulo Maven separando las 5 capas (`sharedkernel`, `domain`, `application`, `infrastructure`, `api`) por paquetes Java bajo `com.crowdfunding.campaign` (a conversar con Raul respecto al pendiente #10).
 - **2026-11-07 · Efrain** · Decisiones de `identity-service` y del contrato de identidad (→ [`servicios/identity-service.md`](servicios/identity-service.md)). Las revisan por PR Arturo, Raul y Gabo, porque los roles y los headers afectan a sus servicios.
   - **Roles:** cada cuenta tiene un solo rol, `USUARIO` o `ADMINISTRADOR`. Reemplaza a VISITANTE, ORGANIZADOR y ADMINISTRADOR del README:
     - "visitante" es quien no tiene sesión;
@@ -69,6 +76,8 @@ Hitos del proyecto, los más recientes arriba.
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
 | 2026-11-09 | Efrain | **`docker-compose.yml`**: `docker compose up --build` levanta `identity-db`, `identity-service`, `api-gateway` y `frontend`. Solo publica los puertos 4200 y 8080, y las variables van en `.env` (plantilla `.env.example`). Probado de punta a punta por el gateway: crear cuenta, iniciar sesión, perfil, CORS, `401` sin token, `404` y `503` con identity caído. | Rama `chore/compose-base` |
+| 2026-11-09 | Gabo | **Novedades: implementación y preparación para revisión.** Dominio, API, persistencia, inbox/outbox, JWT configurable, Compose autónomo y pruebas de PostgreSQL/RabbitMQ. Corrección de compatibilidad con CI general y del nombre del evento interno; diseño y estado documentados. Integración con servicios reales y frontend pendiente. | `feat/update-publicacion-novedades` |
+| 2026-11-08 | Arturo | **Proceso y CI + `campaign-service` (diseño y contratos).** Plantilla de PR (`.github/pull_request_template.md`) y workflow de CI (`.github/workflows/ci.yml`); documento de diseño `docs/servicios/campaign-service.md`; fichas `CampanaPublicada`, `CampanaCerrada` (con `estadoFinal` y `motivoCierre`), `MetaAlcanzada` y `CampanaRechazada` aprobadas por el productor; reglas de negocio de campaña y decisiones de cierre/estructura registradas. | `docs/campaign-contratos-y-diseno` |
 | 2026-11-08 | Efrain | **Base del api-gateway**: Spring Cloud Gateway (WebFlux) con Spring Boot 4.1 y Java 21. Enruta `/api/identidad/**`, valida el JWT HS256, borra los `X-Usuario-*` del cliente y pone los del token, aplica CORS para el frontend y responde sus errores en RFC 9457. Pruebas con JUnit 5 contra un servicio simulado, Spotless, Dockerfile y workflow de CI. | Rama `feat/gateway-base` |
 | 2026-11-08 | Efrain | **Base del frontend**: borrador de `docs/frontend.md` (zonas, rutas, carpetas, sesión e inventario de pantallas) y la aplicación Angular 22 con Angular Material. Tiene el shell, la sesión con el token (interceptores y guards) y las pantallas de identidad: crear cuenta, iniciar sesión y mi perfil. Pruebas con Vitest, lint, Dockerfile con Nginx y workflow de CI. Falta el gateway para probarla contra el API. | Rama `feat/frontend-base` |
 | 2026-11-08 | Efrain | **Autenticación de identity-service** (fase 5): `POST /api/identidad/sesiones` emite el JWT HS256 con los claims del contrato (§5.1) y dura `JWT_DURACION`; `GET /api/identidad/perfil` lee los headers `X-Usuario-*` con un guard global (todo requiere sesión salvo lo `@Publico`); el primer administrador se siembra al arrancar y es idempotente. Variables nuevas: `JWT_SECRETO`, `JWT_DURACION`, `ADMIN_CORREO` y `ADMIN_CONTRASENA`. Probado con e2e y con la imagen de Docker. | Rama `feat/identity-autenticacion` |
@@ -95,11 +104,13 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 
 | Ruta | Quién lo hizo |
 |---|---|
-| `docs/servicios/` | Índice, plantilla y `contribution-service.md`: Raul (2026-11-07). `identity-service.md`: Efrain (2026-11-07). `api-gateway.md`: Efrain (2026-11-08) |
-| `docs/contratos-de-eventos.md` | Gabo (2026-11-07, propuesta v1 de los 7 eventos); Raul (2026-11-07: ficha `AporteRegistrado`, nota en `CampanaCerrada`, encabezado de responsables y enlace al event storming) |
+| `update-service/`, `.github/workflows/update-service.yml` y `docs/servicios/update-service.md` | Gabo (2026-11-07 a 2026-11-09): implementación de novedades, workflow propio, diseño y compatibilidad con CI general |
+| `.github/` | Plantilla de PR (`pull_request_template.md`) y workflow de CI (`workflows/ci.yml`): Arturo (2026-11-08) |
+| `docs/servicios/` | Índice, plantilla y `contribution-service.md`: Raul (2026-11-07); `identity-service.md`: Efrain (2026-11-07); `campaign-service.md` e índice actualizado: Arturo (2026-11-08); `api-gateway.md`: Efrain (2026-11-08) |
+| `docs/contratos-de-eventos.md` | Gabo (2026-11-07, propuesta v1 de los 7 eventos); Raul (2026-11-07: ficha `AporteRegistrado`, nota en `CampanaCerrada`, encabezado de responsables y enlace al event storming); Arturo (2026-11-08: fichas de `campaign-service` aprobadas por el productor, `estadoFinal` en `CampanaCerrada` y `categoria` en enum ASCII) |
 | `docs/adr/` | Raul (2026-11-07) |
 | `docs/enunciado/` | Raul (2026-11-07): transcripción del PDF del docente. Efrain (2026-11-07): fila "Moderación de usuarios" de la sección 4, pendiente de revisión de Raul |
-| `docs/estado-del-proyecto.md` y `docs/historial.md` | Creados por Raul (2026-11-07) |
+| `docs/estado-del-proyecto.md` y `docs/historial.md` | Creados por Raul (2026-11-07); actualizados por Efrain (2026-11-07) y Arturo (2026-11-08) |
 | `docs/stack-y-convenciones.md` | Raul (2026-11-04); Efrain (2026-11-06, paso al español); Raul (2026-11-07); Efrain (2026-11-08, Vitest en NestJS, pendiente de revisión de Raul). El `.html` que lo acompañaba se borró el 2026-11-07. |
 | `docs/diagramas/arquitectura.excalidraw` y `despliegue.excalidraw` | Raul (2026-11-04, como `docs/diagrama-*.excalidraw`); Raul (2026-11-07, paso al español y movidos) |
 | `docs/diagramas/event-storming.excalidraw` | Primera versión subida por Raul (2026-11-04, como `docs/event-storming-suertudometro.excalidraw`); Arturo (2026-11-04, renombrado a `-updated`); Gabo (2026-11-06: agregados, read models y sistemas externos); Raul (2026-11-07: opción A y movido) |
