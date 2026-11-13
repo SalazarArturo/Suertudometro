@@ -1,6 +1,6 @@
 # frontend
 
-> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-08 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-12 · **Estado:** Borrador (en revisión del equipo)
 > Angular 22 · TypeScript 6 · Angular Material 22 · Vitest · contenedor `frontend` (Nginx, host `4200` → `80`) · nombre visible: **Go Fund Me** (el proyecto y el repositorio siguen llamándose Suertudómetro).
 
 ## 1. Qué es
@@ -148,7 +148,7 @@ Los formularios ponen el error **en el campo** que corresponde (por ejemplo, `co
 | `npm run format:check` | Prettier |
 | `npm run build` | Build de producción en `dist/frontend/browser` |
 
-El workflow `.github/workflows/frontend.yml` corre lint, formato, pruebas y build en cada PR que toque `frontend/**`. Lo revisa Arturo, como el resto del CI.
+El frontend no tiene workflow propio: lo valida el CI general (`.github/workflows/ci.yml`, de Arturo), que corre `npm run lint` y `npm test` en cada PR hacia `main`. Ese CI no corre el formato ni el build, así que antes de abrir un PR se corren a mano `npm run format:check` y `npm run build`. El build es el que avisa si el bundle pasa su límite de tamaño.
 
 ## 9. Docker
 
@@ -166,5 +166,6 @@ El workflow `.github/workflows/frontend.yml` corre lint, formato, pruebas y buil
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-12 | Efrain | §8: sin workflow propio; al frontend lo valida el CI general, y el formato y el build se corren a mano (pedido de Arturo). |
 | 2026-11-08 | Efrain | Nombre visible «Go Fund Me» y la paleta y las letras del mockup del equipo (§6). |
 | 2026-11-08 | Efrain | Primera versión: zonas y rutas, estructura de carpetas, sesión, errores, convenciones (Angular Material, Signal Forms, `es-BO`), configuración, pruebas y Docker. |

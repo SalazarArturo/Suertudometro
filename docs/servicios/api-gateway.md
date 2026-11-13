@@ -1,6 +1,6 @@
 # api-gateway
 
-> **Responsable:** Efrain · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-08 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Efrain · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-12 · **Estado:** Borrador (en revisión del equipo)
 > Componente perimetral, sin dominio propio · Spring Cloud Gateway (WebFlux) · Spring Boot 4.1 · Java 21 · sin base de datos · atiende `/api/**` · puerto 8080, publicado en el host.
 
 ## 1. Responsabilidad
@@ -152,13 +152,15 @@ JUnit 5 y `WebTestClient` contra el gateway completo. El servicio de destino es 
 
 Formato con Spotless (`google-java-format`), igual que el resto del Java del proyecto (`docs/stack-y-convenciones.md` §3.2).
 
+El gateway no tiene workflow propio: lo valida el CI general (`.github/workflows/ci.yml`, de Arturo), que corre `mvn -B spotless:check` y `mvn -B test` en cada PR hacia `main`. La imagen de Docker no se construye en el CI; se prueba a mano con `docker compose up --build`.
+
 ## 11. Dependencias con otros integrantes
 
 | Qué | Con quién | Para qué |
 |---|---|---|
 | Que confirmen sus rutas públicas (§3) y avisen cuando su servicio esté listo para activar su ruta | Arturo, Raul y Gabo | Enrutar sus servicios con el acceso correcto |
 | Que monten el prefijo de su servicio en sus rutas (`/api/campanas`…) | Arturo, Raul y Gabo | Que el gateway no reescriba rutas |
-| Que revise el workflow de CI | Arturo | Que siga la definición de CI del equipo |
+| Que el CI general (`.github/workflows/ci.yml`) siga corriendo Spotless y las pruebas del gateway | Arturo | El gateway no tiene workflow propio (§10) |
 
 ## 12. Pendientes
 
@@ -170,7 +172,7 @@ Formato con Spotless (`google-java-format`), igual que el resto del Java del pro
 
 ## 13. Plan de implementación
 
-- [ ] **Fase 1 · Base** (`feat/gateway-base`): la ruta de identity-service, JWT, headers `X-Usuario-*`, CORS, errores RFC 9457, `/salud`, Dockerfile y CI.
+- [ ] **Fase 1 · Base** (`feat/gateway-base`): la ruta de identity-service, JWT, headers `X-Usuario-*`, CORS, errores RFC 9457, `/salud` y Dockerfile.
 - [ ] **Fase 2 · Límite de peticiones** (`feat/gateway-limite-peticiones`).
 - [ ] **Rutas de los demás servicios**, a medida que existan.
 
@@ -178,4 +180,5 @@ Formato con Spotless (`google-java-format`), igual que el resto del Java del pro
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-12 | Efrain | §10 y §11: sin workflow propio; al gateway lo valida el CI general (pedido de Arturo). |
 | 2026-11-08 | Efrain | Primera versión: rutas, rutas públicas, autenticación y headers, errores, CORS, configuración y plan. |

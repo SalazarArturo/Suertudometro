@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-09 (Gabo, Arturo y Efrain).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-12 (Efrain: se integra `main`, y a identity, el api-gateway y el frontend los valida el CI general).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -144,6 +144,7 @@ Valores posibles:
   - identity con JWT;
   - base de Angular según `docs/frontend.md`.
   - *Avance:* las cuatro cosas están hechas y probadas juntas con Docker Compose (ramas `feat/frontend-base`, `feat/gateway-base` y `chore/compose-base`). Faltan RabbitMQ en el compose y el límite de peticiones del gateway (Efrain, 2026-11-09).
+  - *CI:* identity-service, el api-gateway y el frontend no tienen workflow propio; los valida el CI general (`.github/workflows/ci.yml`), a pedido de Arturo. Ese CI no corre el formato con Prettier, la revisión de tipos, las pruebas e2e y de integración, los builds ni las imágenes de Docker: Efrain los corre a mano antes de cada PR (Efrain, 2026-11-12).
 - **Fase 2 · Dominio en aislado (todos, en paralelo):** agregados, objetos de valor, reglas y tests unitarios.
 - **Fase 3 · Persistencia, API y eventos:** migraciones, endpoints por el gateway y eventos con idempotencia por `idEvento`.
   - Gabo (2026-11-09): `update-service` tiene API, persistencia y adaptadores de eventos con pruebas aisladas. Falta integrar JWT, gateway, broker compartido y Notificaciones reales, confirmar contratos con Arturo/Efrain y comprobar el CI remoto. Diseño y pendientes: [update-service](servicios/update-service.md).

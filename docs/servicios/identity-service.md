@@ -1,6 +1,6 @@
 # identity-service
 
-> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-09 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-12 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Identidad** (subdominio genérico) · NestJS 12 · Node.js 24 · TypeScript · base de datos `identity-db` · ruta en el gateway `/api/identidad` · puerto interno 8081.
 
 ## 1. Responsabilidad
@@ -322,7 +322,7 @@ identity-service/
 | Que lean los headers `X-Usuario-Id`, `X-Usuario-Rol` y `X-Usuario-Nombre` (§5.1) y usen los roles `USUARIO` y `ADMINISTRADOR` | Arturo, Raul y Gabo | Saber quién hace cada petición: el administrador aprueba, rechaza y cancela campañas; el organizador se comprueba por id; el aportante viene en los headers |
 | Que decida qué roles pueden aportar (lo pregunta su §10) | Raul | Los permisos de `POST /api/aportes` |
 | Que revise el cambio en la fila "Moderación de usuarios" del enunciado §4 | Raul (responsable de `docs/enunciado/`) | Mantener alineado su documento |
-| Que defina qué valida el CI en cada servicio y proteja `main` | Arturo | Que el workflow de identity-service siga esa definición |
+| Que el CI general (`.github/workflows/ci.yml`) siga corriendo el linter y las pruebas unitarias de identity-service | Arturo | El servicio no tiene workflow propio. Ese CI no corre el formato, los tipos, las pruebas e2e y de integración ni el build: antes de abrir un PR se corren a mano `npm run format:check`, `npm run typecheck`, `npm run test:e2e`, `npm run test:integracion` y `npm run build` |
 | api-gateway, `docker-compose.yml`, RabbitMQ, `.env.example` y notification-service (consume `usuario.registrado`) | Efrain | Integrar el servicio; son piezas propias, pero de otros documentos |
 
 Mientras no esté el gateway, las pruebas envían los headers `X-Usuario-*` a mano.
@@ -356,7 +356,7 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 - [ ] **Fase 0 · Diseño** (`docs/identity-diseno`): este documento y las decisiones en el historial.
 - [ ] **Fase 1 · Esqueleto** (`feat/identity-esqueleto`):
   - proyecto NestJS 12 (ESM) con TypeScript 6 estricto, carpetas por capa y reglas de importación en ESLint;
-  - Vitest, configuración validada, `sharedkernel`, `GET /salud`, Dockerfile y workflow de CI (lo revisa Arturo).
+  - Vitest, configuración validada, `sharedkernel`, `GET /salud` y Dockerfile.
   - *Pruebas:* humo de `/salud`, ESLint falla si `domain` importa NestJS, y `docker build`.
 - [ ] **Fase 2 · Dominio y aplicación en aislado** (`feat/identity-dominio`):
   - objetos de valor, `PoliticaContrasena`, `CuentaUsuario`, eventos, los tres comandos, la consulta y los puertos con sus dobles en memoria.
@@ -383,6 +383,7 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-12 | Efrain | §10 y §13: sin workflow propio; al servicio lo valida el CI general, y lo que ese CI no corre se revisa a mano (pedido de Arturo). |
 | 2026-11-09 | Efrain | La fase 7 se hizo en `chore/compose-base`, junto con el gateway y el frontend. Falta RabbitMQ, que llega con la fase 6. |
 | 2026-11-08 | Efrain | El §5.1 enlaza a `api-gateway.md`, que aplica el contrato y tiene la tabla de rutas públicas. |
 | 2026-11-08 | Efrain | El §11 enlaza a `docs/frontend.md`, donde están las pantallas y la sesión del frontend. |
