@@ -1,0 +1,68 @@
+# Configuración de contribution-service (docs/servicios/contribution-service.md).
+# Todo lo que cambia entre entornos llega por variables de entorno; los valores por
+# defecto sirven para correr el servicio en local contra contribution-service/compose.yaml.
+spring:
+  application:
+    name: contribution-service
+  profiles:
+    group:
+      # `dev` es un alias de `local`: los dos cargan application-local.yml y las campañas de prueba.
+      dev: local
+  datasource:
+    url: ${CONTRIBUTION_DB_URL:jdbc:postgresql://localhost:5433/contribution}
+    username: ${CONTRIBUTION_DB_USUARIO:contribution}
+    password: ${CONTRIBUTION_DB_CONTRASENA:}
+  jpa:
+    # Las consultas terminan en la capa de aplicación; la vista no abre sesiones de JPA.
+    open-in-view: false
+    hibernate:
+      # Flyway crea el esquema y Hibernate solo comprueba que las entidades coincidan con él.
+      ddl-auto: validate
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PUERTO:5672}
+    username: ${RABBITMQ_USUARIO:guest}
+    password: ${RABBITMQ_CLAVE:guest}
+    listener:
+      simple:
+        # Un mensaje que falla se reintenta 3 veces (1 s, 2 s y 4 s). Si sigue fallando se
+        # rechaza sin reencolar y RabbitMQ lo manda a la cola de errores (DLQ).
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-retries: 3
+          initial-interval: 1s
+          multiplier: 2
+
+server:
+  # Puerto interno del diagrama de despliegue. No se publica al host: todo entra por el gateway.
+  port: ${PUERTO:8083}
+
+# GET /salud para el healthcheck de Docker; no se expone ningún otro endpoint de Actuator.
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health
+      path-mapping:
+        health: salud
+
+# Documentación OpenAPI, bajo el prefijo del servicio como en identity-service.
+springdoc:
+  api-docs:
+    path: /api/aportes/docs-json
+  swagger-ui:
+    path: /api/aportes/docs
+
+suertudometro:
+  mensajeria:
+    # Exchange topic del sistema (docs/stack-y-convenciones.md §5.5).
+    exchange: suertudometro.events
+    # Cola propia para campana.publicada y campana.cerrada, y su cola de errores.
+    exchange-errores: suertudometro.events.dlx
+    cola: contribution-service.campanas
+    cola-errores: contribution-service.dlq
+  outbox:
+    # Cada cuánto se envían a RabbitMQ los eventos pendientes de eventos_salida.
+    intervalo-ms: 2000

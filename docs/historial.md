@@ -8,6 +8,14 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-14 · Raul** · Decisiones de `contribution-service` al implementarlo (→ [`servicios/contribution-service.md`](servicios/contribution-service.md)):
+  - **Estructura Maven:** un solo módulo con las cinco capas por paquetes, igual que `campaign-service`, y una prueba (`ArquitecturaDeCapasTest`) que falla si `domain` importa Spring o JPA. Cierra, para los dos servicios Spring Boot, el pendiente 10.
+  - **Anonimato** (era el pendiente 15 y el P1 del servicio): en un aporte anónimo el nombre no se guarda y no lo ve nadie, tampoco el organizador ni la administración. `idAportante` se guarda siempre y va en el evento, como dice la ficha `AporteRegistrado`. *Falta que el equipo lo confirme.*
+  - **Aportes después de alcanzada la meta** (resuelve el pendiente 9): Raul confirma la propuesta de Arturo. El servicio acepta aportes mientras su copia de la campaña diga `PUBLICADA`, y campaign-service suma los que lleguen en tránsito.
+  - **El organizador puede aportar a su propia campaña:** cualquier usuario con sesión puede aportar.
+  - **`campana.cerrada`:** el estado de la copia local sale de `estadoFinal`; `motivoCierre` solo se usa si `estadoFinal` no viniera.
+  - **Paginación:** `?pagina=1&tamano=20`, los dos opcionales, con la respuesta `{ elementos, pagina, tamano, totalElementos, totalPaginas }`. Es una propuesta para los demás servicios.
+  - **Colas de RabbitMQ:** `contribution-service.campanas` y `contribution-service.dlq`, con el exchange de errores `suertudometro.events.dlx`, como ya hace `update-service`. Quedan en la configuración hasta que Efrain cierre la topología común.
 - **2026-11-12 · Arturo** (por mensaje; lo aplicó Efrain) · `identity-service`, `api-gateway` y `frontend` no llevan workflow propio: los valida el CI general (`.github/workflows/ci.yml`). Se quitaron `identity-service.yml`, `frontend.yml` y `api-gateway.yml`, que nunca llegaron a `main`. Además, la base de integración (identity, gateway, frontend y `docker-compose.yml`) entra a `main` en un solo PR, como excepción a «un servicio y una tarea por PR».
   - *Riesgo anotado:* el CI general corre el linter y las pruebas unitarias, y Spotless en Java. No corre Prettier, la revisión de tipos, las pruebas e2e y de integración de identity-service, los builds ni las imágenes de Docker, y `stack-y-convenciones.md` §5.9 pide validar el formato en CI. Mientras tanto, Efrain corre todo eso a mano antes de cada PR.
 - **2026-11-09 · Gabo** · Compatibilidad de `update-service` con el CI general: empaquetado explícito para `pip install -e .`, pruebas rápidas por defecto y selección explícita de PostgreSQL en el Compose de pruebas. Se conserva el flujo de dependencias con `uv` y el workflow global. El evento interno se alinea con `ActualizacionPublicada`; su traducción al bus sigue siendo `CampanaActualizada`, sin cambiar contratos. → [Diseño de Novedades](servicios/update-service.md).
@@ -77,6 +85,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-14 | Raul | **contribution-service: backend.** Dominio, aplicación (CQRS con PipelinR), persistencia con Flyway y JPA, API REST con errores RFC 9457 y mensajería (outbox y consumidores idempotentes), con pruebas unitarias, de API, de contrato y de integración con Testcontainers. El 2026-11-15 se probó con Docker: la imagen, el `compose.yaml` propio, los eventos de campaña simulados en RabbitMQ, `aporte.registrado` en el bus y la cola de errores. Falta la integración con el gateway y el compose de la raíz. | Rama local `feat/contribution-aportes`, sin subir |
 | 2026-11-12 | Efrain | **Base de integración lista para un solo PR.** Se integró `main` en la rama (el PR #1 de Gabo y el commit de Arturo) y se quitaron los workflows propios de identity-service, el api-gateway y el frontend, a pedido de Arturo: los valida el CI general. Los pasos de ese CI se probaron en una copia limpia del repositorio, en contenedores Linux; lo que no corre (Prettier, tipos, pruebas e2e y de integración, builds e imágenes de Docker) se probó a mano, junto con el flujo de punta a punta en Docker Compose. | Rama `chore/compose-base` |
 | 2026-11-09 | Efrain | **`docker-compose.yml`**: `docker compose up --build` levanta `identity-db`, `identity-service`, `api-gateway` y `frontend`. Solo publica los puertos 4200 y 8080, y las variables van en `.env` (plantilla `.env.example`). Probado de punta a punta por el gateway: crear cuenta, iniciar sesión, perfil, CORS, `401` sin token, `404` y `503` con identity caído. | Rama `chore/compose-base` |
 | 2026-11-09 | Gabo | **Novedades: implementación y preparación para revisión.** Dominio, API, persistencia, inbox/outbox, JWT configurable, Compose autónomo y pruebas de PostgreSQL/RabbitMQ. Corrección de compatibilidad con CI general y del nombre del evento interno; diseño y estado documentados. Integración con servicios reales y frontend pendiente. | `feat/update-publicacion-novedades` |
@@ -107,6 +116,7 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 
 | Ruta | Quién lo hizo |
 |---|---|
+| `contribution-service/` | Raul (2026-11-14): backend completo, en la rama local `feat/contribution-aportes` |
 | `update-service/`, `.github/workflows/update-service.yml` y `docs/servicios/update-service.md` | Gabo (2026-11-07 a 2026-11-09): implementación de novedades, workflow propio, diseño y compatibilidad con CI general |
 | `.github/` | Plantilla de PR (`pull_request_template.md`) y workflow de CI (`workflows/ci.yml`): Arturo (2026-11-08) |
 | `docs/servicios/` | Índice, plantilla y `contribution-service.md`: Raul (2026-11-07); `identity-service.md`: Efrain (2026-11-07); `campaign-service.md` e índice actualizado: Arturo (2026-11-08); `api-gateway.md`: Efrain (2026-11-08) |

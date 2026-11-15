@@ -1,0 +1,70 @@
+# Entorno local de contribution-service, independiente del docker-compose.yml de la raíz
+# (igual que update-service/compose.yaml). Sirve para desarrollar y probar este servicio
+# solo, mientras se integra con el resto del sistema.
+#
+#   docker compose up -d                       # solo la base y RabbitMQ; el servicio corre desde el IDE
+#   docker compose --profile servicio up --build   # también el servicio, en un contenedor
+#
+# Base de datos: localhost:5433 · RabbitMQ: localhost:5672 · Panel de RabbitMQ: http://localhost:15672
+# Servicio (con el perfil `servicio`): http://localhost:8083
+#
+# Los puertos se publican al host solo aquí, para desarrollar. En el compose de la raíz no se
+# publican: todo entra por el api-gateway.
+
+name: suertudometro-contribution
+
+services:
+  contribution-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: contribution
+      POSTGRES_USER: contribution
+      POSTGRES_PASSWORD: ${CONTRIBUTION_DB_CONTRASENA:-contribution-dev}
+    ports:
+      - "5433:5432"
+    volumes:
+      # Desde PostgreSQL 18, el volumen va en /var/lib/postgresql.
+      - contribution-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U contribution -d contribution"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4.3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USUARIO:-suertudometro}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_CLAVE:-suertudometro-dev}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  contribution-service:
+    profiles: ["servicio"]
+    build: .
+    environment:
+      # Con el perfil `local` se crean las campañas de prueba (DatosDePruebaLocales).
+      SPRING_PROFILES_ACTIVE: local
+      CONTRIBUTION_DB_URL: jdbc:postgresql://contribution-db:5432/contribution
+      CONTRIBUTION_DB_USUARIO: contribution
+      CONTRIBUTION_DB_CONTRASENA: ${CONTRIBUTION_DB_CONTRASENA:-contribution-dev}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USUARIO: ${RABBITMQ_USUARIO:-suertudometro}
+      RABBITMQ_CLAVE: ${RABBITMQ_CLAVE:-suertudometro-dev}
+      LOCAL_ID_ORGANIZADOR: ${LOCAL_ID_ORGANIZADOR:-e3b68016-9750-41b3-9e34-762dd8346001}
+    ports:
+      - "8083:8083"
+    depends_on:
+      contribution-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  contribution-data:
