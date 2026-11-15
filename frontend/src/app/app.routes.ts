@@ -17,6 +17,10 @@ export const routes: Routes = [
     loadChildren: () => import('./identidad/identidad.routes').then((m) => m.rutasIdentidad),
   },
   {
+    path: '',
+    loadChildren: () => import('./aportes/aportes.routes').then((m) => m.rutasAportes),
+  },
+  {
     path: 'panel',
     title: 'Mi panel',
     canActivate: [guardSesion],

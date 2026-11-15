@@ -1,0 +1,65 @@
+@if (aportes().isLoading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Cargando los aportes" />
+} @else if (error(); as error) {
+  <p class="mensaje-error" role="alert">{{ error.detalle }}</p>
+  <button matButton="outlined" type="button" (click)="aportes().reload()">Reintentar</button>
+} @else if (aportes().value(); as resultado) {
+  @if (resultado.elementos.length === 0) {
+    <p class="vacio">{{ sinAportes() }}</p>
+  } @else {
+    <ul class="aportes">
+      @for (aporte of resultado.elementos; track aporte.idAporte) {
+        <li class="aporte">
+          <div class="cabecera">
+            @if (encabezado() === 'campana') {
+              <a class="quien" [routerLink]="rutaDeCampana(aporte.idCampana)">
+                {{ aporte.tituloCampana ?? 'Campaña' }}
+              </a>
+            } @else {
+              <span class="quien" [class.anonimo]="aporte.esAnonimo">
+                {{ aporte.nombreAportante ?? 'Anónimo' }}
+              </span>
+            }
+            <span class="monto">{{ aporte.monto | currency: aporte.moneda }}</span>
+          </div>
+
+          @if (aporte.mensajeApoyo; as mensaje) {
+            <p class="mensaje">{{ mensaje }}</p>
+          }
+
+          <p class="detalle">
+            <time [attr.datetime]="aporte.registradoEn">
+              {{ aporte.registradoEn | date: 'longDate' }},
+              {{ aporte.registradoEn | date: 'shortTime' }}
+            </time>
+            @if (encabezado() === 'campana' && aporte.esAnonimo) {
+              <span class="etiqueta">Aportaste como anónimo</span>
+            }
+          </p>
+        </li>
+      }
+    </ul>
+
+    @if (resultado.totalPaginas > 1) {
+      <nav class="paginas" aria-label="Páginas de aportes">
+        <button
+          matButton="outlined"
+          type="button"
+          [disabled]="resultado.pagina <= 1"
+          (click)="pagina.set(resultado.pagina - 1)"
+        >
+          Anterior
+        </button>
+        <span>Página {{ resultado.pagina }} de {{ resultado.totalPaginas }}</span>
+        <button
+          matButton="outlined"
+          type="button"
+          [disabled]="resultado.pagina >= resultado.totalPaginas"
+          (click)="pagina.set(resultado.pagina + 1)"
+        >
+          Siguiente
+        </button>
+      </nav>
+    }
+  }
+}

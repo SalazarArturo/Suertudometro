@@ -256,14 +256,24 @@ contribution-service/
 | Que revisen la ficha `AporteRegistrado` como consumidores | Arturo, Gabo y Efrain | Aprobar mi contrato (pendiente #4) |
 | Activar la ruta `/api/aportes/**` en el gateway, con `GET /api/aportes` como ruta pública | Efrain | Que el frontend llegue al servicio |
 | `contribution-db`, RabbitMQ y el servicio en el `docker-compose.yml` de la raíz, y la topología común de colas | Efrain | Integrar el servicio con el resto |
-| Que el detalle de campaña incluya mis secciones "Aportar" e "Historial" | Arturo | Mis pantallas del portal público |
+| Que el detalle de campaña monte `<app-aportar>` y `<app-historial-aportes>`, y que "Mis campañas" enlace a los aportes recibidos de cada una | Arturo | Mis pantallas del portal público y del panel |
+| El enlace a "Mis aportes" en el menú de la cuenta, y revisar el presupuesto del bundle inicial (`docs/frontend.md` §10, F4 y F5) | Efrain | Que se llegue a la pantalla desde el menú; el build avisa por 2 kB |
 
 ## 11. Pantallas del frontend (dominio de aportes)
 
-- **Aportar**, en el detalle de la campaña: monto, mensaje opcional con contador de 300 caracteres y la casilla "Aportar como anónimo". Pide iniciar sesión.
-- **Historial de aportes**, en el detalle de la campaña: nombre (o "Anónimo"), monto, mensaje y fecha.
-- **Mis aportes**, en el menú principal, como en el mockup del enunciado.
-- **Aportes recibidos**, en el panel del organizador.
+Están en `frontend/src/app/aportes/`, con las convenciones de [`docs/frontend.md`](../frontend.md). Sus rutas están en la tabla del §2 de ese documento.
+
+| Pantalla | Componente y ruta | Qué hace |
+|---|---|---|
+| **Aportar** | `<app-aportar>`, una sección del detalle de la campaña | Monto, mensaje opcional con contador de 300 caracteres y la casilla "Aportar como anónimo". Sin sesión, ofrece iniciar sesión y vuelve después. Muestra en su campo los errores del API. |
+| **Historial de aportes** | `<app-historial-aportes>`, una sección del detalle de la campaña | Nombre (o "Anónimo"), monto, mensaje y fecha, por páginas. Es público. |
+| **Mis aportes** | `MisAportes`, en `/aportes/mios` | Los aportes del usuario, con la campaña de cada uno. Marca los que hizo como anónimo. Pide sesión. |
+| **Aportes recibidos** | `AportesRecibidos`, en `/panel/campanas/:idCampana/aportes` | Los aportes de una campaña, para su organizador o un administrador. Pide sesión; si el usuario no puede verlos, muestra el `403` del servicio. |
+
+- **`ListaAportes`** es la lista paginada que comparten el historial, "Mis aportes" y "Aportes recibidos": muestra la carga, el error con "Reintentar", la lista vacía y las páginas.
+- **Página provisoria `/aportes/campana/:idCampana`:** junta "Aportar" y el historial mientras no exista el detalle de la campaña, que es de Arturo. Cuando exista, esa pantalla monta las dos secciones y la página provisoria se quita. Los enlaces a una campaña salen de una sola función, `rutaDeCampana`.
+- **El dinero se muestra, no se calcula:** el monto se envía como texto (`"150.50"`; el formulario acepta coma o punto) y se muestra con `CurrencyPipe` en `es-BO`.
+- **Pruebas:** con Vitest y `HttpTestingController`, por pantalla, más una de las rutas dentro de `app.routes.ts`.
 
 ## 12. Pendientes de este servicio
 
@@ -288,12 +298,14 @@ contribution-service/
 - [x] `Dockerfile`, `compose.yaml` propio y campañas de prueba para el perfil `local`.
 - [x] Pruebas de integración con Testcontainers, y la imagen y el `compose.yaml` probados con Docker: eventos de campaña simulados en RabbitMQ, `aporte.registrado` en el bus y mensaje inválido en la DLQ (2026-11-15).
 - [ ] Integración en el `docker-compose.yml` de la raíz, detrás del gateway (con Efrain).
-- [ ] Pantallas (§11).
+- [x] Pantallas (§11), con sus pruebas (2026-11-15).
+- [ ] Montar las secciones en el detalle de la campaña cuando exista (con Arturo) y el enlace del menú (con Efrain).
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-15 | Raul | §11: pantallas implementadas, con sus componentes y rutas; dependencias con Arturo y Efrain para montarlas (§10). |
 | 2026-11-15 | Raul | Backend probado con Docker: pruebas de integración, imagen y `compose.yaml`; aclaración de los reintentos antes de la DLQ (§6). |
 | 2026-11-14 | Raul | Decisiones P1 a P5; un solo módulo Maven; `estadoFinal` de `campana.cerrada`; respuestas, paginación y catálogo de errores del API; topología de RabbitMQ propuesta; estructura de carpetas y plan según lo implementado. |
 | 2026-11-07 | Raul | Primera versión. |

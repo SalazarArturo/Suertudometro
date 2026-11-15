@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-15 (Raul: backend de `contribution-service` en una rama local, probado con Docker, y sus decisiones sobre los pendientes 9, 10 y 15).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-15 (Raul: backend de `contribution-service`, probado con Docker, y pantallas de aportes, en una rama local; sus decisiones sobre los pendientes 9, 10 y 15).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -67,7 +67,7 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar; implementación en paralelo.** `update-service` (Gabo) está en Persistencia y API, pendiente de integración. `contribution-service` (Raul) tiene el backend completo en su rama local `feat/contribution-aportes`, todavía sin subir. En `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS. `docker compose up --build` (rama `chore/compose-base`) levanta las tres piezas, y crear cuenta, iniciar sesión y ver el perfil ya funcionan de punta a punta.
+**Fase 0: diseño y documentación, por cerrar; implementación en paralelo.** `update-service` (Gabo) está en Persistencia y API, pendiente de integración. `contribution-service` (Raul) tiene el backend completo y las pantallas de aportes en su rama local `feat/contribution-aportes`, todavía sin subir. En `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS. `docker compose up --build` (rama `chore/compose-base`) levanta las tres piezas, y crear cuenta, iniciar sesión y ver el perfil ya funcionan de punta a punta.
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 - las carpetas de los demás servicios (ya existen `identity-service`, `api-gateway`, `frontend` y `update-service`, que tiene implementación y Compose autónomo);
@@ -88,7 +88,7 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 | `update-service` | Gabo | [Borrador](servicios/update-service.md) | Persistencia y API |
 | `search-service` | Gabo | Sin documento | Sin empezar |
 | `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Integrado (probado con Docker Compose) |
-| `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Sin empezar |
+| `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Aportes (Raul): hechas, en la rama local `feat/contribution-aportes` (sin subir). Las demás, sin empezar |
 
 Valores posibles:
 - **Documento:** Sin documento · Borrador · Vigente.
@@ -150,6 +150,7 @@ Valores posibles:
   - Gabo (2026-11-09): `update-service` tiene API, persistencia y adaptadores de eventos con pruebas aisladas. Falta integrar JWT, gateway, broker compartido y Notificaciones reales, confirmar contratos con Arturo/Efrain y comprobar el CI remoto. Diseño y pendientes: [update-service](servicios/update-service.md).
   - Raul (2026-11-15): `contribution-service` tiene dominio, aplicación, persistencia, API y mensajería (outbox y consumidores idempotentes) en la rama local `feat/contribution-aportes`, con las pruebas pasando, incluidas las de integración con Testcontainers (PostgreSQL y RabbitMQ reales). La imagen de Docker y su `compose.yaml` propio están probados con eventos de campaña simulados. Falta subirlo, activar su ruta en el gateway y sumarlo al compose de la raíz (con Efrain), y probarlo con los eventos reales de campaign-service. Diseño y pendientes: [contribution-service](servicios/contribution-service.md).
 - **Fase 4 · Frontend:** las pantallas de cada dominio.
+  - Raul (2026-11-15): las cuatro pantallas de aportes (aportar, historial de una campaña, "Mis aportes" y "Aportes recibidos") están en `frontend/src/app/aportes/`, en la rama local `feat/contribution-aportes`, con sus pruebas. "Aportar" y el historial son secciones para el detalle de la campaña; mientras ese detalle no exista, se usan desde una página provisoria. Quedan dos pendientes para Efrain en [`frontend.md`](frontend.md) §10: el presupuesto del bundle inicial (F4) y el enlace a "Mis aportes" en el menú (F5).
 - **Fase 5 · Entrega:**
   - flujo completo de punta a punta;
   - `docker compose up --build` desde cero;

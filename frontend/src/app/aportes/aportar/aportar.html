@@ -1,0 +1,47 @@
+<section class="aportar" aria-labelledby="titulo-aportar">
+  <h2 id="titulo-aportar">Aportar a esta campaña</h2>
+
+  @if (sesion.usuario(); as usuario) {
+    <form class="formulario" [formRoot]="formulario">
+      <mat-form-field appearance="outline">
+        <mat-label>Monto en bolivianos (Bs)</mat-label>
+        <input matInput inputmode="decimal" autocomplete="off" [formField]="formulario.monto" />
+        <mat-hint>Es un aporte simulado: no se cobra dinero real.</mat-hint>
+        @if (formulario.monto().errors()[0]; as error) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Mensaje de apoyo (opcional)</mat-label>
+        <textarea matInput rows="3" [formField]="formulario.mensajeApoyo"></textarea>
+        <mat-hint align="end">{{ largoDelMensaje() }} / {{ largoMaximo }}</mat-hint>
+        @if (formulario.mensajeApoyo().errors()[0]; as error) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-checkbox [formField]="formulario.esAnonimo">Aportar como anónimo</mat-checkbox>
+      <p class="ayuda">
+        @if (datos().esAnonimo) {
+          Tu nombre no se mostrará a nadie, tampoco al organizador de la campaña.
+        } @else {
+          Tu aporte se mostrará con tu nombre: {{ usuario.nombre }}.
+        }
+      </p>
+
+      @if (formulario().errors()[0]; as error) {
+        <p class="mensaje-error" role="alert">{{ error.message }}</p>
+      }
+
+      <button matButton="filled" type="submit" [disabled]="formulario().submitting()">
+        {{ formulario().submitting() ? 'Registrando tu aporte…' : 'Aportar' }}
+      </button>
+    </form>
+  } @else {
+    <p class="mensaje-aviso">Para aportar necesitas iniciar sesión.</p>
+    <a matButton="filled" routerLink="/ingresar" [queryParams]="{ volverA: router.url }">
+      Iniciar sesión
+    </a>
+  }
+</section>
