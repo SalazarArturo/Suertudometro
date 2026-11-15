@@ -2,7 +2,7 @@
 
 > **Responsable:** Raul · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-15 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Contribuciones** (subdominio core) · Spring Boot 4.1 · Java 21 · base de datos `contribution-db` · ruta en el gateway `/api/aportes` · puerto interno 8083.
-> **Implementación:** el backend está escrito en la rama local `feat/contribution-aportes` de Raul (sin subir). Cómo correrlo: [`contribution-service/README.md`](../../contribution-service/README.md).
+> **Implementación:** el backend está en `contribution-service/` y las pantallas, en `frontend/src/app/aportes/`. Cómo correrlo: [`contribution-service/README.md`](../../contribution-service/README.md).
 
 ## 1. Responsabilidad
 
