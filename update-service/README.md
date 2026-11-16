@@ -6,20 +6,20 @@ El [diseño canónico del servicio](../docs/servicios/update-service.md) documen
 
 ## Comportamiento
 
-El organizador autenticado publica una `Actualizacion` únicamente si el servicio recibió `CampanaPublicada` y no recibió `CampanaCerrada`. El autor se toma del JWT verificado y se compara con `idOrganizador` de la proyección local. El cuerpo de la solicitud no decide quién publica. El contenido debe tener texto; se recortan espacios exteriores.
+El organizador autenticado publica una `Actualizacion` únicamente si el servicio recibió `CampanaPublicada` y no recibió `CampanaCerrada`. El autor se toma de `X-Usuario-Id`, enviado por el gateway, y se compara con `idOrganizador` de la proyección local. El cuerpo de la solicitud no decide quién publica. El contenido debe tener texto; se recortan espacios exteriores.
 
 El cierre es definitivo incluso si llega antes que la publicación. Bloquea nuevas novedades y conserva el historial público. Una campaña aún desconocida devuelve `404`; una cerrada, `409`; un autor diferente, `403`. Puede haber un intervalo de consistencia eventual hasta que llegue el evento de Campañas.
 
 ## API
 
-Todas las rutas se exponen a través del gateway, sin barra final.
+Las rutas conservan el prefijo completo, sin reescritura ni barra final. Su activación en el gateway está pendiente de Efrain.
 
 | Método | Ruta | Acceso y resultado |
 |---|---|---|
 | POST | `/api/novedades` | Organizador autenticado; `201` con la novedad |
 | GET | `/api/novedades/campana/{idCampana}` | Público; historial, también de campañas cerradas |
-| GET | `/api/novedades/esquema` | Esquema OpenAPI |
-| GET | `/api/novedades/documentacion` | Swagger UI |
+| GET | `/api/novedades/esquema` | Público en desarrollo; esquema OpenAPI |
+| GET | `/api/novedades/documentacion` | Público en desarrollo; Swagger UI |
 
 Solicitud de publicación:
 
@@ -36,11 +36,13 @@ La respuesta contiene `idActualizacion`, `idCampana`, `idOrganizador`, `contenid
 
 Consume `campana.publicada` y `campana.cerrada`; traduce `ActualizacionPublicada` del dominio a `CampanaActualizada` (`campana.actualizada`) en el bus. La topología, la deduplicación y las garantías de entrega se describen en [Eventos del diseño](../docs/servicios/update-service.md#6-eventos).
 
-## Identidad pendiente de integración
+## Identidad del gateway
 
-Confirmar con Identidad y Gateway la clave, el algoritmo, el emisor, la audiencia y el campo de identidad. Se parametrizan con `JWT_CLAVE_VERIFICACION`, `JWT_ALGORITMO`, `JWT_EMISOR`, `JWT_AUDIENCIA` y `JWT_CAMPO_USUARIO`.
+Se aplica el [contrato de identidad](../docs/servicios/identity-service.md#51-contrato-del-token-y-de-los-headers): el cliente envía `Authorization: Bearer <token>` al gateway. Este verifica el token, elimina los `X-Usuario-*` recibidos del cliente y el `Authorization`, y reenvía la identidad en headers internos.
 
-La configuración inicial espera `RS256` y un UUID en `sub`, con `exp`, `iss` y `aud` obligatorios. Permite configurar `HS256` si el equipo acuerda una clave compartida. La clave PEM admite saltos de línea escapados como `\n`. Sin clave, emisor o audiencia, publicar devuelve `503`; sin token, `401`. No emite tokens ni crea cuentas de usuario. No requiere llamadas HTTP a otros servicios.
+`AutenticacionGateway` lee `X-Usuario-Id` como UUID y lo expone en `request.user.id_usuario`. Publicar devuelve `401` si el header falta, está vacío o no es un UUID; un Bearer sin ese header tampoco autentica. No se exigen `X-Usuario-Rol` ni `X-Usuario-Nombre` para publicar: el dominio comprueba que el usuario sea el organizador de la campaña. El servicio no verifica JWT ni necesita variables `JWT_*` o claves de Identidad.
+
+La confianza en estos headers depende de que el servicio permanezca aislado de clientes externos y solo el gateway sea el punto de entrada. El Compose autónomo no publica sus puertos al host. Swagger describe Bearer para probar a través del gateway; las peticiones directas de desarrollo usan `X-Usuario-Id`. Se conserva `WWW-Authenticate: Bearer` en los errores `401`, conforme al acceso por gateway.
 
 ## Ejecutar con Docker
 
@@ -52,13 +54,37 @@ docker compose up --build -d
 docker compose logs -f update-service consumidor publicador
 ```
 
-El Compose es autónomo para desarrollar este servicio. Ejecuta migraciones antes de los procesos. La API escucha en `8000` dentro de la red Docker; los servicios internos y las bases no publican puertos al host. La integración al Compose global y la ruta del gateway quedan para el despliegue del equipo. Para una comprobación local puntual se puede ejecutar la API con enlace solo a loopback:
+El Compose es autónomo para desarrollar este servicio. Ejecuta migraciones antes de los procesos. La API escucha en `8084` dentro de la red Docker, alineada con el diagrama de despliegue; los servicios internos y las bases no publican puertos al host. La integración al Compose global y la ruta del gateway quedan a cargo de Efrain. Para una comprobación local puntual se puede ejecutar la API con enlace solo a loopback:
 
 ```powershell
-docker compose run --rm --service-ports -p 127.0.0.1:8001:8000 update-service
+docker compose run --rm --service-ports -p 127.0.0.1:8001:8084 update-service
 ```
 
-En ese caso Swagger queda en `http://127.0.0.1:8001/api/novedades/documentacion`. Para publicar, antes debe recibirse el evento real de publicación y configurarse el JWT. RabbitMQ debe estar accesible para el productor de Campañas cuando se integren los servicios.
+En ese caso Swagger queda en `http://127.0.0.1:8001/api/novedades/documentacion`. Su botón de autorización configura Bearer para el gateway; para publicar directamente se usa el siguiente ejemplo con el header interno. Antes debe recibirse `CampanaPublicada` con los mismos identificadores de campaña y organizador. RabbitMQ debe estar accesible para el productor de Campañas cuando se integren los servicios.
+
+```powershell
+$cuerpo = '{"idCampana":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","contenido":"Llegaron los primeros libros."}'
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8001/api/novedades -ContentType application/json -Headers @{ "X-Usuario-Id" = "e3b68016-9750-41b3-9e34-762dd8346001" } -Body $cuerpo
+```
+
+Cuando Efrain active la ruta, la misma publicación se prueba mediante el gateway con el token del organizador devuelto por `POST /api/identidad/sesiones`:
+
+```powershell
+$tokenAcceso = "<tokenAcceso del organizador>"
+Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/novedades -ContentType application/json -Headers @{ Authorization = "Bearer $tokenAcceso" } -Body $cuerpo
+```
+
+## Confirmación para Efrain
+
+Mensaje preparado para compartir al entregar este cambio:
+
+> Efraín, `update-service` ya está adaptado para recibir `X-Usuario-Id` del gateway, validar que sea UUID y comprobar que corresponda al organizador. Ya no verifica JWT y su puerto interno es `8084`.
+>
+> Destino: `http://update-service:8084`, conservando el prefijo `/api/novedades`, sin reescritura ni barra final.
+>
+> Rutas públicas: `GET /api/novedades/campana/{idCampana}`, `GET /api/novedades/esquema` y `GET /api/novedades/documentacion` (las dos últimas para desarrollo).
+>
+> `POST /api/novedades` requiere sesión; el servicio valida la propiedad de la campaña. Quedan pendientes la activación de la ruta y la incorporación al Compose global de tu lado, y luego la prueba conjunta por el gateway.
 
 ## Desarrollo y verificación
 

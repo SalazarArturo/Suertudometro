@@ -8,8 +8,8 @@ RUN groupadd --gid 10001 novedades && useradd --uid 10001 --gid novedades noveda
 COPY --chown=10001:10001 . .
 RUN chown novedades:novedades /servicio
 USER 10001:10001
-EXPOSE 8000
-CMD ["gunicorn", "configuracion.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--access-logfile", "-"]
+EXPOSE 8084
+CMD ["gunicorn", "configuracion.wsgi:application", "--bind", "0.0.0.0:8084", "--workers", "2", "--access-logfile", "-"]
 
 FROM ejecucion AS pruebas
 USER root

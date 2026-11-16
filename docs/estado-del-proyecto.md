@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-12 (Efrain: se integra `main`, y a identity, el api-gateway y el frontend los valida el CI general).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-15 (Gabo: `update-service` adaptado a los headers del gateway y al puerto interno `8084`; activación pendiente de Efrain).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -147,7 +147,7 @@ Valores posibles:
   - *CI:* identity-service, el api-gateway y el frontend no tienen workflow propio; los valida el CI general (`.github/workflows/ci.yml`), a pedido de Arturo. Ese CI no corre el formato con Prettier, la revisión de tipos, las pruebas e2e y de integración, los builds ni las imágenes de Docker: Efrain los corre a mano antes de cada PR (Efrain, 2026-11-12).
 - **Fase 2 · Dominio en aislado (todos, en paralelo):** agregados, objetos de valor, reglas y tests unitarios.
 - **Fase 3 · Persistencia, API y eventos:** migraciones, endpoints por el gateway y eventos con idempotencia por `idEvento`.
-  - Gabo (2026-11-09): `update-service` tiene API, persistencia y adaptadores de eventos con pruebas aisladas. Falta integrar JWT, gateway, broker compartido y Notificaciones reales, confirmar contratos con Arturo/Efrain y comprobar el CI remoto. Diseño y pendientes: [update-service](servicios/update-service.md).
+  - Gabo (2026-11-15): `update-service` tiene API, persistencia y adaptadores de eventos con pruebas aisladas. Se adapta al contrato de identidad por `X-Usuario-Id` y al puerto interno `8084`, y confirma como públicas las lecturas de historial, esquema y Swagger (las dos últimas en desarrollo). Mantiene el estado **Persistencia y API**: falta que Efrain active la ruta y lo incorpore al Compose global, probar el acceso por el gateway, integrar broker compartido y Notificaciones reales, confirmar contratos con Arturo/Efrain y comprobar el CI remoto. Diseño y pendientes: [update-service](servicios/update-service.md).
 - **Fase 4 · Frontend:** las pantallas de cada dominio.
 - **Fase 5 · Entrega:**
   - flujo completo de punta a punta;
