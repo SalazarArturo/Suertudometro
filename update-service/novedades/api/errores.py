@@ -19,7 +19,6 @@ def construir_problema(estado, detalle, ruta, codigo="solicitud-invalida"):
             404: "Recurso no encontrado",
             409: "Conflicto",
             500: "Error interno",
-            503: "Servicio no disponible",
         }.get(estado, "Solicitud no completada"),
         "status": estado,
         "detail": detalle,

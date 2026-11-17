@@ -30,7 +30,6 @@ class PublicarActualizacionVista(APIView):
             (403, "application/problem+json"): ProblemaSerializador,
             (404, "application/problem+json"): ProblemaSerializador,
             (409, "application/problem+json"): ProblemaSerializador,
-            (503, "application/problem+json"): ProblemaSerializador,
         },
     )
     def post(self, request):

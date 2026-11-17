@@ -53,7 +53,7 @@ APPEND_SLASH = False
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "novedades.infraestructura.autenticacion.AutenticacionJwt",
+        "novedades.infraestructura.autenticacion.AutenticacionGateway",
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
@@ -69,11 +69,6 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
 }
-JWT_CLAVE_VERIFICACION = os.environ.get("JWT_CLAVE_VERIFICACION", "").replace("\\n", "\n")
-JWT_ALGORITMO = os.environ.get("JWT_ALGORITMO", "RS256")
-JWT_CAMPO_USUARIO = os.environ.get("JWT_CAMPO_USUARIO", "sub")
-JWT_EMISOR = os.environ.get("JWT_EMISOR", "")
-JWT_AUDIENCIA = os.environ.get("JWT_AUDIENCIA", "")
 RABBITMQ_URL = os.environ.get("RABBITMQ_URL", "")
 RABBITMQ_EXCHANGE = "suertudometro.events"
 RABBITMQ_COLA = "update-service.campanas"
