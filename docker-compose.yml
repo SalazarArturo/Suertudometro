@@ -4,11 +4,13 @@
 #   docker compose up --build
 #
 # Aplicación web: http://localhost:4200 · API Gateway: http://localhost:8080
-# Las bases de datos y los servicios no se publican al host: todo entra por el
-# gateway.
+# Consola de RabbitMQ: http://localhost:15672 · Mailpit: http://localhost:8025
+# Las bases de datos, los servicios y el puerto AMQP de RabbitMQ no se publican
+# al host: todo entra por el gateway.
 #
-# Por ahora están identity-service, el api-gateway y el frontend. Cada servicio
-# nuevo se agrega aquí, con su base, en el PR que activa su ruta en el gateway.
+# Por ahora están identity-service, el api-gateway, el frontend, RabbitMQ y
+# Mailpit. Cada servicio nuevo se agrega aquí, con su base, en el PR que activa
+# su ruta en el gateway. Cómo usa RabbitMQ cada servicio: docs/rabbitmq.md.
 
 name: suertudometro
 
@@ -58,5 +60,37 @@ services:
     ports:
       - "4200:80"
 
+  # Bus de eventos. Los servicios se conectan a amqp://<usuario>:<clave>@rabbitmq:5672
+  # y cada uno declara sus colas al arrancar (docs/rabbitmq.md).
+  rabbitmq:
+    image: rabbitmq:4.3-management-alpine
+    # RabbitMQ guarda sus datos con el nombre del nodo (rabbit@<hostname>). Con un
+    # hostname fijo, recrear el contenedor no deja las colas huérfanas en el volumen.
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USUARIO:?Falta RABBITMQ_USUARIO en .env (copia .env.example)}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_CLAVE:?Falta RABBITMQ_CLAVE en .env (copia .env.example)}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    ports:
+      # Solo la consola web. El puerto AMQP (5672) queda en la red interna.
+      - "15672:15672"
+    healthcheck:
+      # Listo cuando acepta conexiones AMQP, no solo cuando el proceso responde.
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+
+  # Correo de prueba. notification-service envía por SMTP a mailpit:1025 (red
+  # interna) y los correos se ven en http://localhost:8025. No guarda nada entre
+  # reinicios.
+  mailpit:
+    image: axllent/mailpit:v1.33
+    ports:
+      - "8025:8025"
+
 volumes:
   identity-data:
+  rabbitmq-data:
