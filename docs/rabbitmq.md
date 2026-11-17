@@ -29,6 +29,8 @@ Esta topología no es nueva: es la que ya usaban `update-service` (Gabo) y `cont
 
 `<servicio>` es el nombre de infraestructura (`campaign-service`, `notification-service`…). Una cola por servicio suele alcanzar; si un servicio escucha temas muy distintos, puede tener más de una, cada una con el mismo argumento de DLQ.
 
+**Las colas siempre son durables**, también las de las pruebas. RabbitMQ 4.3 no acepta una cola no durable que no sea exclusiva (`transient_nonexcl_queues`): si se declara una, cierra la conexión entera con el error 541.
+
 Ejemplo, `update-service`:
 
 ```text
@@ -54,7 +56,7 @@ Declarar algo que ya existe con los mismos argumentos no hace nada. Con otros ar
 - **Siempre desde un outbox:** el evento se guarda en la misma transacción que el cambio de negocio, y un publicador lo envía después. La fila se marca como publicada **cuando RabbitMQ confirma** que recibió el mensaje (*publisher confirms*). Si no confirma, la fila queda pendiente y se reintenta.
 - Un reintento puede enviar dos veces el mismo mensaje, siempre con el mismo `idEvento`. Los consumidores lo descartan (§5).
 
-**Primer arranque.** Si la cola de un consumidor todavía no existe, el mensaje no tiene a dónde ir y RabbitMQ lo descarta sin avisar. Para no perderlo se recomienda publicar con `mandatory`: RabbitMQ devuelve el mensaje que no llegó a ninguna cola y el outbox lo reintenta. Así lo hace `update-service`. Una vez que el consumidor creó su cola, la cola queda en el volumen y el problema no se repite.
+**Primer arranque.** Si la cola de un consumidor todavía no existe, el mensaje no tiene a dónde ir y RabbitMQ lo descarta sin avisar. Para no perderlo se recomienda publicar con `mandatory`: RabbitMQ devuelve el mensaje que no llegó a ninguna cola y el outbox lo reintenta. Así lo hacen `update-service` e `identity-service`. Una vez que el consumidor creó su cola, la cola queda en el volumen y el problema no se repite.
 
 ## 5. Consumir y reintentos
 
@@ -107,4 +109,5 @@ El servicio se conecta entonces a `amqp://<usuario>:<clave>@localhost:5672`. Con
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-17 | Efrain | §2: las colas siempre son durables (RabbitMQ 4.3 rechaza las no durables compartidas). §4: identity-service también publica con `mandatory`. |
 | 2026-11-17 | Efrain | Primera versión: deja escrita la topología que ya usaban `update-service` y `contribution-service`, cómo publicar y consumir, la DLQ y la conexión desde el IDE. |
