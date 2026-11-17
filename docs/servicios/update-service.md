@@ -1,7 +1,7 @@
 # update-service · Novedades
 
-> **Responsable:** Gabo · **Creado:** 2026-11-09 · **Última actualización:** 2026-11-09 · **Estado:** Borrador (en revisión)
-> Contexto de soporte Novedades. Django 5.2 + DRF, Python 3.13, PostgreSQL 18 exclusiva (`update-db`). Ruta del gateway: `/api/novedades`; puerto interno: `8000`.
+> **Responsable:** Gabo · **Creado:** 2026-11-09 · **Última actualización:** 2026-11-15 · **Estado:** Borrador (en revisión)
+> Contexto de soporte Novedades. Django 5.2 + DRF, Python 3.13, PostgreSQL 18 exclusiva (`update-db`). Ruta del gateway: `/api/novedades`; puerto interno: `8084`.
 
 ## 1. Responsabilidad
 
@@ -29,18 +29,22 @@ Un cierre recibido antes de la publicación crea una proyección cerrada. Una pu
 | `RegistrarCampanaPublicadaComando` | Consumidor de eventos | Mensaje v1, UUID, fecha UTC y organizador coherente | Proyección e inbox en la misma transacción |
 | `RegistrarCampanaCerradaComando` | Consumidor de eventos | Mensaje v1, UUID, fecha UTC y motivo admitido | Bloqueo definitivo e inbox en la misma transacción |
 
-El autor de una novedad procede del JWT verificado, nunca del cuerpo HTTP.
+El autor de una novedad procede de `X-Usuario-Id`, enviado por el gateway conforme al [contrato de identidad](identity-service.md#51-contrato-del-token-y-de-los-headers), nunca del cuerpo HTTP. `AutenticacionGateway` lo convierte a UUID y conserva `request.user.id_usuario`; responde `401` si falta, está vacío o es inválido. Un Bearer sin ese header no autentica. No se exige nombre ni rol para esta operación: la autorización compara el usuario con el organizador de la proyección local.
+
+El servicio no valida JWT ni necesita claves o variables `JWT_*`. Solo confía en estos headers dentro de la red interna: el gateway debe eliminar los `X-Usuario-*` recibidos del cliente y el `Authorization` antes de reenviar la identidad verificada. Se conserva `WWW-Authenticate: Bearer` en los errores `401` para el acceso público mediante gateway.
 
 ## 5. Consultas y endpoints REST
 
 | Método y ruta | Acceso | Consulta o comando | Respuesta y errores |
 |---|---|---|---|
-| `POST /api/novedades` | Organizador de la campaña | `PublicarActualizacionComando` | `201`; `400`, `401`, `403`, `404`, `409`, `503` |
+| `POST /api/novedades` | Sesión requerida; organizador de la campaña | `PublicarActualizacionComando` | `201`; `400`, `401`, `403`, `404`, `409` |
 | `GET /api/novedades/campana/{idCampana}` | Público | `ObtenerActualizacionesPorCampanaConsulta` | `200`; `400`, `404` |
-| `GET /api/novedades/esquema` | Público | OpenAPI | `200` |
-| `GET /api/novedades/documentacion` | Público | Swagger UI | `200` |
+| `GET /api/novedades/esquema` | Público en desarrollo | OpenAPI | `200` |
+| `GET /api/novedades/documentacion` | Público en desarrollo | Swagger UI | `200` |
 
 La consulta devuelve `total` y `resultados`, ordenados por fecha e identificador descendentes. Admite `limite` (1 a 100, predeterminado 20) y `desplazamiento` (desde 0). El historial de campañas cerradas sigue disponible. JSON en camelCase y errores RFC 9457. Ejemplos y comandos de ejecución: [guía operativa](../../update-service/README.md).
+
+Estas rutas se confirman para que Efrain active `/api/novedades` en el gateway hacia `http://update-service:8084`, sin reescritura ni barra final. Swagger conserva el esquema Bearer del acceso externo: el cliente envía el token al gateway y este lo transforma a los headers internos. La activación y la prueba conjunta siguen pendientes.
 
 ## 6. Eventos
 
@@ -77,7 +81,7 @@ novedades/
   api/                  # Vistas y serializadores
   aplicacion/           # Comandos, consultas, manejadores y puertos
   dominio/              # Objetos y eventos sin frameworks
-  infraestructura/      # ORM, migraciones, mappers, JWT y RabbitMQ
+  infraestructura/      # ORM, migraciones, mappers, identidad del gateway y RabbitMQ
   shared_kernel/        # Errores de negocio
 pruebas/                # Dominio, API, arquitectura y adaptadores
 ```
@@ -95,18 +99,18 @@ Es una estructura local del servicio, no un acuerdo general para otros integrant
 ## 10. Dependencias con otros integrantes
 
 - **Arturo (Campañas):** validar como consumidor los contratos de publicación y cierre; probar los eventos reales y su orden de llegada.
-- **Efrain (Identidad y Gateway):** acordar algoritmo, clave, emisor, audiencia y claim del identificador. El adaptador inicial espera RS256 y UUID en `sub`, exige `exp`, `iss` y `aud`, y admite HS256 configurable si se acuerda. Sin configuración de verificación responde `503`.
+- **Efrain (Identidad y Gateway):** activar la ruta hacia `http://update-service:8084` y declarar las tres lecturas públicas de §5, manteniendo protegido el POST. El adaptador ya recibe `X-Usuario-Id` conforme al contrato; queda probar juntos la autenticación real por el gateway.
 - **Efrain (RabbitMQ y Notificaciones):** acordar topología, DLQ y operación de reintentos; verificar recepción de `campana.actualizada` y contenido del aviso. Los contratos y decisiones pendientes no se dan por aprobados aquí.
 - **Efrain (infraestructura y Angular):** incorporar servicio, procesos, base, ruta del gateway y pantallas al despliegue global.
 
 ## 11. Pantallas del frontend
 
-A cargo de Gabo sobre la base Angular de Efrain: formulario de publicación del organizador e historial público en el detalle de campaña. Pendientes de implementar e integrar; rutas concretas por coordinar con `docs/frontend.md` cuando exista.
+A cargo de Gabo sobre la base Angular de Efrain: formulario de publicación del organizador e historial público en el detalle de campaña. Pendientes de implementar e integrar; las rutas propuestas están en [`docs/frontend.md`](../frontend.md) y quedan por confirmar al desarrollar las pantallas.
 
 ## 12. Pendientes de este servicio
 
 - Revisar y aprobar este borrador y los contratos con productores y consumidores.
-- Integrar JWT y gateway reales y topología compartida; probar publicación, cierre y aviso de extremo a extremo.
+- Activar y probar el acceso por el gateway con Efrain y la topología compartida; probar publicación, cierre y aviso de extremo a extremo.
 - Incorporar el servicio al Compose global y desarrollar sus pantallas.
 - Validar el CI en GitHub después de subir los cambios. La ejecución local no equivale a una corrida remota.
 
@@ -114,10 +118,12 @@ A cargo de Gabo sobre la base Angular de Efrain: formulario de publicación del 
 
 1. Dominio, API, persistencia, outbox e inbox implementados en la rama de novedades, con pruebas aisladas de integración.
 2. Compatibilidad con CI general: instalación editable con `pip` y `pytest` rápido por defecto. El Compose de pruebas selecciona explícitamente `configuracion.ajustes` y habilita el broker real.
-3. Revisión por PR; después, integración con los servicios reales y frontend. Estado actual: **Persistencia y API**, no integrado de extremo a extremo.
+3. Adaptación al contrato de headers del gateway y al puerto interno `8084` en `fix/update-identidad-gateway`. Se retira la verificación JWT local y se confirman las rutas públicas para Efrain.
+4. Revisión por PR; después, activación en gateway y Compose global por Efrain e integración con los servicios reales y frontend. Estado actual: **Persistencia y API**, no integrado de extremo a extremo.
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-15 | Gabo | Identidad por `X-Usuario-Id`, retiro de verificación JWT local y del `503` de autenticación, puerto `8084` y confirmación de rutas públicas; integración con gateway y Compose global pendiente de Efrain. |
 | 2026-11-09 | Gabo | Borrador basado en la implementación de novedades; diseño, límites, patrones y pendientes de integración. |
