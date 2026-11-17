@@ -8,6 +8,10 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-17 · Efrain** · contribution-service y update-service en el `docker-compose.yml` de la raíz (→ [`servicios/api-gateway.md`](servicios/api-gateway.md) §2 y §3):
+  - **contribution-service corre sin el perfil `local`**, así que no crea campañas de prueba: las conoce solo por `campana.publicada`, como en producción. Mientras no exista campaign-service, el evento se simula desde la consola de RabbitMQ ([`rabbitmq.md`](rabbitmq.md) §9).
+  - **update-service corre en cuatro contenedores con la misma imagen**, como en su compose propio: `update-migrations` (aplica las migraciones y termina), `update-service` (la API), `update-worker` (consume los eventos) y `update-publisher` (publica desde el outbox). El diagrama de despliegue muestra solo `update-service` y `update-worker`.
+  - **Rutas públicas:** las que confirmó cada responsable. `GET /api/aportes` (Raul) y, de update-service, `GET /api/novedades/campana/{idCampana}`, el esquema y la documentación (Gabo). El Swagger de contribution-service no se publica por el gateway porque Raul no lo declaró público; el pendiente G3 sigue abierto.
 - **2026-11-17 · Efrain** · identity-service publica `usuario.registrado` con `mandatory` (→ [`servicios/identity-service.md`](servicios/identity-service.md) §6). Mientras no exista una cola que lo reciba, RabbitMQ lo devuelve y el evento espera en el outbox, en vez de perderse. Así, cuando notification-service cree su cola, recibirá también las cuentas creadas antes, incluida la del administrador.
 - **2026-11-17 · Efrain** · Topología de RabbitMQ (→ [`rabbitmq.md`](rabbitmq.md)). Deja escrita la que ya usaban `update-service` (Gabo) y `contribution-service` (Raul), para que los demás servicios la sigan:
   - **Cada servicio declara al arrancar lo que usa**, sin un archivo central: el que publica, solo el exchange; el que consume, los exchanges, su cola, su DLQ y sus enlaces. Así cada uno se prueba solo con Testcontainers.
@@ -92,6 +96,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-17 | Efrain | **contribution-service y update-service en el compose y detrás del gateway.** `docker compose up --build` levanta sus bases y sus contenedores, y el gateway enruta `/api/aportes/**` y `/api/novedades/**` con sus rutas públicas. Pruebas del gateway por cada ruta. Probado de punta a punta por el gateway con un `campana.publicada` simulado: aportar, historiales públicos, aportes recibidos, publicar una novedad y los eventos `aporte.registrado` y `campana.actualizada` en el bus. | Rama `feat/gateway-rutas-aportes-novedades` |
 | 2026-11-17 | Efrain | **identity-service publica `usuario.registrado`** (fase 6): el publicador del outbox lo envía a `suertudometro.events` con confirmaciones del broker, se reconecta solo y no pierde eventos sin cola. Pruebas de integración con RabbitMQ 4.3 y PostgreSQL 18 reales; en Docker Compose, el servicio se conecta a RabbitMQ. | Rama `feat/identity-mensajeria` |
 | 2026-11-17 | Efrain | **RabbitMQ y Mailpit en `docker-compose.yml`.** RabbitMQ 4.3 con su consola en el puerto 15672 y el volumen `rabbitmq-data`; Mailpit con su bandeja en el 8025. Topología documentada en `docs/rabbitmq.md`. | Rama `chore/compose-rabbitmq` |
 | 2026-11-15 | Gabo | **Novedades: preparación para el gateway.** Adaptador de identidad por `X-Usuario-Id`, retiro del JWT local, Swagger con Bearer para el gateway y puerto interno `8084`. Se documentan las rutas públicas y los ejemplos de prueba directa y por gateway. Verificación local: 47 pruebas aprobadas con PostgreSQL y RabbitMQ reales en la imagen nueva; Ruff, configuración Django, migraciones y OpenAPI correctos; arranque de Gunicorn comprobado en `8084`. La activación en el gateway, el Compose global, la prueba conjunta y el CI remoto siguen pendientes. | `fix/update-identidad-gateway` |
@@ -139,13 +144,13 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 | `docs/stack-y-convenciones.md` | Raul (2026-11-04); Efrain (2026-11-06, paso al español); Raul (2026-11-07); Efrain (2026-11-08, Vitest en NestJS, pendiente de revisión de Raul). El `.html` que lo acompañaba se borró el 2026-11-07. |
 | `docs/diagramas/arquitectura.excalidraw` y `despliegue.excalidraw` | Raul (2026-11-04, como `docs/diagrama-*.excalidraw`); Raul (2026-11-07, paso al español y movidos) |
 | `docs/diagramas/event-storming.excalidraw` | Primera versión subida por Raul (2026-11-04, como `docs/event-storming-suertudometro.excalidraw`); Arturo (2026-11-04, renombrado a `-updated`); Gabo (2026-11-06: agregados, read models y sistemas externos); Raul (2026-11-07: opción A y movido) |
-| `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, roles de identity); Efrain (2026-11-08, enlace a `docs/frontend.md`); Efrain (2026-11-09, cómo ejecutar con Docker Compose) |
+| `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, roles de identity); Efrain (2026-11-08, enlace a `docs/frontend.md`); Efrain (2026-11-09, cómo ejecutar con Docker Compose); Efrain (2026-11-17, el compose con contribution-service y update-service) |
 | `AGENTS.md` | Arturo (2026-10-16); Efrain (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, fila del contrato de identidad); Efrain (2026-11-08, filas del frontend y del gateway) |
 | `CLAUDE.md` | Arturo (2026-10-16); Raul (2026-11-07) |
 | `.agents/skills/` y `skills-lock.json` | Arturo (2026-10-16, primeras skills); Efrain (2026-11-06, skill propia y skills nuevas); Raul (2026-11-07, quitó 4 skills y convirtió la skill propia en checklist) |
 | `.gitignore` | Arturo (2026-10-16); Raul (2026-11-07); Efrain (2026-11-17, `docker-compose.override.yml`) |
 | `identity-service/` | Efrain (2026-11-07, esqueleto) |
 | `docs/frontend.md` y `frontend/` | Efrain (2026-11-08, base del frontend) |
-| `api-gateway/` | Efrain (2026-11-08, base del gateway) |
-| `docker-compose.yml` y `.env.example` | Efrain (2026-11-09: identity, gateway y frontend; 2026-11-17: RabbitMQ y Mailpit) |
+| `api-gateway/` | Efrain (2026-11-08, base del gateway; 2026-11-17, rutas de contribution-service y update-service) |
+| `docker-compose.yml` y `.env.example` | Efrain (2026-11-09: identity, gateway y frontend; 2026-11-17: RabbitMQ y Mailpit, y después contribution-service y update-service) |
 | `docs/rabbitmq.md` | Efrain (2026-11-17) |
