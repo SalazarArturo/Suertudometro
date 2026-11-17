@@ -1,0 +1,82 @@
+// Cada aporte es un bloque con borde, como las tarjetas del mockup.
+.aportes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aporte {
+  padding: 12px 16px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--mat-sys-corner-medium);
+}
+
+.cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.quien {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.anonimo {
+  color: var(--mat-sys-on-surface-variant);
+  font-style: italic;
+}
+
+.monto {
+  color: var(--color-marca);
+  font: var(--mat-sys-title-medium);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mensaje {
+  margin: 8px 0 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--color-acento-verde);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.detalle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 8px 0 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.etiqueta {
+  padding: 2px 8px;
+  border-radius: var(--mat-sys-corner-full);
+  background-color: var(--color-fondo-suave);
+  color: var(--color-marca);
+}
+
+.vacio {
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--color-borde);
+  border-radius: var(--mat-sys-corner-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.paginas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}

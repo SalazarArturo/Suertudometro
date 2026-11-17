@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-15 (Gabo: `update-service` adaptado a los headers del gateway y al puerto interno `8084`; activación pendiente de Efrain).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-15 (Gabo: `update-service` adaptado a los headers del gateway y al puerto interno `8084`; Raul: backend de `contribution-service`, pantallas de aportes y decisiones sobre los pendientes 9, 10 y 15).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -67,10 +67,10 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar; implementación en paralelo.** `update-service` (Gabo) está en Persistencia y API, pendiente de integración. En `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS. `docker compose up --build` (rama `chore/compose-base`) levanta las tres piezas, y crear cuenta, iniciar sesión y ver el perfil ya funcionan de punta a punta.
+**Fase 0: diseño y documentación, por cerrar; implementación en paralelo.** `update-service` (Gabo) está en Persistencia y API, pendiente de integración. `contribution-service` (Raul) tiene el backend completo y las pantallas de aportes (rama `feat/contribution-aportes`), pendientes de integración con el gateway y el compose. En `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS. `docker compose up --build` (rama `chore/compose-base`) levanta las tres piezas, y crear cuenta, iniciar sesión y ver el perfil ya funcionan de punta a punta.
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
-- las carpetas de los demás servicios (ya existen `identity-service`, `api-gateway`, `frontend` y `update-service`, que tiene implementación y Compose autónomo);
+- las carpetas de los demás servicios (ya existen `identity-service`, `api-gateway` y `frontend`, y también `update-service` y `contribution-service`, que tienen implementación y Compose autónomo);
 - sumar a `docker-compose.yml` los demás servicios, RabbitMQ y Mailpit;
 - aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos; Arturo ya aprobó los 4 de `campaign-service` y Raul el de `contribution-service`);
 - los documentos de diseño de 2 servicios, `notification-service` y `search-service` (`contribution-service`, `campaign-service`, `identity-service`, `update-service` y `api-gateway` ya están en borrador).
@@ -84,11 +84,11 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 | `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Persistencia y API |
 | `notification-service` | Efrain | Sin documento | Sin empezar |
 | `campaign-service` | Arturo | [Borrador](servicios/campaign-service.md) | Sin empezar |
-| `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Sin empezar |
+| `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Persistencia y API. El outbox y los consumidores de eventos están implementados; falta integrarlos con campaign-service, el gateway y el compose de la raíz |
 | `update-service` | Gabo | [Borrador](servicios/update-service.md) | Persistencia y API |
 | `search-service` | Gabo | Sin documento | Sin empezar |
 | `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Integrado (probado con Docker Compose) |
-| `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Sin empezar |
+| `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Aportes (Raul): hechas. Las demás, sin empezar |
 
 Valores posibles:
 - **Documento:** Sin documento · Borrador · Vigente.
@@ -148,7 +148,9 @@ Valores posibles:
 - **Fase 2 · Dominio en aislado (todos, en paralelo):** agregados, objetos de valor, reglas y tests unitarios.
 - **Fase 3 · Persistencia, API y eventos:** migraciones, endpoints por el gateway y eventos con idempotencia por `idEvento`.
   - Gabo (2026-11-15): `update-service` tiene API, persistencia y adaptadores de eventos con pruebas aisladas. Se adapta al contrato de identidad por `X-Usuario-Id` y al puerto interno `8084`, y confirma como públicas las lecturas de historial, esquema y Swagger (las dos últimas en desarrollo). Mantiene el estado **Persistencia y API**: falta que Efrain active la ruta y lo incorpore al Compose global, probar el acceso por el gateway, integrar broker compartido y Notificaciones reales, confirmar contratos con Arturo/Efrain y comprobar el CI remoto. Diseño y pendientes: [update-service](servicios/update-service.md).
+  - Raul (2026-11-15): `contribution-service` tiene dominio, aplicación, persistencia, API y mensajería, con outbox y consumidores idempotentes (rama `feat/contribution-aportes`). Las pruebas pasan, incluidas las de integración con Testcontainers (PostgreSQL y RabbitMQ reales). La imagen de Docker y su `compose.yaml` propio están probados con eventos de campaña simulados. Falta activar su ruta en el gateway y sumarlo al compose de la raíz (con Efrain), y probarlo con los eventos reales de campaign-service. Diseño y pendientes: [contribution-service](servicios/contribution-service.md).
 - **Fase 4 · Frontend:** las pantallas de cada dominio.
+  - Raul (2026-11-15): las cuatro pantallas de aportes (aportar, historial de una campaña, "Mis aportes" y "Aportes recibidos") están en `frontend/src/app/aportes/` (rama `feat/contribution-aportes`), con sus pruebas. "Aportar" y el historial son secciones para el detalle de la campaña; mientras ese detalle no exista, se usan desde una página provisoria. Quedan dos pendientes para Efrain en [`frontend.md`](frontend.md) §10: el presupuesto del bundle inicial (F4) y el enlace a "Mis aportes" en el menú (F5).
 - **Fase 5 · Entrega:**
   - flujo completo de punta a punta;
   - `docker compose up --build` desde cero;
@@ -165,10 +167,9 @@ Mientras sigan aquí, **nadie las asume**, ni las personas ni los agentes de IA:
 | 3 | `EnviarComentario`: los comentarios son una mejora opcional; el mensaje de apoyo ya va en `RealizarAporte`. ¿Se implementa? ¿Dónde? | Por definir | Equipo |
 | 4 | Aprobar los contratos de `docs/contratos-de-eventos.md` (propuesta v1 de Gabo). Arturo ya aprobó como productor las 4 fichas de `campaign-service` (`CampanaCerrada` envía `estadoFinal` y `motivoCierre`) y Raul ajustó `AporteRegistrado`. Falta la confirmación final de los consumidores y de las fichas de Efrain y Gabo. | Todos | Quien publica cada evento: Arturo (`campana.*`, `meta.alcanzada`), Raul (`aporte.registrado`), Efrain (`usuario.registrado`) y Gabo (`campana.actualizada`) |
 | 7 | Criterio de "popularidad" para explorar campañas. | search | Gabo |
-| 9 | Aportes que llegan después de alcanzada la meta pero antes de `campana.cerrada`: Arturo propone cierre automático al alcanzar la meta (`MetaAlcanzada` + `CampanaCerrada`), pero sumando en `campaign-service` cualquier `aporte.registrado` en tránsito que ya haya sido aceptado. Falta que confirme Raul. | contribution, campaign | Raul y Arturo |
-| 10 | Estructura de carpetas DDD por tecnología. Efrain compartió una propuesta para NestJS. En Spring Boot, Raul propuso Maven multimódulo en `contribution-service` y Arturo prefiere un solo módulo Maven separando las 5 capas por paquetes Java (`com.crowdfunding.campaign.<capa>`) en `campaign-service`; queda acordar entre Raul y Arturo si unifican o cada servicio mantiene su variante. | Todos los servicios | Efrain y Gabo; Raul y Arturo |
+| 10 | Estructura de carpetas DDD por tecnología. Efrain compartió una propuesta para NestJS. En Spring Boot ya está acordado: `campaign-service` y `contribution-service` usan un solo módulo Maven con las 5 capas por paquetes Java (`com.crowdfunding.<servicio>.<capa>`); Raul adoptó la propuesta de Arturo el 2026-11-14. Queda la parte de NestJS y Django. | Servicios NestJS y Django | Efrain y Gabo |
 | 11 | Modelo de dominio detallado de cada servicio. `contribution-service`, `campaign-service`, `identity-service` y `update-service` ya tienen borrador. | Cada servicio | Su responsable |
 | 12 | ADR 0001: falta el motivo para usar tres tecnologías y no una. | Documentación | Raul, con el equipo |
 | 13 | `CONTRIBUTING.md` con el detalle de cada tecnología (opcional). | Documentación | Equipo |
 | 14 | Campañas cerradas en el catálogo: ¿las `FINALIZADA` siguen visibles y marcadas? ¿Las `CANCELADA` se ocultan o se muestran con su estado? El enunciado pide explorar por estado. | search, frontend | Gabo |
-| 15 | En un aporte anónimo, ¿se guarda el nombre real? ¿Lo pueden ver el organizador o el administrador? | contribution, notification, frontend | Raul, con el equipo |
+| 15 | En un aporte anónimo, ¿se guarda el nombre real? ¿Lo pueden ver el organizador o el administrador? Raul decidió el 2026-11-14 que no se guarda y que nadie lo ve (así está implementado; `idAportante` sí se guarda y va en el evento). Falta que el equipo lo confirme. | contribution, notification, frontend | Raul, con el equipo |

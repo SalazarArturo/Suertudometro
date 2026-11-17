@@ -1,7 +1,8 @@
 # contribution-service
 
-> **Responsable:** Raul · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-07 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Raul · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-15 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Contribuciones** (subdominio core) · Spring Boot 4.1 · Java 21 · base de datos `contribution-db` · ruta en el gateway `/api/aportes` · puerto interno 8083.
+> **Implementación:** el backend está en `contribution-service/` y las pantallas, en `frontend/src/app/aportes/`. Cómo correrlo: [`contribution-service/README.md`](../../contribution-service/README.md).
 
 ## 1. Responsabilidad
 
@@ -22,14 +23,14 @@ Lo que **no** hace, y qué servicio lo hace:
 |---|---|---|
 | `id` | `IdAporte` (UUID) | Lo genera el servicio. |
 | `idCampana` | `IdCampana` (UUID) | Referencia por id a una campaña de otro servicio. |
-| `idAportante` | `IdAportante` (UUID) | Usuario autenticado que aporta; viene del token (R5). |
-| `nombreAportante` | `NombreAportante` | Nombre del usuario, tomado del token. En un aporte anónimo no se muestra en público (R6). Si se guarda o no está pendiente (P1). |
-| `esAnonimo` | booleano | Lo elige el aportante. |
+| `idAportante` | `IdAportante` (UUID) | Usuario autenticado que aporta; viene de `X-Usuario-Id` (R5). Se guarda siempre, también en un aporte anónimo. |
+| `nombreAportante` | `NombreAportante` (opcional) | Nombre de la cuenta, tomado de `X-Usuario-Nombre`. **En un aporte anónimo no se guarda** (R6). |
+| `esAnonimo` | booleano | Lo elige el aportante. Si no lo indica, el aporte va con nombre. |
 | `monto` | `Dinero` (monto + moneda) | R1 y R2. |
 | `mensajeApoyo` | `MensajeApoyo` (opcional) | R4. |
 | `registradoEn` | instante UTC | Lo fija el servicio. |
 
-Un aporte se crea con un método de fábrica, `Aporte.registrar(campana, aportante, monto, mensaje, esAnonimo)`. El método verifica las reglas y produce el evento de dominio `AporteRealizado`, que es el nombre que tiene en el event storming.
+Un aporte se crea con un método de fábrica, `Aporte.registrar(campana, idAportante, nombreAportante, monto, mensajeApoyo, esAnonimo, ahora)`. El método verifica las reglas y produce el evento de dominio `AporteRealizado`, que es el nombre que tiene en el event storming.
 
 ### Proyección local `CampanaAportable`
 
@@ -38,21 +39,28 @@ Es una copia mínima de cada campaña publicada, alimentada por los eventos de `
 | Atributo | De dónde sale |
 |---|---|
 | `idCampana`, `idOrganizador`, `titulo`, `moneda`, `fechaLimite` | `campana.publicada` |
-| `estado` (`PUBLICADA`, `FINALIZADA` o `CANCELADA`) | `PUBLICADA` al recibir `campana.publicada`. Al recibir `campana.cerrada`, el estado final que corresponde a su `motivoCierre` (`CANCELACION` → `CANCELADA`; los demás → `FINALIZADA`) |
+| `estado` (`PUBLICADA`, `FINALIZADA` o `CANCELADA`) | `PUBLICADA` al recibir `campana.publicada`. Al recibir `campana.cerrada`, el valor de su campo `estadoFinal`. |
 
-Tiene un método de dominio, `aceptaAportes()`, que devuelve verdadero solo si `estado = PUBLICADA`.
+- **`aceptaAportes()`** devuelve verdadero solo si `estado = PUBLICADA`.
+- **Los estados terminales no cambian:** una campaña `FINALIZADA` o `CANCELADA` se queda así.
+- **Si el cierre llega antes que la publicación**, la campaña se guarda cerrada y sin datos. Cuando llega la publicación, se completan los datos pero la campaña no se reabre.
 
 ### Reglas (invariantes)
 
-| # | Regla | Origen |
-|---|---|---|
-| R1 | El monto es mayor que 0 y tiene como máximo 2 decimales. No hay monto mínimo de negocio. El máximo técnico es 9 999 999 999,99, lo que cabe en `NUMERIC(12,2)`. | Decisión de Raul, 2026-11-07 |
-| R2 | La moneda del aporte es la de la campaña. | Convención de dinero (`docs/stack-y-convenciones.md` §5.7) |
-| R3 | Solo se aporta a campañas en `PUBLICADA`. Las campañas `FINALIZADA` o `CANCELADA` rechazan aportes. | Enunciado y event storming |
-| R4 | El mensaje de apoyo es opcional y tiene como máximo 300 caracteres. Si llega vacío o solo con espacios, se guarda como "sin mensaje". | Decisión de Raul, 2026-11-07 |
-| R5 | Para aportar hay que iniciar sesión: todo aporte tiene un `idAportante`. | Decisión de Raul, 2026-11-07 (era el pendiente #1) |
-| R6 | En un aporte anónimo, el historial público no muestra el nombre. | Enunciado |
-| R7 | Un aporte registrado no se modifica ni se elimina. | Propuesta: es un registro de dinero, aunque sea simulado, y `campaign-service` ya lo sumó. |
+Cada regla es una clase de `domain.rule` que implementa `ReglaDeNegocio`, con su código de error.
+
+| # | Regla | Código de error | Origen |
+|---|---|---|---|
+| R1 | El monto es mayor que 0 y tiene como máximo 2 decimales. No hay monto mínimo de negocio. El máximo técnico es 9 999 999 999,99, lo que cabe en `NUMERIC(12,2)`. | `monto-invalido` | Decisión de Raul, 2026-11-07 |
+| R2 | La moneda del aporte es la de la campaña. En la versión 1 siempre es `BOB`. | `moneda-distinta-de-la-campana` | Convención de dinero (`docs/stack-y-convenciones.md` §5.7) y decisión de Arturo, 2026-11-08 |
+| R3 | Solo se aporta a campañas en `PUBLICADA`. Las campañas `FINALIZADA` o `CANCELADA` rechazan aportes. | `campana-no-acepta-aportes` | Enunciado y event storming |
+| R4 | El mensaje de apoyo es opcional y tiene como máximo 300 caracteres. Si llega vacío o solo con espacios, se guarda como "sin mensaje". | `mensaje-apoyo-demasiado-largo` | Decisión de Raul, 2026-11-07 |
+| R5 | Para aportar hay que iniciar sesión: todo aporte tiene un `idAportante`. | `aportante-requerido` | Decisión de Raul, 2026-11-07 (era el pendiente #1) |
+| R6 | En un aporte anónimo, el nombre no se muestra a nadie: ni en el historial público, ni en los aportes recibidos, ni en el evento. Para garantizarlo, el nombre no se guarda. | — | Enunciado y decisión de Raul, 2026-11-14 |
+| R7 | Un aporte registrado no se modifica ni se elimina. | — | Es un registro de dinero, aunque sea simulado, y `campaign-service` ya lo sumó. |
+
+- **Cualquier usuario con sesión puede aportar**, también el organizador a su propia campaña (decisión de Raul, 2026-11-14).
+- **Aportes después de alcanzada la meta:** se aceptan mientras la copia local diga `PUBLICADA`, es decir, hasta que llegue `campana.cerrada`. `campaign-service` los suma igual (propuesta de Arturo, confirmada por Raul el 2026-11-14).
 
 ## 3. Estados
 
@@ -62,16 +70,16 @@ Tiene un método de dominio, `aceptaAportes()`, que devuelve verdadero solo si `
 
 | Comando | Quién lo ejecuta | Qué valida | Resultado |
 |---|---|---|---|
-| `RealizarAporteComando` | Usuario autenticado | R1 a R5, y que la campaña exista en la proyección local | Guarda el `Aporte`, emite `AporteRealizado` y publica `AporteRegistrado` (mediante outbox, §6) |
+| `RealizarAporteComando` | Usuario autenticado | R1 a R6, y que la campaña exista en la proyección local | Guarda el `Aporte`, emite `AporteRealizado` y deja `AporteRegistrado` en el outbox (§6), todo en una transacción |
 
 Reacciones a eventos de otros servicios (no las ejecuta un usuario):
 
 | Evento recibido | Manejador | Qué hace |
 |---|---|---|
 | `campana.publicada` | `CampanaPublicadaManejador` | Crea la campaña en `CampanaAportable` con estado `PUBLICADA`. |
-| `campana.cerrada` | `CampanaCerradaManejador` | Cambia el estado a `FINALIZADA` o `CANCELADA`. A partir de ahí se rechazan los aportes. |
+| `campana.cerrada` | `CampanaCerradaManejador` | Cambia el estado a `estadoFinal` (`FINALIZADA` o `CANCELADA`). A partir de ahí se rechazan los aportes. |
 
-Los dos manejadores son idempotentes (§6). Si `campana.cerrada` llega antes que `campana.publicada`, la campaña queda cerrada y la publicación que llegue después no la reabre.
+Los dos manejadores son idempotentes (§6).
 
 ## 5. Consultas y endpoints REST
 
@@ -79,13 +87,16 @@ Todos los endpoints entran por el gateway con el prefijo `/api/aportes`. Convenc
 
 | Método y ruta | Quién puede usarlo | Comando o consulta | Respuesta |
 |---|---|---|---|
-| `POST /api/aportes` | Usuario autenticado | `RealizarAporteComando` | `201 Created` con `Location: /api/aportes/{idAporte}` |
-| `GET /api/aportes?idCampana={id}` | Cualquiera, sin sesión | `ObtenerAportesPorCampanaConsulta`: historial público; los anónimos van sin nombre | `200`, lista paginada |
+| `POST /api/aportes` | Usuario autenticado | `RealizarAporteComando` | `201 Created` con `Location: /api/aportes/{idAporte}` y `{ "idAporte": "…" }` |
+| `GET /api/aportes?idCampana={id}` | **Cualquiera, sin sesión** | `ObtenerAportesPorCampanaConsulta`: historial público | `200`, lista paginada |
 | `GET /api/aportes/mios` | Usuario autenticado | `ObtenerAportesPorAportanteConsulta`: "Mis aportes" | `200`, lista paginada |
 | `GET /api/aportes/recibidos?idCampana={id}` | Organizador de esa campaña o administrador | `ObtenerAportesRecibidosPorCampanaConsulta`: "aportes recibidos" (enunciado) | `200`, lista paginada |
 | `GET /api/aportes/{idAporte}` | El aportante, el organizador de la campaña o un administrador | `ObtenerAportePorIdConsulta` | `200` |
 
-Cuerpo de `POST /api/aportes`:
+- **Ruta pública para el gateway:** solo `GET /api/aportes` (el historial). Las demás requieren sesión. Además están `GET /salud` (healthcheck) y la documentación OpenAPI en `GET /api/aportes/docs` y `/api/aportes/docs-json`.
+- **Identidad:** el servicio no valida el JWT. Lee los headers `X-Usuario-Id`, `X-Usuario-Rol` y `X-Usuario-Nombre` del contrato de [`identity-service.md`](identity-service.md) §5.1 y exige los tres; el nombre llega codificado para URL en UTF-8.
+
+Cuerpo de `POST /api/aportes` (`mensajeApoyo` y `esAnonimo` son opcionales):
 
 ```json
 {
@@ -97,67 +108,127 @@ Cuerpo de `POST /api/aportes`:
 }
 ```
 
-| Error | Código |
-|---|---|
-| Monto menor o igual a 0, mal formado o con más de 2 decimales; mensaje de más de 300 caracteres; moneda distinta de la de la campaña | `400 Bad Request` |
-| Sin sesión (normalmente lo corta antes el gateway) | `401 Unauthorized` |
-| Consultar aportes recibidos sin ser el organizador ni administrador | `403 Forbidden` |
-| La campaña no está en la proyección local (no publicada o desconocida) | `404 Not Found` |
-| La campaña ya está `FINALIZADA` o `CANCELADA` | `409 Conflict`, con `type`: `https://api.suertudometro.com/errores/campana-no-acepta-aportes` |
+Un aporte en las respuestas. No incluye el id del aportante, que es un dato interno:
 
-Paginación propuesta: `?pagina=1&tamano=20`. El stack todavía no define una convención (P5).
+```json
+{
+  "idAporte": "5fb46893-a255-4614-83eb-9d64ec0a4432",
+  "idCampana": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "tituloCampana": "Libros para la biblioteca",
+  "monto": "150.00",
+  "moneda": "BOB",
+  "esAnonimo": false,
+  "nombreAportante": "Ana Pérez",
+  "mensajeApoyo": "¡Mucho éxito con la campaña!",
+  "registradoEn": "2026-11-14T15:30:00Z"
+}
+```
+
+En un aporte anónimo, `nombreAportante` es `null` en todas las consultas.
+
+**Paginación:** `?pagina=1&tamano=20`. Los dos parámetros son opcionales; `pagina` empieza en 1 y `tamano` va de 1 a 100. Las listas van del aporte más reciente al más antiguo:
+
+```json
+{ "elementos": [], "pagina": 1, "tamano": 20, "totalElementos": 0, "totalPaginas": 0 }
+```
+
+| Error | Estado y código (`type`) |
+|---|---|
+| Falta un campo, un parámetro no tiene el formato esperado o la paginación está fuera de rango | `400`, `validacion`, con la extensión `errores: [{ "campo", "mensaje" }]` |
+| Un dato incumple una regla del dominio | `400`, con el código de la regla: `monto-invalido`, `moneda-invalida`, `moneda-distinta-de-la-campana` o `mensaje-apoyo-demasiado-largo` |
+| Sin sesión (normalmente lo corta antes el gateway) | `401`, `no-autenticado` |
+| Consultar aportes recibidos, o un aporte ajeno, sin ser el organizador ni administrador | `403`, `acceso-denegado` |
+| La campaña no está en la proyección local (no publicada o desconocida) | `404`, `campana-no-encontrada` |
+| El aporte no existe | `404`, `aporte-no-encontrado` |
+| La campaña ya está `FINALIZADA` o `CANCELADA` | `409`, `campana-no-acepta-aportes` |
+| Error HTTP sin significado propio: ruta inexistente, JSON mal formado | Su estado, con `type: "about:blank"` |
+
+El `title` resume el estado HTTP en español, igual que en el gateway y en identity-service.
 
 ## 6. Eventos
 
-**Publica `AporteRegistrado`** (`aporte.registrado`) cada vez que se registra un aporte. El contrato completo, con los campos y un ejemplo, está en [`docs/contratos-de-eventos.md`](../contratos-de-eventos.md). Lo consumen campaign, search y notification.
+**Publica `AporteRegistrado`** (`aporte.registrado`) cada vez que se registra un aporte. El contrato completo, con los campos y un ejemplo, está en [`docs/contratos-de-eventos.md`](../contratos-de-eventos.md). Lo consumen campaign, search y notification. En un aporte anónimo, `nombreAportante` va en `null` e `idAportante` va siempre.
 
 Para no perder eventos se usa una **tabla outbox**:
 1. El aporte y su evento se guardan en la misma transacción.
-2. Un publicador programado envía a RabbitMQ los eventos que todavía no se publicaron.
+2. Un publicador programado envía a RabbitMQ, cada 2 segundos, los eventos que todavía no se publicaron, y los marca. Si RabbitMQ no responde, quedan pendientes y se reintentan.
 
-**Consume** `campana.publicada` y `campana.cerrada` (de Arturo). La propuesta v1 de esas fichas, en `docs/contratos-de-eventos.md`, ya trae todo lo que necesita: `idCampana`, `idOrganizador`, `titulo`, `moneda` y `fechaLimite` al publicarse, y `motivoCierre` al cerrarse. Falta que Arturo las apruebe.
+**Consume** `campana.publicada` y `campana.cerrada` (de Arturo, fichas aprobadas por el productor el 2026-11-08). De la primera lee `idCampana`, `idOrganizador`, `titulo`, `moneda` y `fechaLimite`; de la segunda, `idCampana` y `estadoFinal`. Si `estadoFinal` no viniera, lo deduce de `motivoCierre`: `CANCELACION` es `CANCELADA` y los demás motivos son `FINALIZADA`.
 
-**Idempotencia:** antes de procesar un evento, el consumidor revisa si su `idEvento` ya está en `eventos_procesados`. Si está, lo ignora.
+**Idempotencia:** antes de aplicar un evento, el manejador anota su `idEvento` en `eventos_procesados`, en la misma transacción. Si ya estaba, lo ignora.
+
+**Topología en RabbitMQ.** Los nombres están en `application.yml` y siguen la convención que ya usa `update-service`. Son una propuesta hasta que Efrain cierre la topología común:
+
+| Qué | Nombre |
+|---|---|
+| Exchange topic del sistema | `suertudometro.events` |
+| Cola de este servicio, con las routing keys `campana.publicada` y `campana.cerrada` | `contribution-service.campanas` |
+| Cola de errores (DLQ) | `contribution-service.dlq`, en el exchange `suertudometro.events.dlx` |
+
+Un mensaje que falla, o que no cumple el contrato, se reintenta 3 veces (a 1, 2 y 4 segundos) y después va a la cola de errores.
 
 ## 7. Base de datos (`contribution-db`)
 
-Migraciones con Flyway.
+Migraciones con Flyway (`V1__crear_esquema_aportes.sql`). Hibernate solo valida que las entidades coincidan con el esquema.
 
 | Tabla | Columnas principales | Para qué |
 |---|---|---|
-| `aportes` | `id` (UUID, PK), `id_campana`, `id_aportante`, `nombre_aportante` (según P1), `es_anonimo`, `monto` `NUMERIC(12,2)` con `CHECK (monto > 0)`, `moneda` `VARCHAR(3)`, `mensaje_apoyo` `VARCHAR(300)`, `registrado_en` `TIMESTAMPTZ` | Los aportes. Lleva índices por (`id_campana`, `registrado_en`) y por (`id_aportante`, `registrado_en`), para el historial y para "Mis aportes". |
-| `campanas_aportables` | `id_campana` (PK), `id_organizador`, `titulo`, `moneda`, `fecha_limite`, `estado`, `actualizado_en` | La proyección local de campañas. |
-| `eventos_salida` | `id_evento` (PK), `tipo_evento`, `contenido` `JSONB`, `ocurrido_en`, `publicado_en` (null mientras está pendiente) | El outbox. |
+| `campanas_aportables` | `id_campana` (PK), `id_organizador`, `titulo`, `moneda`, `fecha_limite`, `estado`, `actualizado_en` | La proyección local de campañas. Los datos de la publicación admiten `NULL` para el caso del cierre que llega primero; un `CHECK` exige que una campaña `PUBLICADA` los tenga todos. |
+| `aportes` | `id` (UUID, PK), `id_campana` (FK a `campanas_aportables`), `id_aportante`, `nombre_aportante` (`NULL` si es anónimo), `es_anonimo`, `monto` `NUMERIC(12,2)` con `CHECK (monto > 0)`, `moneda` `VARCHAR(3)`, `mensaje_apoyo` `VARCHAR(300)`, `registrado_en` `TIMESTAMPTZ` | Los aportes. Índices por (`id_campana`, `registrado_en`) y por (`id_aportante`, `registrado_en`), para el historial y para "Mis aportes". Un `CHECK` impide guardar el nombre en un aporte anónimo. |
+| `eventos_salida` | `id_evento` (PK), `tipo_evento`, `contenido` `JSONB`, `ocurrido_en`, `publicado_en` (null mientras está pendiente) | El outbox. `contenido` es el mensaje completo, con su sobre. |
 | `eventos_procesados` | `id_evento` (PK), `tipo_evento`, `procesado_en` | La idempotencia de los consumidores. |
 
 ## 8. Estructura de carpetas
 
-Maven multimódulo, igual que el repositorio del docente. Así el propio compilador impide que el dominio dependa de Spring o de JPA. **Es una propuesta para acordar con Arturo**, para que `campaign-service` use la misma estructura.
+Un solo módulo Maven con las cinco capas separadas por paquetes, igual que `campaign-service` (decisión de Raul del 2026-11-14, que cierra para Spring Boot el pendiente #10).
 
 ```text
 contribution-service/
-├── pom.xml                        # POM padre: Spring Boot 4.1, Java 21 y los cinco módulos
-├── Dockerfile
-├── contribution-sharedkernel/     # RaizDeAgregado, EventoDeDominio, ObjetoDeValor, ReglaDeNegocio, Dinero
-├── contribution-domain/           # Aporte, CampanaAportable, objetos de valor, reglas, eventos de dominio
-│                                  # e interfaces de repositorio. Sin Spring ni JPA.
-├── contribution-application/      # Comandos, consultas y manejadores (PipelinR), puertos de salida
-├── contribution-infrastructure/   # JPA + Flyway, mappers, outbox y publicador, consumidores de RabbitMQ
-└── contribution-api/              # Controladores REST, DTOs, errores RFC 9457, clase principal de Spring Boot
+├── pom.xml · mvnw · .mvn/               # Spring Boot 4.1, Java 21, PipelinR, Flyway, AMQP, Spotless
+├── Dockerfile · compose.yaml · README.md
+└── src/
+    ├── main/java/com/crowdfunding/contribution/
+    │   ├── ContributionServiceApplication.java
+    │   ├── sharedkernel/                # RaizDeAgregado, EventoDeDominio, ObjetoDeValor, ReglaDeNegocio,
+    │   │                                # ExcepcionReglaDeNegocio, Dinero
+    │   ├── domain/                      # Java puro, sin Spring ni JPA
+    │   │   ├── model/                   # Aporte, CampanaAportable, EstadoCampanaAportable
+    │   │   ├── valueobject/             # IdAporte, IdCampana, IdAportante, IdOrganizador,
+    │   │   │                            # NombreAportante, MensajeApoyo
+    │   │   ├── rule/                    # una clase por regla
+    │   │   ├── event/                   # AporteRealizado
+    │   │   └── repository/              # AporteRepositorio, CampanaAportableRepositorio (interfaces)
+    │   ├── application/                 # casos de uso CQRS con PipelinR; sin Spring
+    │   │   ├── command/                 # RealizarAporteComando y su manejador
+    │   │   ├── query/                   # las 4 consultas, sus manejadores, AporteVista y Pagina
+    │   │   ├── eventhandler/            # CampanaPublicada y CampanaCerrada, con sus manejadores
+    │   │   ├── port/                    # PublicadorEventosPuerto, EventosProcesadosPuerto, ConsultaAportesPuerto
+    │   │   └── exception/               # RecursoNoEncontradoExcepcion, AccesoDenegadoExcepcion
+    │   ├── infrastructure/
+    │   │   ├── persistence/             # *JpaEntity, repositorios de Spring Data, mappers y adaptadores
+    │   │   ├── messaging/               # outbox, publicador programado, consumidor y topología de RabbitMQ
+    │   │   ├── config/                  # PipelinR, transacciones, reloj y tareas programadas
+    │   │   └── local/                   # campañas de prueba, solo con el perfil `local` o `dev`
+    │   └── api/
+    │       ├── controller/              # AporteControlador
+    │       ├── dto/                     # peticiones y respuestas JSON
+    │       ├── security/                # UsuarioActual, a partir de los headers X-Usuario-*
+    │       └── exception/               # ManejadorGlobalExcepciones (RFC 9457)
+    ├── main/resources/                  # application.yml, application-local.yml y db/migration/
+    └── test/java/com/crowdfunding/contribution/
 ```
 
-**Dependencias entre módulos:**
-- `domain` depende de `sharedkernel`.
-- `application` depende de `domain`.
-- `infrastructure` depende de `application`.
-- `api` depende de `application`, y de `infrastructure` solo para arrancar Spring.
-
-**Paquete base:** `com.crowdfunding.contribution.<capa>`.
+**Quién puede importar a quién** lo vigila `ArquitecturaDeCapasTest`, que corre con `mvn test`:
+- `domain` solo usa Java y `sharedkernel`: ningún `import` de `org.springframework` ni de `jakarta.persistence`.
+- `application` no importa Spring, JPA, `infrastructure` ni `api`.
+- `infrastructure` no importa `api`.
+- `api` no importa `domain` ni `infrastructure`: solo habla con `application`.
 
 **Pruebas:**
-- dominio con JUnit 5, sin Spring;
-- persistencia y mensajería con Testcontainers (PostgreSQL y RabbitMQ);
-- API con MockMvc.
+- dominio y aplicación con JUnit, sin Spring, con repositorios en memoria;
+- API con MockMvc, simulando los headers `X-Usuario-*`;
+- los JSON de los eventos, contra los ejemplos de `docs/contratos-de-eventos.md`;
+- persistencia y mensajería con Testcontainers (PostgreSQL 18 y RabbitMQ 4.3 reales). Sin Docker se omiten; en el CI corren.
 
 ## 9. Patrones de diseño y justificación
 
@@ -166,62 +237,75 @@ contribution-service/
 | Agregado (raíz) | `Aporte` | El aporte es la unidad de consistencia: se valida y se guarda completo. |
 | Objeto de valor | `Dinero`, `MensajeApoyo`, `NombreAportante`, ids | Cada regla (monto mayor que 0, 300 caracteres) vive en un solo lugar y no hay forma de saltársela. |
 | Método de fábrica | `Aporte.registrar(...)` | Impide crear un aporte inválido o para una campaña que no acepta aportes. |
-| Regla de negocio (como en el repositorio del docente) | R1 a R7 | Cada regla se declara y se prueba por separado. |
+| Regla de negocio (como en el repositorio del docente) | Clases de `domain.rule` | Cada regla se declara y se prueba por separado. |
 | Repositorio | Interfaces en `domain`, implementación JPA en `infrastructure` | El dominio no depende de la base de datos. |
-| CQRS (con PipelinR) | Comandos y consultas separados | Registrar un aporte y leer historiales tienen necesidades distintas. |
+| CQRS con mediador (PipelinR) | Comandos y consultas separados | Registrar un aporte pasa por el agregado y sus reglas; las consultas leen un modelo de lectura (`AporteVista`) directamente. |
+| Middleware del pipeline (decorador) | `MiddlewareTransaccional` | Cada comando y cada evento recibido corre en una transacción, sin que la capa de aplicación conozca Spring. |
 | Eventos de dominio y de integración | `AporteRealizado` dentro del servicio, `AporteRegistrado` en el bus | Los otros servicios reaccionan sin acoplarse a este. |
 | Transactional Outbox | Tabla `eventos_salida` | Todo aporte guardado publica su evento. Si se perdiera uno, campaign sumaría mal. |
 | Consumidor idempotente | Tabla `eventos_procesados` | RabbitMQ puede entregar el mismo mensaje más de una vez. |
 | Proyección local (read model) | `CampanaAportable` | Valida aportes sin llamar por HTTP a campaign-service. |
+| Capa anticorrupción | `LectorEventosCampana` y `UsuarioActual` | Traducen el JSON de otro servicio y los headers del gateway a tipos propios; un cambio de formato se arregla en un solo lugar. |
 | Mapper | Dominio ↔ JPA | El dominio no lleva anotaciones de JPA. |
 
 ## 10. Dependencias con otros integrantes
 
 | Qué necesito | De quién | Para qué |
 |---|---|---|
-| Que apruebe las fichas de `campana.publicada` y `campana.cerrada` en `docs/contratos-de-eventos.md` (y la nota sobre `CANCELACION` → `CANCELADA`) | Arturo | Llenar `CampanaAportable` |
-| Acordar una estructura Maven común | Arturo | Que los dos servicios Spring queden iguales |
-| El contrato de identidad: que el JWT, o los headers del gateway, traigan el id, el nombre y el rol del usuario | Efrain | Saber quién aporta (R5) y con qué nombre |
-| Qué rol puede aportar (¿cualquier usuario autenticado?) | Efrain | Definir los permisos de `POST /api/aportes` |
-| `contribution-db`, RabbitMQ y los nombres de las colas en docker-compose | Efrain | Integrar el servicio |
-| El modo de desarrollo local (puertos de la base y de RabbitMQ) | Efrain | Correr el servicio desde IntelliJ |
-| La base de Angular | Efrain | Hacer mis pantallas |
-| Que confirmen cómo usan `aporte.registrado` | Arturo, Gabo y Efrain | Aprobar mi contrato |
-
-Mientras llegan estas piezas, en las pruebas se simula al usuario, y los eventos de Arturo se reemplazan con mensajes de ejemplo escritos según el contrato.
+| Que confirme que publicará `campana.publicada` y `campana.cerrada` como en sus fichas | Arturo | Llenar `CampanaAportable`. Mientras tanto, el servicio se prueba con mensajes escritos según el contrato. |
+| Que revisen la ficha `AporteRegistrado` como consumidores | Arturo, Gabo y Efrain | Aprobar mi contrato (pendiente #4) |
+| Activar la ruta `/api/aportes/**` en el gateway, con `GET /api/aportes` como ruta pública | Efrain | Que el frontend llegue al servicio |
+| `contribution-db`, RabbitMQ y el servicio en el `docker-compose.yml` de la raíz, y la topología común de colas | Efrain | Integrar el servicio con el resto |
+| Que el detalle de campaña monte `<app-aportar>` y `<app-historial-aportes>`, y que "Mis campañas" enlace a los aportes recibidos de cada una | Arturo | Mis pantallas del portal público y del panel |
+| El enlace a "Mis aportes" en el menú de la cuenta, y revisar el presupuesto del bundle inicial (`docs/frontend.md` §10, F4 y F5) | Efrain | Que se llegue a la pantalla desde el menú; el build avisa por 2 kB |
 
 ## 11. Pantallas del frontend (dominio de aportes)
 
-- **Aportar**, en el detalle de la campaña: monto, mensaje opcional con contador de 300 caracteres y la casilla "Aportar como anónimo". Pide iniciar sesión.
-- **Historial de aportes**, en el detalle de la campaña: nombre (o "Anónimo"), monto, mensaje y fecha.
-- **Mis aportes**, en el menú principal, como en el mockup del enunciado.
-- **Aportes recibidos**, en el panel del organizador.
+Están en `frontend/src/app/aportes/`, con las convenciones de [`docs/frontend.md`](../frontend.md). Sus rutas están en la tabla del §2 de ese documento.
+
+| Pantalla | Componente y ruta | Qué hace |
+|---|---|---|
+| **Aportar** | `<app-aportar>`, una sección del detalle de la campaña | Monto, mensaje opcional con contador de 300 caracteres y la casilla "Aportar como anónimo". Sin sesión, ofrece iniciar sesión y vuelve después. Muestra en su campo los errores del API. |
+| **Historial de aportes** | `<app-historial-aportes>`, una sección del detalle de la campaña | Nombre (o "Anónimo"), monto, mensaje y fecha, por páginas. Es público. |
+| **Mis aportes** | `MisAportes`, en `/aportes/mios` | Los aportes del usuario, con la campaña de cada uno. Marca los que hizo como anónimo. Pide sesión. |
+| **Aportes recibidos** | `AportesRecibidos`, en `/panel/campanas/:idCampana/aportes` | Los aportes de una campaña, para su organizador o un administrador. Pide sesión; si el usuario no puede verlos, muestra el `403` del servicio. |
+
+- **`ListaAportes`** es la lista paginada que comparten el historial, "Mis aportes" y "Aportes recibidos": muestra la carga, el error con "Reintentar", la lista vacía y las páginas.
+- **Página provisoria `/aportes/campana/:idCampana`:** junta "Aportar" y el historial mientras no exista el detalle de la campaña, que es de Arturo. Cuando exista, esa pantalla monta las dos secciones y la página provisoria se quita. Los enlaces a una campaña salen de una sola función, `rutaDeCampana`.
+- **El dinero se muestra, no se calcula:** el monto se envía como texto (`"150.50"`; el formulario acepta coma o punto) y se muestra con `CurrencyPipe` en `es-BO`.
+- **Pruebas:** con Vitest y `HttpTestingController`, por pantalla, más una de las rutas dentro de `app.routes.ts`.
 
 ## 12. Pendientes de este servicio
 
 | # | Pendiente | Decide | Estado |
 |---|---|---|---|
-| P1 | En un aporte anónimo, ¿se guarda el nombre real y lo pueden ver el organizador o el administrador? | Raul con el equipo | Abierto (pendiente #15 del proyecto) |
-| P2 | Aportes que llegan después de alcanzada la meta, pero antes de recibir `campana.cerrada`: ¿se aceptan? | Raul y Arturo | Abierto (pendiente #9 del proyecto) |
-| P3 | ¿Hay una sola moneda (BOB)? | Arturo y Raul | Abierto (reglas de negocio compartidas, Fase 0) |
-| P4 | ¿El organizador puede aportar a su propia campaña? | Raul | Abierto (sugerido) |
-| P5 | Convención de paginación | Equipo | Propuesta: `pagina` y `tamano` |
+| P1 | En un aporte anónimo, ¿se guarda el nombre real y lo pueden ver el organizador o el administrador? | Raul con el equipo | **Resuelto por Raul (2026-11-14):** no se guarda y nadie lo ve. Falta que el equipo lo confirme (pendiente #15 del proyecto). |
+| P2 | Aportes que llegan después de alcanzada la meta, pero antes de recibir `campana.cerrada`: ¿se aceptan? | Raul y Arturo | **Resuelto (2026-11-14):** se aceptan mientras la copia local diga `PUBLICADA`; Raul confirma la propuesta de Arturo (pendiente #9). |
+| P3 | ¿Hay una sola moneda (BOB)? | Arturo y Raul | **Resuelto (Arturo, 2026-11-08):** solo `BOB`. |
+| P4 | ¿El organizador puede aportar a su propia campaña? | Raul | **Resuelto (2026-11-14):** sí. |
+| P5 | Convención de paginación | Equipo | Implementado `pagina` y `tamano` (§5). Es una propuesta para los demás servicios. |
+| P6 | Nombres de las colas y de la DLQ (§6) | Efrain | Abierto: se usan los de la convención de `update-service`. |
 
 ## 13. Plan de implementación
 
-- [ ] Instalar JDK 21, Docker Desktop e IntelliJ.
-- [ ] Acordar la estructura Maven con Arturo.
-- [ ] Esqueleto multimódulo y `sharedkernel`.
-- [ ] Dominio y pruebas unitarias (§2).
-- [ ] Capa de aplicación: comando, consultas y puertos (§4 y §5).
-- [ ] Persistencia: migraciones Flyway, JPA y mappers (§7), probada con Testcontainers.
-- [ ] API REST con errores RFC 9457 y documentación OpenAPI (§5).
-- [ ] Mensajería: outbox, publicador y consumidores idempotentes (§6).
-- [ ] Integración en docker-compose, detrás del gateway, cuando esté la base de Efrain.
-- [ ] Pantallas (§11), cuando exista la base de Angular.
+- [x] Acordar la estructura Maven: un solo módulo, como `campaign-service`.
+- [x] Esqueleto, `sharedkernel` y prueba de arquitectura de capas.
+- [x] Dominio y pruebas unitarias (§2).
+- [x] Capa de aplicación: comando, consultas, manejadores de eventos y puertos (§4 y §5).
+- [x] Persistencia: migración Flyway, JPA y mappers (§7).
+- [x] API REST con errores RFC 9457 y documentación OpenAPI (§5).
+- [x] Mensajería: outbox, publicador y consumidores idempotentes (§6).
+- [x] `Dockerfile`, `compose.yaml` propio y campañas de prueba para el perfil `local`.
+- [x] Pruebas de integración con Testcontainers, y la imagen y el `compose.yaml` probados con Docker: eventos de campaña simulados en RabbitMQ, `aporte.registrado` en el bus y mensaje inválido en la DLQ (2026-11-15).
+- [ ] Integración en el `docker-compose.yml` de la raíz, detrás del gateway (con Efrain).
+- [x] Pantallas (§11), con sus pruebas (2026-11-15).
+- [ ] Montar las secciones en el detalle de la campaña cuando exista (con Arturo) y el enlace del menú (con Efrain).
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-15 | Raul | §11: pantallas implementadas, con sus componentes y rutas; dependencias con Arturo y Efrain para montarlas (§10). |
+| 2026-11-15 | Raul | Backend probado con Docker: pruebas de integración, imagen y `compose.yaml`; aclaración de los reintentos antes de la DLQ (§6). |
+| 2026-11-14 | Raul | Decisiones P1 a P5; un solo módulo Maven; `estadoFinal` de `campana.cerrada`; respuestas, paginación y catálogo de errores del API; topología de RabbitMQ propuesta; estructura de carpetas y plan según lo implementado. |
 | 2026-11-07 | Raul | Primera versión. |

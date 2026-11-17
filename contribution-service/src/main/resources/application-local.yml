@@ -1,0 +1,16 @@
+# Perfil `local` (o su alias `dev`): para correr el servicio desde el IDE o con
+#   ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+# contra la base y el RabbitMQ de contribution-service/compose.yaml.
+# Con este perfil se crean las campañas de prueba (DatosDePruebaLocales).
+spring:
+  datasource:
+    password: ${CONTRIBUTION_DB_CONTRASENA:contribution-dev}
+  rabbitmq:
+    username: ${RABBITMQ_USUARIO:suertudometro}
+    password: ${RABBITMQ_CLAVE:suertudometro-dev}
+
+suertudometro:
+  local:
+    # Organizador de las campañas de prueba 1 y 3. Para probar "Aportes recibidos" con tu
+    # cuenta, pon aquí tu id de usuario (el `id` que devuelve GET /api/identidad/perfil).
+    id-organizador: ${LOCAL_ID_ORGANIZADOR:e3b68016-9750-41b3-9e34-762dd8346001}

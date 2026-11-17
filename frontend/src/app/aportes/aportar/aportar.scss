@@ -1,0 +1,17 @@
+// Bloque destacado, como la portada del mockup.
+.aportar {
+  padding: 20px 24px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--mat-sys-corner-large);
+  background-color: var(--color-fondo-suave);
+
+  h2 {
+    margin: 0 0 4px;
+  }
+}
+
+.ayuda {
+  margin: 0 0 12px;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}

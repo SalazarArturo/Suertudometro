@@ -1,6 +1,6 @@
 # frontend
 
-> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-12 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-15 · **Estado:** Borrador (en revisión del equipo)
 > Angular 22 · TypeScript 6 · Angular Material 22 · Vitest · contenedor `frontend` (Nginx, host `4200` → `80`) · nombre visible: **Go Fund Me** (el proyecto y el repositorio siguen llamándose Suertudómetro).
 
 ## 1. Qué es
@@ -24,10 +24,14 @@ Cada dominio carga sus rutas de forma diferida (*lazy loading*) desde su carpeta
 | Base | `**` | Página no encontrada | Efrain | Público | — |
 | Portal público | `/` (propuesta) | Explorar campañas por categoría, estado o popularidad | Gabo | Público | `/api/busqueda` (por definir) |
 | Portal público | `/campanas/:id` (propuesta) | Detalle: portada, historia, galería, meta, progreso, aportes y novedades | Arturo, con secciones de Raul (aportes y mensajes) y Gabo (novedades) | Público | `/api/campanas`, `/api/aportes`, `/api/novedades` (por definir) |
-| Portal público | En el detalle | Aportar, con nombre o anónimo y con mensaje de apoyo | Raul | Lo decide Raul (su §10) | `POST /api/aportes` (por definir) |
+| Portal público | En el detalle: `<app-aportar>` | Aportar, con nombre o anónimo y con mensaje de apoyo | Raul | Con sesión; sin ella, la sección ofrece iniciar sesión | `POST /api/aportes` |
+| Portal público | En el detalle: `<app-historial-aportes>` | Historial de aportes de la campaña: nombre o "Anónimo", monto, mensaje y fecha | Raul | Público | `GET /api/aportes?idCampana=` |
+| Portal público | `/aportes/campana/:idCampana` (provisoria) | Las dos secciones anteriores juntas, mientras no exista el detalle de la campaña | Raul | Público | Los dos anteriores |
+| Portal público | `/aportes/mios` | Mis aportes | Raul | Con sesión | `GET /api/aportes/mios` |
 | Portal público | En el detalle | Compartir la campaña | Por definir | Público | Pendiente #2 |
 | Organizador | `/panel` | Inicio del panel (hoy, una página provisoria) | Efrain (base) | Con sesión | — |
-| Organizador | `/panel/...` (propuesta) | Mis campañas, crear y editar, solicitar revisión, aportes recibidos y progreso | Arturo y Raul | Con sesión | Por definir |
+| Organizador | `/panel/...` (propuesta) | Mis campañas, crear y editar, solicitar revisión y progreso | Arturo | Con sesión | Por definir |
+| Organizador | `/panel/campanas/:idCampana/aportes` | Aportes recibidos de una campaña | Raul | Con sesión; el servicio exige ser el organizador de la campaña o un administrador | `GET /api/aportes/recibidos?idCampana=` |
 | Organizador | `/panel/...` (propuesta) | Publicar novedades | Gabo | Con sesión | Por definir |
 | Administración | `/administracion` | Inicio del panel (hoy, una página provisoria) | Efrain (base) | Rol `ADMINISTRADOR` | — |
 | Administración | `/administracion/...` (propuesta) | Revisión de campañas: aprobar, rechazar y cancelar | Arturo | Rol `ADMINISTRADOR` | Por definir |
@@ -161,11 +165,14 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 | F1 | Confirmar las rutas y las pantallas de cada dominio (tabla del §2) | Cada responsable, en su documento de diseño |
 | F2 | Compartir la campaña: solo frontend o también backend (pendiente #2 del estado) | Equipo |
 | F3 | Si las notificaciones tienen pantalla en el frontend | Efrain, al diseñar notification-service |
+| F4 | Presupuesto del bundle inicial. Con las pantallas de aportes pasa de 487,8 kB a 502,1 kB, y el aviso de `angular.json` está en 500 kB (el error, en 1 MB). El aumento no depende de las pantallas en sí: es la primera vez que la aplicación usa `CurrencyPipe` (7,3 kB; lo pide el §6) y `@for` (unos 7 kB), y su código queda en el bloque inicial. Opciones: subir el aviso, o mostrar el dinero con `Intl.NumberFormat` en lugar de `CurrencyPipe`. Lo anotó Raul el 2026-11-15. | Efrain |
+| F5 | Enlace a "Mis aportes" en el menú de la cuenta (`core/layout/barra-superior`), como en el mockup del enunciado. Hoy la pantalla existe, pero solo se llega por su URL. | Efrain, con Raul |
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-15 | Raul | §2: filas de las pantallas de aportes, con sus rutas confirmadas (F1, para su dominio). §10: pendientes F4 (presupuesto del bundle) y F5 (enlace a "Mis aportes" en el menú). |
 | 2026-11-12 | Efrain | §8: sin workflow propio; al frontend lo valida el CI general, y el formato y el build se corren a mano (pedido de Arturo). |
 | 2026-11-08 | Efrain | Nombre visible «Go Fund Me» y la paleta y las letras del mockup del equipo (§6). |
 | 2026-11-08 | Efrain | Primera versión: zonas y rutas, estructura de carpetas, sesión, errores, convenciones (Angular Material, Signal Forms, `es-BO`), configuración, pruebas y Docker. |
