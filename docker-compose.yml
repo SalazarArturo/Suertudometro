@@ -40,8 +40,14 @@ services:
       JWT_DURACION: ${JWT_DURACION:-3600}
       ADMIN_CORREO: ${ADMIN_CORREO:?Falta ADMIN_CORREO en .env (copia .env.example)}
       ADMIN_CONTRASENA: ${ADMIN_CONTRASENA:?Falta ADMIN_CONTRASENA en .env (copia .env.example)}
+      # Publica usuario.registrado desde su outbox (docs/servicios/identity-service.md §6).
+      RABBITMQ_URL: amqp://${RABBITMQ_USUARIO}:${RABBITMQ_CLAVE}@rabbitmq:5672
     depends_on:
       identity-db:
+        condition: service_healthy
+      # No la necesita para arrancar (los eventos esperan en el outbox), pero así
+      # el primer arranque no llena el log de reintentos de conexión.
+      rabbitmq:
         condition: service_healthy
 
   api-gateway:

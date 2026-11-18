@@ -21,6 +21,8 @@ import {
 } from './application/puertos/tokens-inyeccion.js';
 import { SembradorAdministrador } from './infrastructure/arranque/sembrador-administrador.js';
 import { validarVariablesEntorno } from './infrastructure/configuracion/variables-entorno.js';
+import { ConexionRabbitmq } from './infrastructure/mensajeria/conexion-rabbitmq.js';
+import { PublicadorEventosSalida } from './infrastructure/mensajeria/publicador-eventos-salida.js';
 import { LectorUsuariosPrisma } from './infrastructure/persistencia/lector-usuarios.prisma.js';
 import { PrismaServicio } from './infrastructure/persistencia/prisma.servicio.js';
 import { RepositorioCuentasUsuarioPrisma } from './infrastructure/persistencia/repositorio-cuentas-usuario.prisma.js';
@@ -71,6 +73,10 @@ import { EmisorTokensJwt } from './infrastructure/seguridad/emisor-tokens-jwt.js
     IniciarSesionComandoManejador,
     CrearAdministradorInicialComandoManejador,
     ObtenerUsuarioPorIdConsultaManejador,
+
+    // Mensajería: el outbox sale a RabbitMQ (docs/servicios/identity-service.md §6)
+    ConexionRabbitmq,
+    PublicadorEventosSalida,
 
     // Arranque y borde HTTP
     SembradorAdministrador,

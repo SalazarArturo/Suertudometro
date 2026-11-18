@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-17 (Efrain: RabbitMQ y Mailpit en `docker-compose.yml`, y la topología de RabbitMQ en `docs/rabbitmq.md`).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-17 (Efrain: RabbitMQ y Mailpit en `docker-compose.yml`, la topología de RabbitMQ en `docs/rabbitmq.md`, e identity-service publica `usuario.registrado`).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -67,7 +67,7 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 ## Fase actual
 
-**Fase 0: diseño y documentación, por cerrar; implementación en paralelo.** `update-service` (Gabo) está en Persistencia y API, pendiente de integración. `contribution-service` (Raul) tiene el backend completo y las pantallas de aportes (rama `feat/contribution-aportes`), pendientes de integración con el gateway y el compose. En `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), y el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS. `docker compose up --build` (rama `chore/compose-base`) levanta las tres piezas, y crear cuenta, iniciar sesión y ver el perfil ya funcionan de punta a punta.
+**Fase 0: diseño y documentación, por cerrar; implementación en paralelo.** `update-service` (Gabo) está en Persistencia y API, pendiente de integración. `contribution-service` (Raul) tiene el backend completo y las pantallas de aportes (rama `feat/contribution-aportes`), pendientes de integración con el gateway y el compose. En `identity-service` (Efrain): el esqueleto (rama `feat/identity-esqueleto`), el dominio en aislado (rama `feat/identity-dominio`), la persistencia con Prisma en `identity-db` (rama `feat/identity-persistencia`), el registro por la API REST, con Swagger y errores RFC 9457 (rama `feat/identity-api`), el inicio de sesión con JWT, el perfil y la siembra del administrador (rama `feat/identity-autenticacion`), y la publicación de `usuario.registrado` en RabbitMQ desde el outbox (rama `feat/identity-mensajeria`). Además están la base del frontend (rama `feat/frontend-base`), con Angular 22, Angular Material, la sesión y las pantallas de identidad, y la base del api-gateway (rama `feat/gateway-base`), con la ruta de identity, la validación del JWT, los headers de identidad y CORS. `docker compose up --build` (rama `chore/compose-base`) levanta las tres piezas, y crear cuenta, iniciar sesión y ver el perfil ya funcionan de punta a punta.
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 - las carpetas de los demás servicios (ya existen `identity-service`, `api-gateway` y `frontend`, y también `update-service` y `contribution-service`, que tienen implementación y Compose autónomo);
@@ -80,9 +80,9 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 | Servicio / pieza | Responsable | Documento | Código |
 |---|---|---|---|
 | `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Con identity, el gateway, el frontend, RabbitMQ y Mailpit; faltan los demás servicios |
-| RabbitMQ (topología) | Efrain | [Borrador](rabbitmq.md) | En el compose; identity-service todavía no publica |
+| RabbitMQ (topología) | Efrain | [Borrador](rabbitmq.md) | En el compose; identity-service ya publica `usuario.registrado` |
 | `api-gateway` | Efrain | [Borrador](servicios/api-gateway.md) | Integrado (probado con Docker Compose); falta el límite de peticiones |
-| `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Persistencia y API |
+| `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Integrado por eventos: publica `usuario.registrado`, que esperará en el outbox hasta que exista notification-service |
 | `notification-service` | Efrain | Sin documento | Sin empezar |
 | `campaign-service` | Arturo | [Borrador](servicios/campaign-service.md) | Sin empezar |
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Persistencia y API. El outbox y los consumidores de eventos están implementados; falta integrarlos con campaign-service, el gateway y el compose de la raíz |

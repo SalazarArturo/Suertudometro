@@ -107,4 +107,47 @@ describe('validarVariablesEntorno', () => {
       validarVariablesEntorno(con({ DATABASE_URL: url })).DATABASE_URL,
     ).toBe(url);
   });
+
+  describe('RabbitMQ y outbox', () => {
+    it('RABBITMQ_URL es opcional, y OUTBOX_INTERVALO_MS vale 2000 por defecto', () => {
+      const variables = validarVariablesEntorno(con());
+
+      expect(variables.RABBITMQ_URL).toBeUndefined();
+      expect(variables.OUTBOX_INTERVALO_MS).toBe(2000);
+    });
+
+    it.each([
+      ['amqp://suertudometro:rabbitmq-dev@rabbitmq:5672'],
+      ['amqps://usuario:clave@broker.example.org:5671/vhost'],
+    ])('acepta RABBITMQ_URL %s', (url) => {
+      expect(
+        validarVariablesEntorno(con({ RABBITMQ_URL: url })).RABBITMQ_URL,
+      ).toBe(url);
+    });
+
+    it.each([['http://rabbitmq:15672'], ['rabbitmq:5672'], ['']])(
+      'rechaza RABBITMQ_URL «%s»',
+      (url) => {
+        expect(() =>
+          validarVariablesEntorno(con({ RABBITMQ_URL: url })),
+        ).toThrow(/RABBITMQ_URL debe ser una URL de RabbitMQ/);
+      },
+    );
+
+    it('convierte OUTBOX_INTERVALO_MS de texto a número', () => {
+      expect(
+        validarVariablesEntorno(con({ OUTBOX_INTERVALO_MS: '500' }))
+          .OUTBOX_INTERVALO_MS,
+      ).toBe(500);
+    });
+
+    it.each([['50'], ['120000'], ['rapido']])(
+      'rechaza OUTBOX_INTERVALO_MS %s',
+      (intervalo) => {
+        expect(() =>
+          validarVariablesEntorno(con({ OUTBOX_INTERVALO_MS: intervalo })),
+        ).toThrow(/OUTBOX_INTERVALO_MS/);
+      },
+    );
+  });
 });

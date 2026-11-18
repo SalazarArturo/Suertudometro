@@ -8,6 +8,7 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-17 · Efrain** · identity-service publica `usuario.registrado` con `mandatory` (→ [`servicios/identity-service.md`](servicios/identity-service.md) §6). Mientras no exista una cola que lo reciba, RabbitMQ lo devuelve y el evento espera en el outbox, en vez de perderse. Así, cuando notification-service cree su cola, recibirá también las cuentas creadas antes, incluida la del administrador.
 - **2026-11-17 · Efrain** · Topología de RabbitMQ (→ [`rabbitmq.md`](rabbitmq.md)). Deja escrita la que ya usaban `update-service` (Gabo) y `contribution-service` (Raul), para que los demás servicios la sigan:
   - **Cada servicio declara al arrancar lo que usa**, sin un archivo central: el que publica, solo el exchange; el que consume, los exchanges, su cola, su DLQ y sus enlaces. Así cada uno se prueba solo con Testcontainers.
   - **Nombres:** exchange de errores `suertudometro.events.dlx` (`direct`); cola `<servicio>.<tema>` y DLQ `<servicio>.dlq`, con el nombre del servicio como clave de errores.
@@ -91,6 +92,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-17 | Efrain | **identity-service publica `usuario.registrado`** (fase 6): el publicador del outbox lo envía a `suertudometro.events` con confirmaciones del broker, se reconecta solo y no pierde eventos sin cola. Pruebas de integración con RabbitMQ 4.3 y PostgreSQL 18 reales; en Docker Compose, el servicio se conecta a RabbitMQ. | Rama `feat/identity-mensajeria` |
 | 2026-11-17 | Efrain | **RabbitMQ y Mailpit en `docker-compose.yml`.** RabbitMQ 4.3 con su consola en el puerto 15672 y el volumen `rabbitmq-data`; Mailpit con su bandeja en el 8025. Topología documentada en `docs/rabbitmq.md`. | Rama `chore/compose-rabbitmq` |
 | 2026-11-15 | Gabo | **Novedades: preparación para el gateway.** Adaptador de identidad por `X-Usuario-Id`, retiro del JWT local, Swagger con Bearer para el gateway y puerto interno `8084`. Se documentan las rutas públicas y los ejemplos de prueba directa y por gateway. Verificación local: 47 pruebas aprobadas con PostgreSQL y RabbitMQ reales en la imagen nueva; Ruff, configuración Django, migraciones y OpenAPI correctos; arranque de Gunicorn comprobado en `8084`. La activación en el gateway, el Compose global, la prueba conjunta y el CI remoto siguen pendientes. | `fix/update-identidad-gateway` |
 | 2026-11-15 | Raul | **Pantallas de aportes.** Aportar (monto, mensaje con contador y anonimato), historial público de una campaña, "Mis aportes" y "Aportes recibidos", en `frontend/src/app/aportes/`, con pruebas en Vitest. Rutas confirmadas en `docs/frontend.md` §2. El build avisa de que el bundle inicial pasa de 500 kB por 2 kB (pendiente F4 de `frontend.md`). | Rama `feat/contribution-aportes` |

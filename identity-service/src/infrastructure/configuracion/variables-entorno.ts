@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   Matches,
   Max,
   Min,
@@ -19,7 +20,6 @@ export enum Entorno {
 /**
  * Variables de entorno del servicio. Se validan al arrancar: si falta una
  * o tiene un valor inválido, el servicio no levanta.
- * La fase de mensajería agrega las de RabbitMQ.
  */
 export class VariablesEntorno {
   @IsEnum(Entorno)
@@ -65,6 +65,25 @@ export class VariablesEntorno {
 
   @IsNotEmpty({ message: 'ADMIN_CONTRASENA es obligatoria' })
   ADMIN_CONTRASENA: string;
+
+  /**
+   * Conexión a RabbitMQ (docs/rabbitmq.md §1). Es opcional: sin ella, el
+   * servicio funciona igual y los eventos esperan en el outbox. En Docker
+   * Compose siempre está.
+   */
+  @IsOptional()
+  @Matches(/^amqps?:\/\/\S+$/, {
+    message: 'RABBITMQ_URL debe ser una URL de RabbitMQ (amqp://...)',
+  })
+  RABBITMQ_URL?: string;
+
+  /** Cada cuántos milisegundos el publicador revisa el outbox. */
+  @IsInt({ message: 'OUTBOX_INTERVALO_MS debe ser un número entero' })
+  @Min(100, { message: 'OUTBOX_INTERVALO_MS debe ser de al menos 100 ms' })
+  @Max(60_000, {
+    message: 'OUTBOX_INTERVALO_MS no puede pasar de 60000 ms (1 minuto)',
+  })
+  OUTBOX_INTERVALO_MS: number = 2000;
 }
 
 export function validarVariablesEntorno(

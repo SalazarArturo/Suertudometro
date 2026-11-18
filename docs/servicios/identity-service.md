@@ -1,6 +1,6 @@
 # identity-service
 
-> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-12 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-17 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Identidad** (subdominio genérico) · NestJS 12 · Node.js 24 · TypeScript · base de datos `identity-db` · ruta en el gateway `/api/identidad` · puerto interno 8081.
 
 ## 1. Responsabilidad
@@ -209,15 +209,18 @@ Ejemplo (`409`):
 
 Para no perder eventos se usa una **tabla outbox** (`eventos_salida`):
 1. **Misma transacción.** El repositorio guarda la cuenta y, en la misma transacción de Prisma, las filas de `eventos_salida`. Un traductor de infraestructura (`MapeadorEventosIntegracion`) convierte `UsuarioCreado` en el envelope de `UsuarioRegistrado`, con `idEvento`, `tipoEvento`, `version`, `ocurridoEn` y `datos`.
-2. **Publicador programado.** Cada 2 segundos (`OUTBOX_INTERVALO_MS`), el `PublicadorEventosSalida` toma hasta 50 filas pendientes con `SELECT … FOR UPDATE SKIP LOCKED` y las publica en el exchange topic `suertudometro.events`:
+2. **Publicador programado.** Cada 2 segundos (`OUTBOX_INTERVALO_MS`), el `PublicadorEventosSalida` toma hasta 50 filas pendientes, de la más antigua a la más nueva, con `SELECT … FOR UPDATE SKIP LOCKED`, y las publica en el exchange topic `suertudometro.events` (`docs/rabbitmq.md` §4):
    - routing key igual a `tipoEvento`, mensaje persistente, `contentType: application/json` y `messageId` igual a `idEvento`;
    - usa un canal con confirmaciones del broker (*publisher confirms*): marca `publicado_en` solo cuando RabbitMQ confirma;
-   - si falla, suma `intentos`, guarda `ultimo_error` y lo reintenta en la siguiente vuelta.
-3. **Reconexión.** Si se cae la conexión con RabbitMQ, el publicador se reconecta con espera exponencial (de 1 a 30 segundos). Mientras tanto, los eventos esperan en la tabla.
+   - publica con `mandatory`: si ninguna cola recibe el evento, RabbitMQ lo devuelve y el evento **queda pendiente** hasta que su consumidor cree la cola. Por eso, cuando exista notification-service, recibirá también las cuentas creadas antes, incluida la del administrador;
+   - si un evento no se publica (sin confirmación, devuelto o con el canal cerrado), suma `intentos`, guarda `ultimo_error` y se reintenta;
+   - cuando una vuelta falla, la siguiente espera el doble, hasta 30 segundos; con una vuelta sin errores, vuelve al intervalo normal. En el log, cada problema se avisa una vez, no en cada vuelta.
+3. **Reconexión.** Si se cae la conexión con RabbitMQ, amqplib se reconecta solo con espera exponencial (de 1 a 30 segundos). Mientras tanto, los eventos esperan en la tabla, **sin sumar intentos**: un intento cuenta solo si el evento llegó a enviarse.
+4. **Sin `RABBITMQ_URL`** (por ejemplo, al correr el servicio desde el IDE sin RabbitMQ), el servicio funciona igual: lo avisa una vez en el log y los eventos se acumulan en el outbox. En Docker Compose la variable siempre está.
 
-La entrega es **al menos una vez**: notification-service descarta los duplicados por `idEvento`.
+La entrega es **al menos una vez**: si el servicio cae entre la confirmación de RabbitMQ y la marca de `publicado_en`, el evento se publica de nuevo con el mismo `idEvento`, y notification-service descarta el duplicado.
 
-Se usa `amqplib` directamente, no `@nestjs/microservices`, porque ese paquete envuelve los mensajes en un formato que Java y Python no entienden (`docs/stack-y-convenciones.md` §3.2). identity-service declara el exchange con `assertExchange`, que es idempotente. No declara colas, porque no consume eventos.
+Se usa `amqplib` directamente (versión 2.x, que ya trae los tipos de TypeScript y la reconexión), no `@nestjs/microservices`, porque ese paquete envuelve los mensajes en un formato que Java y Python no entienden (`docs/stack-y-convenciones.md` §3.2). identity-service declara el exchange con `assertExchange`, que es idempotente. No declara colas, porque no consume eventos.
 
 ## 7. Base de datos (`identity-db`)
 
@@ -261,7 +264,7 @@ identity-service/
 │   │   ├── persistencia/           # PrismaServicio, repositorio, mapper dominio ↔ Prisma, LectorUsuarios
 │   │   │                           # y prisma/generado/ (el cliente generado, sin versionar)
 │   │   ├── reloj/                  # RelojSistema
-│   │   ├── mensajeria/             # conexión a RabbitMQ, PublicadorEventosSalida, MapeadorEventosIntegracion
+│   │   ├── mensajeria/             # MapeadorEventosIntegracion, ConexionRabbitmq, PublicadorEventosSalida y publicarLote
 │   │   ├── seguridad/              # CifradorArgon2, EmisorTokensJwt
 │   │   ├── arranque/               # SembradorAdministrador (ejecuta CrearAdministradorInicialComando)
 │   │   └── configuracion/          # variables de entorno validadas
@@ -370,9 +373,9 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 - [ ] **Fase 5 · Autenticación** (`feat/identity-autenticacion`):
   - `EmisorTokensJwt`, `POST /sesiones`, `GuardIdentidad`, `GET /perfil` y la siembra del administrador.
   - *Pruebas:* claims y duración del token, `401` por credenciales inválidas y por falta de sesión, nombre con tildes en el header y siembra idempotente.
-- [ ] **Fase 6 · Mensajería** (`feat/identity-mensajeria`):
-  - conexión a RabbitMQ con confirmaciones y reconexión, y `PublicadorEventosSalida`.
-  - *Pruebas con Testcontainers:* llega el envelope de `usuario.registrado`; con RabbitMQ caído, el evento espera y se publica al volver; nada se publica dos veces.
+- [x] **Fase 6 · Mensajería** (`feat/identity-mensajeria`):
+  - conexión a RabbitMQ con confirmaciones y reconexión, y `PublicadorEventosSalida`; en `docker-compose.yml`, `RABBITMQ_URL` y la espera a que RabbitMQ esté listo.
+  - *Pruebas con Testcontainers (RabbitMQ 4.3 y PostgreSQL 18):* llega el envelope de `usuario.registrado` con sus propiedades; sin una cola que lo reciba, el evento espera y sale cuando aparece; sin conexión no se tocan los eventos; se reconecta si RabbitMQ cierra la conexión; dos publicadores a la vez no publican dos veces; lo ya publicado no se reenvía.
 - [ ] **Fase 7 · Integración** (`chore/compose-base`, junto con el gateway y el frontend; RabbitMQ entra con la fase 6):
   - `identity-db` e `identity-service` en `docker-compose.yml`, con healthchecks, y las variables en `.env.example`;
   - la ruta del gateway va en su propio PR.
@@ -383,6 +386,7 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-17 | Efrain | Fase 6: §6 con lo que hace el publicador al implementarlo (`mandatory`, la espera entre vueltas que fallan, sin conexión no suma intentos, `RABBITMQ_URL` opcional) y §8 con los archivos de `mensajeria/`. |
 | 2026-11-12 | Efrain | §10 y §13: sin workflow propio; al servicio lo valida el CI general, y lo que ese CI no corre se revisa a mano (pedido de Arturo). |
 | 2026-11-09 | Efrain | La fase 7 se hizo en `chore/compose-base`, junto con el gateway y el frontend. Falta RabbitMQ, que llega con la fase 6. |
 | 2026-11-08 | Efrain | El §5.1 enlaza a `api-gateway.md`, que aplica el contrato y tiene la tabla de rutas públicas. |
