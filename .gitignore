@@ -12,6 +12,10 @@ CLAUDE.local.md
 .env.*
 !.env.example
 
+# Ajustes locales de Docker Compose, por ejemplo publicar un puerto para
+# desarrollar desde el IDE (docs/rabbitmq.md §7)
+docker-compose.override.yml
+
 # Java / Maven (api-gateway, campaign-service, contribution-service)
 target/
 *.class

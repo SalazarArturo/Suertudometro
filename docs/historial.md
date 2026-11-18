@@ -8,6 +8,11 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-17 · Efrain** · Topología de RabbitMQ (→ [`rabbitmq.md`](rabbitmq.md)). Deja escrita la que ya usaban `update-service` (Gabo) y `contribution-service` (Raul), para que los demás servicios la sigan:
+  - **Cada servicio declara al arrancar lo que usa**, sin un archivo central: el que publica, solo el exchange; el que consume, los exchanges, su cola, su DLQ y sus enlaces. Así cada uno se prueba solo con Testcontainers.
+  - **Nombres:** exchange de errores `suertudometro.events.dlx` (`direct`); cola `<servicio>.<tema>` y DLQ `<servicio>.dlq`, con el nombre del servicio como clave de errores.
+  - **Reintentos:** un mensaje mal formado va a la DLQ de inmediato; un error pasajero se reintenta con espera y, si no se recupera, va a la DLQ. Lo que llega a la DLQ se revisa a mano en la consola.
+  - **Un solo usuario** para todos los servicios en desarrollo, con las variables `RABBITMQ_USUARIO` y `RABBITMQ_CLAVE`, los nombres que ya usaban Raul y Gabo.
 - **2026-11-15 · Gabo** (a partir de la revisión de Efrain) · `update-service` se alinea con el contrato de identidad ya definido: recibe `X-Usuario-Id` como UUID y conserva la autorización por propiedad de campaña; retira la verificación JWT local y el `503` por falta de configuración. Usa el puerto interno `8084` del diagrama de despliegue. Se confirman como públicas las lecturas de historial, esquema OpenAPI y Swagger (las dos últimas en desarrollo); el POST requiere sesión. La activación de rutas y el Compose global quedan a cargo de Efrain. → [Diseño de Novedades](servicios/update-service.md).
 - **2026-11-14 · Raul** · Decisiones de `contribution-service` al implementarlo (→ [`servicios/contribution-service.md`](servicios/contribution-service.md)):
   - **Estructura Maven:** un solo módulo con las cinco capas por paquetes, igual que `campaign-service`, y una prueba (`ArquitecturaDeCapasTest`) que falla si `domain` importa Spring o JPA. Cierra, para los dos servicios Spring Boot, el pendiente 10.
@@ -86,6 +91,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-17 | Efrain | **RabbitMQ y Mailpit en `docker-compose.yml`.** RabbitMQ 4.3 con su consola en el puerto 15672 y el volumen `rabbitmq-data`; Mailpit con su bandeja en el 8025. Topología documentada en `docs/rabbitmq.md`. | Rama `chore/compose-rabbitmq` |
 | 2026-11-15 | Gabo | **Novedades: preparación para el gateway.** Adaptador de identidad por `X-Usuario-Id`, retiro del JWT local, Swagger con Bearer para el gateway y puerto interno `8084`. Se documentan las rutas públicas y los ejemplos de prueba directa y por gateway. Verificación local: 47 pruebas aprobadas con PostgreSQL y RabbitMQ reales en la imagen nueva; Ruff, configuración Django, migraciones y OpenAPI correctos; arranque de Gunicorn comprobado en `8084`. La activación en el gateway, el Compose global, la prueba conjunta y el CI remoto siguen pendientes. | `fix/update-identidad-gateway` |
 | 2026-11-15 | Raul | **Pantallas de aportes.** Aportar (monto, mensaje con contador y anonimato), historial público de una campaña, "Mis aportes" y "Aportes recibidos", en `frontend/src/app/aportes/`, con pruebas en Vitest. Rutas confirmadas en `docs/frontend.md` §2. El build avisa de que el bundle inicial pasa de 500 kB por 2 kB (pendiente F4 de `frontend.md`). | Rama `feat/contribution-aportes` |
 | 2026-11-14 | Raul | **contribution-service: backend.** Dominio, aplicación (CQRS con PipelinR), persistencia con Flyway y JPA, API REST con errores RFC 9457 y mensajería (outbox y consumidores idempotentes), con pruebas unitarias, de API, de contrato y de integración con Testcontainers. El 2026-11-15 se probó con Docker: la imagen, el `compose.yaml` propio, los eventos de campaña simulados en RabbitMQ, `aporte.registrado` en el bus y la cola de errores. Falta la integración con el gateway y el compose de la raíz. | Rama `feat/contribution-aportes` |
@@ -135,8 +141,9 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 | `AGENTS.md` | Arturo (2026-10-16); Efrain (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, fila del contrato de identidad); Efrain (2026-11-08, filas del frontend y del gateway) |
 | `CLAUDE.md` | Arturo (2026-10-16); Raul (2026-11-07) |
 | `.agents/skills/` y `skills-lock.json` | Arturo (2026-10-16, primeras skills); Efrain (2026-11-06, skill propia y skills nuevas); Raul (2026-11-07, quitó 4 skills y convirtió la skill propia en checklist) |
-| `.gitignore` | Arturo (2026-10-16); Raul (2026-11-07) |
+| `.gitignore` | Arturo (2026-10-16); Raul (2026-11-07); Efrain (2026-11-17, `docker-compose.override.yml`) |
 | `identity-service/` | Efrain (2026-11-07, esqueleto) |
 | `docs/frontend.md` y `frontend/` | Efrain (2026-11-08, base del frontend) |
 | `api-gateway/` | Efrain (2026-11-08, base del gateway) |
-| `docker-compose.yml` y `.env.example` | Efrain (2026-11-09: identity, gateway y frontend) |
+| `docker-compose.yml` y `.env.example` | Efrain (2026-11-09: identity, gateway y frontend; 2026-11-17: RabbitMQ y Mailpit) |
+| `docs/rabbitmq.md` | Efrain (2026-11-17) |
