@@ -1,0 +1,71 @@
+package com.crowdfunding.campaign.application.command;
+
+import an.awesome.pipelinr.Command;
+import com.crowdfunding.campaign.application.dto.DetalleCampanaDto;
+import com.crowdfunding.campaign.application.port.out.ExcepcionRecursoNoEncontrado;
+import com.crowdfunding.campaign.application.port.out.PublicadorEventosPuerto;
+import com.crowdfunding.campaign.domain.model.Campana;
+import com.crowdfunding.campaign.domain.model.CategoriaCampana;
+import com.crowdfunding.campaign.domain.repository.CampanaRepositorio;
+import com.crowdfunding.campaign.domain.valueobject.HistoriaCampana;
+import com.crowdfunding.campaign.domain.valueobject.IdCampana;
+import com.crowdfunding.campaign.domain.valueobject.IdOrganizador;
+import com.crowdfunding.campaign.domain.valueobject.MetaFinanciera;
+import com.crowdfunding.campaign.domain.valueobject.PlazoCampana;
+import com.crowdfunding.campaign.domain.valueobject.TituloCampana;
+import com.crowdfunding.campaign.sharedkernel.Dinero;
+import java.time.Instant;
+import java.util.Objects;
+
+public class EditarBorradorComandoManejador
+    implements Command.Handler<EditarBorradorComando, DetalleCampanaDto> {
+
+  private final CampanaRepositorio campanaRepositorio;
+  private final PublicadorEventosPuerto publicadorEventos;
+
+  public EditarBorradorComandoManejador(
+      CampanaRepositorio campanaRepositorio, PublicadorEventosPuerto publicadorEventos) {
+    this.campanaRepositorio = Objects.requireNonNull(campanaRepositorio);
+    this.publicadorEventos = Objects.requireNonNull(publicadorEventos);
+  }
+
+  @Override
+  public DetalleCampanaDto handle(EditarBorradorComando comando) {
+    Campana campana =
+        campanaRepositorio
+            .buscarPorId(IdCampana.de(comando.idCampana()))
+            .orElseThrow(
+                () ->
+                    new ExcepcionRecursoNoEncontrado(
+                        "No se encontro la campana con id " + comando.idCampana(),
+                        "campana-no-encontrada"));
+
+    CategoriaCampana categoria = parsearCategoria(comando.categoria());
+    Dinero dineroMeta = Dinero.de(comando.metaFinanciera(), comando.moneda());
+
+    campana.editarBorrador(
+        IdOrganizador.de(comando.idSolicitante()),
+        new TituloCampana(comando.titulo()),
+        new HistoriaCampana(comando.historia()),
+        categoria,
+        MetaFinanciera.de(dineroMeta),
+        new PlazoCampana(comando.fechaLimite()),
+        Instant.now());
+
+    campanaRepositorio.guardar(campana);
+    publicadorEventos.publicar(campana.extraerEventos());
+
+    return DetalleCampanaDto.desdeDominio(campana);
+  }
+
+  private CategoriaCampana parsearCategoria(String textoCategoria) {
+    if (textoCategoria == null || textoCategoria.isBlank()) {
+      throw new IllegalArgumentException("La categoria de la campana es obligatoria");
+    }
+    try {
+      return CategoriaCampana.valueOf(textoCategoria.trim().toUpperCase());
+    } catch (IllegalArgumentException ex) {
+      throw new IllegalArgumentException("Categoria de campana no valida: " + textoCategoria, ex);
+    }
+  }
+}

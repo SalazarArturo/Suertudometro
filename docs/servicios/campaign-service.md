@@ -1,7 +1,8 @@
 # campaign-service
 
-> **Responsable:** Arturo · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-08 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Arturo · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-17 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Campañas** (subdominio core) · Spring Boot 4.1 · Java 21 · base de datos `campaign-db` · volumen `campaign-images` · ruta en el gateway `/api/campanas` · puerto interno 8082.
+> **Implementación:** el backend completo está en `campaign-service/` con su `Dockerfile` y `compose.yaml` propio. Cómo correrlo: [`campaign-service/README.md`](../../campaign-service/README.md).
 
 ## 1. Responsabilidad
 
@@ -273,26 +274,27 @@ campaign-service/
 
 | # | Pendiente | Decide | Estado |
 |---|---|---|---|
-| P1 | Confirmar con Raul si ambos servicios Spring usan la misma estructura Maven o si `campaign-service` va con un solo módulo por paquetes y `contribution-service` con multimódulo. | Arturo y Raul | Propuesta de Arturo definida (pendiente #10 del proyecto) |
-| P2 | Confirmar con Efrain que `notification-service` consuma `campana.cerrada` y los destinatarios de `meta.alcanzada`. | Arturo y Efrain | Propuesta de Arturo definida (pendiente #8 del proyecto) |
-| P3 | Confirmar con Raul el manejo de aportes en tránsito al cerrarse por meta alcanzada. | Arturo y Raul | Propuesta de Arturo definida (pendiente #9 del proyecto) |
-| P4 | Headers de identidad enviados por `api-gateway` (`X-User-Id`, `X-User-Role`, etc.). | Efrain | Abierto (pendiente #5 del proyecto) |
+| P1 | Confirmar con Raul si ambos servicios Spring usan la misma estructura Maven o si `campaign-service` va con un solo módulo por paquetes y `contribution-service` con multimódulo. | Arturo y Raul | **Resuelto (2026-11-14):** ambos servicios usan un solo módulo Maven con las 5 capas por paquetes Java (cierra para Spring Boot el pendiente #10) |
+| P2 | Confirmar con Efrain que `notification-service` consuma `campana.cerrada` y los destinatarios de `meta.alcanzada`. | Arturo y Efrain | **Resuelto (Efrain, 2026-11-07):** `notification-service` no consume `campana.cerrada` (cierra el pendiente #8) |
+| P3 | Confirmar con Raul el manejo de aportes en tránsito al cerrarse por meta alcanzada. | Arturo y Raul | **Resuelto (Raul, 2026-11-14):** confirma la propuesta de Arturo (cierra el pendiente #9) |
+| P4 | Headers de identidad enviados por `api-gateway` (`X-Usuario-Id`, `X-Usuario-Rol`, etc.). | Efrain | **Resuelto (Efrain, 2026-11-07):** `X-Usuario-Id`, `X-Usuario-Rol` (`USUARIO`, `ADMINISTRADOR`) y `X-Usuario-Nombre` (cierra el pendiente #5) |
 
 ## 13. Plan de implementación
 
 - [x] Definir reglas de negocio de campaña y aprobar fichas de eventos como productor (`docs/contratos-de-eventos.md`).
 - [x] Redactar el documento de diseño `docs/servicios/campaign-service.md`.
 - [x] Configurar plantilla de PR y workflow de CI en `.github/` (responsabilidad de Arturo en el repositorio).
-- [ ] Crear el proyecto Maven en `campaign-service/` con Java 21, Spring Boot 4.1, PipelinR, Flyway, Spring AMQP, Spotless y Testcontainers.
-- [ ] Implementar `sharedkernel` y `domain` (agregado `Campana`, objetos de valor, reglas R1..R10, máquina de estados y eventos de dominio) con pruebas unitarias en JUnit 5.
-- [ ] Implementar `application` (los 10 comandos, comandos de imágenes, consultas, puertos y manejador de `AporteRegistrado`) con pruebas unitarias.
-- [ ] Implementar `infrastructure` (migración Flyway `V1__crear_esquema_campanas.sql`, entidades JPA, mappers, almacenamiento de imágenes en volumen, Transactional Outbox y consumidor RabbitMQ) con pruebas en Testcontainers.
-- [ ] Implementar `api` (controladores REST, DTOs, errores RFC 9457 y documentación OpenAPI) con pruebas MockMvc.
-- [ ] Integrar en `docker-compose.yml` detrás del `api-gateway`.
+- [x] Crear el proyecto Maven en `campaign-service/` con Java 21, Spring Boot 4.1, PipelinR, Flyway, Spring AMQP, Spotless y Testcontainers.
+- [x] Implementar `sharedkernel` y `domain` (agregado `Campana`, `CampanaBuilder`, objetos de valor, reglas R1..R10, máquina de estados y eventos de dominio) con pruebas unitarias en JUnit 5.
+- [x] Implementar `application` (comandos, consultas CQRS, puertos, DTOs y manejador de `AporteRegistrado`) con pruebas unitarias.
+- [x] Implementar `infrastructure` (migración Flyway `V1__crear_esquema_campanas.sql`, entidades JPA, mappers, almacenamiento de imágenes en volumen, Transactional Outbox, consumidor idempotente de RabbitMQ, `Dockerfile` y `compose.yaml` propio) con pruebas de adaptadores y de arquitectura de capas.
+- [x] Implementar `api` (controladores REST, DTOs, lectura de headers `X-Usuario-*` y errores RFC 9457) con pruebas unitarias.
+- [ ] Integrar en `docker-compose.yml` de la raíz detrás del `api-gateway` (con Efrain).
 - [ ] Construir las 4 pantallas de campañas en Angular.
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-17 | Arturo | Implementación completa del backend de `campaign-service` (capas `sharedkernel`, `domain`, `application`, `infrastructure` y `api`), migración Flyway, Outbox/Inbox RabbitMQ, `Dockerfile`, `compose.yaml` autónomo y suite de pruebas JUnit 5. |
 | 2026-11-08 | Arturo | Primera versión completa del diseño de `campaign-service`. |

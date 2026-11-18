@@ -1,0 +1,64 @@
+name: suertudometro-campaign
+
+services:
+  campaign-db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-campaign_db}
+      POSTGRES_USER: ${POSTGRES_USER:-campanas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-campanas}
+    ports:
+      - "${CAMPAIGN_DB_PORT:-5433}:5432"
+    volumes:
+      - campaign-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:4.3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - campaign-rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  campaign-service:
+    build:
+      context: .
+      target: ejecucion
+    image: suertudometro-campaign:local
+    depends_on:
+      campaign-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: jdbc:postgresql://campaign-db:5432/${POSTGRES_DB:-campaign_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-campanas}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-campanas}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-guest}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      CAMPANA_DIRECTORIO_IMAGENES: /var/lib/suertudometro/campaign-images
+    ports:
+      - "${CAMPAIGN_SERVICE_PORT:-8082}:8082"
+    volumes:
+      - campaign-images:/var/lib/suertudometro/campaign-images
+
+volumes:
+  campaign-db-data:
+  campaign-rabbitmq-data:
+  campaign-images:
