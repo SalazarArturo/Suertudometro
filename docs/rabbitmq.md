@@ -105,9 +105,27 @@ El servicio se conecta entonces a `amqp://<usuario>:<clave>@localhost:5672`. Con
 4. Probar con Testcontainers que un mensaje válido se aplica una sola vez y que uno mal formado termina en la DLQ.
 5. Sumar el servicio a `docker-compose.yml`, con `RABBITMQ_URL` (o host, usuario y clave por separado) y `depends_on: rabbitmq` con `condition: service_healthy`.
 
+## 9. Simular un evento desde la consola
+
+Mientras no exista el servicio que publica un evento, se puede publicar a mano para probar a quienes lo consumen. Por ejemplo, sin campaign-service, un `campana.publicada` deja aportar (contribution-service) y publicar novedades (update-service) en una campaña:
+
+1. **Exchanges** → `suertudometro.events` → **Publish message**.
+2. **Routing key:** `campana.publicada`.
+3. **Delivery mode:** «2 - Persistent». En **Properties**: `content_type` = `application/json` y `message_id` = el `idEvento` del mensaje.
+4. **Payload:** el mensaje completo de ejemplo de la ficha `CampanaPublicada` ([`contratos-de-eventos.md`](contratos-de-eventos.md)), cambiando:
+   - `idEvento` e `idCampana` por UUID nuevos (por ejemplo, de `node -e "console.log(crypto.randomUUID())"`);
+   - `idOrganizador` por el `id` de tu cuenta, el que devuelve `GET /api/identidad/perfil`. Así puedes ver los aportes recibidos y publicar novedades con tu sesión;
+   - `fechaLimite` por una fecha futura.
+5. **Publish message.** Si la consola responde «Message published, but not routed», ninguna cola lo recibió: revisa la routing key.
+
+Después, en `http://localhost:4200/aportes/campana/<idCampana>` se puede aportar y ver el historial (la página provisoria de aportes), y la novedad se publica con `POST /api/novedades` (todavía no tiene pantalla).
+
+Cada consumidor guarda la campaña en su propia base. Para borrar esas campañas de prueba hay que borrar los volúmenes con `docker compose down -v`, que también borra las cuentas.
+
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-17 | Efrain | §9: cómo simular un evento desde la consola, mientras falta el servicio que lo publica. |
 | 2026-11-17 | Efrain | §2: las colas siempre son durables (RabbitMQ 4.3 rechaza las no durables compartidas). §4: identity-service también publica con `mandatory`. |
 | 2026-11-17 | Efrain | Primera versión: deja escrita la topología que ya usaban `update-service` y `contribution-service`, cómo publicar y consumir, la DLQ y la conexión desde el IDE. |

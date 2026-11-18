@@ -18,6 +18,14 @@ spring:
               uri: ${IDENTITY_URL:http://localhost:8081}
               predicates:
                 - Path=/api/identidad/**
+            - id: contribution-service
+              uri: ${CONTRIBUTION_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/aportes/**
+            - id: update-service
+              uri: ${UPDATE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/novedades/**
 
 server:
   port: 8080
@@ -53,3 +61,10 @@ suertudometro:
     - POST /api/identidad/sesiones
     - GET /api/identidad/docs/**
     - GET /api/identidad/docs-json
+    # contribution-service: el historial de aportes de una campaña (?idCampana=).
+    # Solo esa ruta exacta; /mios, /recibidos y /{idAporte} piden sesión.
+    - GET /api/aportes
+    # update-service: el historial de novedades de una campaña y su Swagger.
+    - GET /api/novedades/campana/*
+    - GET /api/novedades/esquema
+    - GET /api/novedades/documentacion

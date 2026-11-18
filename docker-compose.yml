@@ -8,11 +8,32 @@
 # Las bases de datos, los servicios y el puerto AMQP de RabbitMQ no se publican
 # al host: todo entra por el gateway.
 #
-# Por ahora están identity-service, el api-gateway, el frontend, RabbitMQ y
-# Mailpit. Cada servicio nuevo se agrega aquí, con su base, en el PR que activa
-# su ruta en el gateway. Cómo usa RabbitMQ cada servicio: docs/rabbitmq.md.
+# Por ahora están identity-service, contribution-service y update-service (cada
+# uno con su base), el api-gateway, el frontend, RabbitMQ y Mailpit. Faltan
+# campaign-service, search-service y notification-service: cada uno se agrega
+# aquí, con su base, en el PR que activa su ruta en el gateway. Cómo usa
+# RabbitMQ cada servicio: docs/rabbitmq.md.
 
 name: suertudometro
+
+# update-service corre en cuatro contenedores con la misma imagen, como en
+# update-service/compose.yaml: las migraciones (una vez, al arrancar), la API, el
+# consumidor de eventos y el publicador de su outbox.
+x-update-service: &update-service
+  image: suertudometro-update-service
+  build:
+    context: ./update-service
+    target: ejecucion
+  environment:
+    DJANGO_CLAVE_SECRETA: ${UPDATE_DJANGO_CLAVE_SECRETA:?Falta UPDATE_DJANGO_CLAVE_SECRETA en .env (copia .env.example)}
+    # El gateway llama a http://update-service:8084, y Django rechaza cualquier
+    # otro Host.
+    DJANGO_HOSTS_PERMITIDOS: update-service
+    POSTGRES_DB: update
+    POSTGRES_USER: update
+    POSTGRES_PASSWORD: ${UPDATE_DB_CONTRASENA:?Falta UPDATE_DB_CONTRASENA en .env (copia .env.example)}
+    POSTGRES_HOST: update-db
+    RABBITMQ_URL: amqp://${RABBITMQ_USUARIO}:${RABBITMQ_CLAVE}@rabbitmq:5672/%2F
 
 services:
   identity-db:
@@ -50,16 +71,108 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  contribution-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: contribution
+      POSTGRES_USER: contribution
+      POSTGRES_PASSWORD: ${CONTRIBUTION_DB_CONTRASENA:?Falta CONTRIBUTION_DB_CONTRASENA en .env (copia .env.example)}
+    volumes:
+      - contribution-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U contribution -d contribution"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # El healthcheck (GET /salud) viene en su Dockerfile. Corre sin el perfil
+  # `local`: no crea campañas de prueba, las conoce por campana.publicada
+  # (docs/servicios/contribution-service.md §6).
+  contribution-service:
+    build: ./contribution-service
+    environment:
+      CONTRIBUTION_DB_URL: jdbc:postgresql://contribution-db:5432/contribution
+      CONTRIBUTION_DB_USUARIO: contribution
+      CONTRIBUTION_DB_CONTRASENA: ${CONTRIBUTION_DB_CONTRASENA}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USUARIO: ${RABBITMQ_USUARIO}
+      RABBITMQ_CLAVE: ${RABBITMQ_CLAVE}
+    depends_on:
+      contribution-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  update-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: update
+      POSTGRES_USER: update
+      POSTGRES_PASSWORD: ${UPDATE_DB_CONTRASENA:?Falta UPDATE_DB_CONTRASENA en .env (copia .env.example)}
+    volumes:
+      - update-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U update -d update"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Aplica las migraciones de Django y termina.
+  update-migrations:
+    <<: *update-service
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    depends_on:
+      update-db:
+        condition: service_healthy
+
+  update-service:
+    <<: *update-service
+    depends_on:
+      update-migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      # La imagen no trae curl ni wget, y el servicio no tiene /salud: basta con
+      # que gunicorn acepte conexiones en el 8084.
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8084), 2)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  # Consume campana.publicada y campana.cerrada (cola update-service.campanas).
+  update-worker:
+    <<: *update-service
+    command: ["python", "manage.py", "consumir_eventos"]
+    depends_on:
+      update-migrations:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
+  # Publica campana.actualizada desde el outbox (eventos_pendientes).
+  update-publisher:
+    <<: *update-service
+    command: ["python", "manage.py", "publicar_eventos"]
+    depends_on:
+      update-migrations:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
   api-gateway:
     build: ./api-gateway
     environment:
       JWT_SECRETO: ${JWT_SECRETO:?Falta JWT_SECRETO en .env (copia .env.example)}
       IDENTITY_URL: http://identity-service:8081
+      CONTRIBUTION_URL: http://contribution-service:8083
+      UPDATE_URL: http://update-service:8084
       CORS_ORIGENES: http://localhost:4200
     ports:
       - "8080:8080"
     depends_on:
       - identity-service
+      - contribution-service
+      - update-service
 
   frontend:
     build: ./frontend
@@ -99,4 +212,6 @@ services:
 
 volumes:
   identity-data:
+  contribution-data:
+  update-data:
   rabbitmq-data:

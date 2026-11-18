@@ -22,30 +22,41 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.netty.DisposableServer;
 
-/** El gateway completo contra un servicio de prueba (api-gateway.md §10). */
+/** El gateway completo contra un servicio de prueba por cada ruta activa (api-gateway.md §10). */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ApiGatewayTest {
 
   private static final String FRONTEND = "http://localhost:4200";
-  private static final DisposableServer SERVICIO = ServicioDePrueba.iniciar();
+  private static final String ID_CAMPANA = "3f1c2a4e-8b7d-4c21-9f0e-5a6b7c8d9e01";
+  private static final String ID_APORTE = "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d";
+  private static final DisposableServer IDENTIDAD = ServicioDePrueba.iniciar("identity-service");
+  private static final DisposableServer APORTES = ServicioDePrueba.iniciar("contribution-service");
+  private static final DisposableServer NOVEDADES = ServicioDePrueba.iniciar("update-service");
 
   @DynamicPropertySource
   static void configurar(DynamicPropertyRegistry registro) {
     registro.add("JWT_SECRETO", () -> Tokens.SECRETO);
-    registro.add("IDENTITY_URL", () -> "http://127.0.0.1:" + SERVICIO.port());
+    registro.add("IDENTITY_URL", () -> url(IDENTIDAD));
+    registro.add("CONTRIBUTION_URL", () -> url(APORTES));
+    registro.add("UPDATE_URL", () -> url(NOVEDADES));
     // Menos que los 3 s que tarda la ruta lenta del servicio de prueba.
     registro.add("spring.cloud.gateway.server.webflux.httpclient.response-timeout", () -> "1s");
   }
 
+  private static String url(DisposableServer servicio) {
+    return "http://127.0.0.1:" + servicio.port();
+  }
+
   @AfterAll
-  static void detenerServicio() {
-    SERVICIO.disposeNow();
+  static void detenerServicios() {
+    Stream.of(IDENTIDAD, APORTES, NOVEDADES).forEach(DisposableServer::disposeNow);
   }
 
   @LocalServerPort private int puerto;
@@ -59,6 +70,78 @@ class ApiGatewayTest {
             .baseUrl("http://localhost:" + puerto)
             .responseTimeout(Duration.ofSeconds(10))
             .build();
+  }
+
+  static Stream<Arguments> rutasDeCadaServicio() {
+    return Stream.of(
+        Arguments.of("GET", "/api/identidad/perfil", "identity-service"),
+        Arguments.of("POST", "/api/aportes", "contribution-service"),
+        Arguments.of("GET", "/api/aportes/mios", "contribution-service"),
+        Arguments.of("POST", "/api/novedades", "update-service"),
+        Arguments.of("GET", "/api/novedades/campana/" + ID_CAMPANA, "update-service"));
+  }
+
+  @ParameterizedTest(name = "{0} {1} llega a {2} sin reescribir la ruta")
+  @MethodSource("rutasDeCadaServicio")
+  void cadaPrefijoLlegaASuServicio(String metodo, String ruta, String servicio) {
+    cliente
+        .method(HttpMethod.valueOf(metodo))
+        .uri(ruta)
+        .header(AUTHORIZATION, "Bearer " + Tokens.valido())
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectHeader()
+        .valueEquals("eco-servicio", servicio)
+        .expectHeader()
+        .valueEquals("eco-ruta", metodo + " " + ruta);
+  }
+
+  static Stream<Arguments> lecturasPublicasDeLosServicios() {
+    return Stream.of(
+        Arguments.of("/api/aportes?idCampana=" + ID_CAMPANA, "contribution-service"),
+        Arguments.of("/api/novedades/campana/" + ID_CAMPANA, "update-service"),
+        Arguments.of("/api/novedades/esquema", "update-service"),
+        Arguments.of("/api/novedades/documentacion", "update-service"));
+  }
+
+  @ParameterizedTest(name = "GET {0} pasa sin token")
+  @MethodSource("lecturasPublicasDeLosServicios")
+  void lecturaPublicaSinToken(String ruta, String servicio) {
+    cliente
+        .get()
+        .uri(ruta)
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectHeader()
+        .valueEquals("eco-servicio", servicio)
+        .expectHeader()
+        .valueEquals("eco-ruta", "GET " + ruta);
+  }
+
+  static Stream<Arguments> rutasProtegidasDeLosServicios() {
+    return Stream.of(
+        Arguments.of("POST", "/api/aportes"),
+        Arguments.of("GET", "/api/aportes/mios"),
+        Arguments.of("GET", "/api/aportes/recibidos?idCampana=" + ID_CAMPANA),
+        Arguments.of("GET", "/api/aportes/" + ID_APORTE),
+        Arguments.of("POST", "/api/novedades"),
+        // Solo la lectura del historial es pública, no otro método sobre la misma ruta.
+        Arguments.of("POST", "/api/novedades/campana/" + ID_CAMPANA));
+  }
+
+  @ParameterizedTest(name = "sin token, {0} {1} da 401")
+  @MethodSource("rutasProtegidasDeLosServicios")
+  void rutaProtegidaDeUnServicioSinToken(String metodo, String ruta) {
+    cliente
+        .method(HttpMethod.valueOf(metodo))
+        .uri(ruta)
+        .exchange()
+        .expectStatus()
+        .isUnauthorized()
+        .expectHeader()
+        .doesNotExist("eco-ruta");
   }
 
   @Test
