@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-17 (Arturo: backend completo de `campaign-service` en las 5 capas DDD con Flyway, Outbox/Inbox RabbitMQ, `Dockerfile`, `compose.yaml` y pruebas JUnit 5; Efrain: RabbitMQ y Mailpit en `docker-compose.yml`, la topología de RabbitMQ en `docs/rabbitmq.md`, identity-service publica `usuario.registrado`, y contribution-service y update-service entran al compose y al gateway).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-19 (Arturo: las 4 pantallas del dominio de campañas en `frontend/src/app/campanas/` con sus pruebas en Vitest, además del backend completo de `campaign-service`; Efrain: RabbitMQ, Mailpit, `docs/rabbitmq.md`, `usuario.registrado` y rutas de contribution y update en el compose y el gateway).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -89,7 +89,7 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 | `update-service` | Gabo | [Borrador](servicios/update-service.md) | Persistencia y API; ya está en el gateway y en el compose de la raíz, y falta integrarlo con campaign-service |
 | `search-service` | Gabo | Sin documento | Sin empezar |
 | `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Integrado (probado con Docker Compose) |
-| `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Aportes (Raul): hechas. Las demás, sin empezar |
+| `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Campañas (Arturo) y Aportes (Raul): hechas. Las demás, sin empezar |
 
 Valores posibles:
 - **Documento:** Sin documento · Borrador · Vigente.
@@ -157,6 +157,7 @@ Valores posibles:
   - Arturo (2026-11-17): `campaign-service` tiene las 5 capas DDD completas (`sharedkernel`, `domain` con `Campana` y `CampanaBuilder`, `application` CQRS con PipelinR, `infrastructure` con Flyway, JPA, almacenamiento de imágenes en volumen, Transactional Outbox y consumidor idempotente de `aporte.registrado` alineados con `docs/rabbitmq.md`, y `api` con errores RFC 9457 y lectura de headers `X-Usuario-*`), además de su `Dockerfile`, `compose.yaml` autónomo (`campaign-db` + `rabbitmq` + `campaign-service`) y pruebas unitarias y de arquitectura de capas (rama `feat/campaign-dominio-y-aplicacion`). Falta activar su ruta en el gateway y sumarlo al compose de la raíz (con Efrain). Diseño: [campaign-service](servicios/campaign-service.md).
 - **Fase 4 · Frontend:** las pantallas de cada dominio.
   - Raul (2026-11-15): las cuatro pantallas de aportes (aportar, historial de una campaña, "Mis aportes" y "Aportes recibidos") están en `frontend/src/app/aportes/` (rama `feat/contribution-aportes`), con sus pruebas. "Aportar" y el historial son secciones para el detalle de la campaña; mientras ese detalle no exista, se usan desde una página provisoria. Quedan dos pendientes para Efrain en [`frontend.md`](frontend.md) §10: el presupuesto del bundle inicial (F4) y el enlace a "Mis aportes" en el menú (F5).
+  - Arturo (2026-11-19): las cuatro pantallas de campañas (detalle público `/campanas/:id` montando `<app-aportar>` y `<app-historial-aportes>`, "Mis campañas" `/panel/campanas` enlazando a los aportes recibidos, formulario de creación/edición e imágenes `/panel/campanas/nueva` y `/panel/campanas/:id/editar`, y bandeja de moderación administrativa `/administracion/campanas`) están en `frontend/src/app/campanas/` (rama `feat/campaign-pantallas`), con sus pruebas en Vitest. Rutas confirmadas en [`frontend.md`](frontend.md) §2.
 - **Fase 5 · Entrega:**
   - flujo completo de punta a punta;
   - `docker compose up --build` desde cero;

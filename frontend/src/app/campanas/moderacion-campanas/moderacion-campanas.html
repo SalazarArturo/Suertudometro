@@ -1,0 +1,154 @@
+<section class="pagina">
+  <header class="encabezado">
+    <div>
+      <h1>Moderación de campañas</h1>
+      <p class="bajada">
+        Revisa las solicitudes de publicación, aprueba o devuelve con observaciones, y modera
+        campañas publicadas.
+      </p>
+    </div>
+
+    <div class="filtros-estado" role="group" aria-label="Filtrar campañas por estado">
+      <button
+        [matButton]="estadoFiltro() === 'EN_REVISION' ? 'filled' : 'outlined'"
+        type="button"
+        (click)="cambiarFiltro('EN_REVISION')"
+      >
+        En revisión
+      </button>
+      <button
+        [matButton]="estadoFiltro() === 'PUBLICADA' ? 'filled' : 'outlined'"
+        type="button"
+        (click)="cambiarFiltro('PUBLICADA')"
+      >
+        Publicadas
+      </button>
+    </div>
+  </header>
+
+  @if (errorAccion(); as mensajeAccion) {
+    <div class="bloque-error" role="alert">{{ mensajeAccion }}</div>
+  }
+
+  @if (campanas.isLoading()) {
+    <p role="status">Cargando bandeja de moderación…</p>
+  } @else if (errorLectura(); as mensajeError) {
+    <div class="bloque-error" role="alert">
+      <p>{{ mensajeError }}</p>
+      <button matButton="outlined" type="button" (click)="campanas.reload()">Reintentar</button>
+    </div>
+  } @else if (campanas.value(); as paginaActual) {
+    @if (paginaActual.elementos.length === 0) {
+      <p class="vacio">No hay campañas en estado {{ etiquetasEstado[estadoFiltro()] }}.</p>
+    } @else {
+      <ul class="lista-moderacion">
+        @for (item of paginaActual.elementos; track item.id) {
+          <li class="tarjeta-moderacion">
+            <div class="info-principal">
+              <div class="etiquetas">
+                <span class="insignia">{{ etiquetasCategoria[item.categoria] }}</span>
+                <span class="insignia">{{ etiquetasEstado[item.estado] }}</span>
+              </div>
+              <h2>
+                <a [routerLink]="rutaDetalleCampana(item.id)">{{ item.titulo }}</a>
+              </h2>
+              <p class="metadatos">
+                Meta: <strong>{{ item.metaFinanciera | currency: item.moneda }}</strong> · Fecha
+                límite: {{ item.fechaLimite | date: 'mediumDate' }}
+              </p>
+            </div>
+
+            <div class="acciones-moderacion">
+              <a matButton="outlined" [routerLink]="rutaDetalleCampana(item.id)">
+                Revisar detalle
+              </a>
+
+              @if (item.estado === 'EN_REVISION') {
+                <button
+                  matButton="filled"
+                  type="button"
+                  [disabled]="procesando()"
+                  (click)="aprobar(item.id)"
+                >
+                  Aprobar y publicar
+                </button>
+                <button
+                  matButton="outlined"
+                  type="button"
+                  [disabled]="procesando()"
+                  (click)="abrirRechazo(item.id)"
+                >
+                  Observar / Rechazar
+                </button>
+              }
+
+              <button
+                matButton="outlined"
+                type="button"
+                [disabled]="procesando()"
+                (click)="abrirCancelacion(item.id)"
+              >
+                Cancelar campaña
+              </button>
+            </div>
+
+            @if (idRechazando() === item.id) {
+              <div class="panel-accion">
+                <mat-form-field appearance="outline" class="campo-ancho">
+                  <mat-label>Observaciones para el organizador</mat-label>
+                  <textarea
+                    matInput
+                    rows="3"
+                    [value]="textoObservaciones()"
+                    (input)="textoObservaciones.set($any($event.target).value)"
+                  ></textarea>
+                  <mat-hint>Mínimo {{ largoMinimoObservacion }} caracteres</mat-hint>
+                </mat-form-field>
+                <div class="botones-panel">
+                  <button
+                    matButton="filled"
+                    type="button"
+                    [disabled]="procesando()"
+                    (click)="confirmarRechazo(item.id)"
+                  >
+                    Confirmar rechazo
+                  </button>
+                  <button matButton="outlined" type="button" (click)="cerrarFormularios()">
+                    Descartar
+                  </button>
+                </div>
+              </div>
+            }
+
+            @if (idCancelando() === item.id) {
+              <div class="panel-accion">
+                <mat-form-field appearance="outline" class="campo-ancho">
+                  <mat-label>Motivo de cancelación administrativa</mat-label>
+                  <input
+                    matInput
+                    type="text"
+                    [value]="motivoCancelacion()"
+                    (input)="motivoCancelacion.set($any($event.target).value)"
+                  />
+                </mat-form-field>
+                <div class="botones-panel">
+                  <button
+                    matButton="filled"
+                    type="button"
+                    [disabled]="procesando()"
+                    (click)="confirmarCancelacion(item.id)"
+                  >
+                    Confirmar cancelación
+                  </button>
+                  <button matButton="outlined" type="button" (click)="cerrarFormularios()">
+                    Descartar
+                  </button>
+                </div>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>
