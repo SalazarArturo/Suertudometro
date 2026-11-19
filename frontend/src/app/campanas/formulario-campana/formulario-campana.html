@@ -1,0 +1,162 @@
+<section class="pagina">
+  <header class="encabezado">
+    <h1>{{ esEdicion() ? 'Editar borrador de campaña' : 'Crear nueva campaña' }}</h1>
+    <a matButton="outlined" [routerLink]="rutaMisCampanas()">Volver a mis campañas</a>
+  </header>
+
+  @if (campanaActual.value(); as actual) {
+    @if (actual.observacionesRechazo) {
+      <div class="aviso-observaciones" role="alert">
+        <strong>Observaciones de la administración:</strong>
+        <p>{{ actual.observacionesRechazo }}</p>
+      </div>
+    }
+  }
+
+  <form class="tarjeta-formulario" [formRoot]="formulario">
+    <mat-form-field appearance="outline">
+      <mat-label>Título de la campaña</mat-label>
+      <input matInput type="text" [formField]="formulario.titulo" />
+      <mat-hint align="end">{{ largoTitulo() }} / 120</mat-hint>
+      @for (error of formulario.titulo().errors(); track error.kind) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Categoría</mat-label>
+      <select matNativeControl [formField]="formulario.categoria">
+        @for (cat of categorias; track cat.codigo) {
+          <option [value]="cat.codigo">{{ cat.etiqueta }}</option>
+        }
+      </select>
+    </mat-form-field>
+
+    <div class="fila-doble">
+      <mat-form-field appearance="outline">
+        <mat-label>Meta financiera (BOB)</mat-label>
+        <input
+          matInput
+          type="text"
+          inputmode="decimal"
+          placeholder="1500.00"
+          [formField]="formulario.metaFinanciera"
+        />
+        <mat-hint>Mínimo 100.00 BOB</mat-hint>
+        @for (error of formulario.metaFinanciera().errors(); track error.kind) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha límite</mat-label>
+        <input matInput type="date" [formField]="formulario.fechaLimite" />
+        @for (error of formulario.fechaLimite().errors(); track error.kind) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Historia de la campaña</mat-label>
+      <textarea matInput rows="6" [formField]="formulario.historia"></textarea>
+      <mat-hint align="end">{{ largoHistoria() }} / 5000 (mínimo 50)</mat-hint>
+      @for (error of formulario.historia().errors(); track error.kind) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    @for (error of formulario().errors(); track error.kind) {
+      <p class="error-general" role="alert">{{ error.message }}</p>
+    }
+
+    <div class="acciones-formulario">
+      <button matButton="filled" type="submit" [disabled]="formulario().submitting()">
+        {{ esEdicion() ? 'Guardar cambios del borrador' : 'Crear borrador' }}
+      </button>
+    </div>
+  </form>
+
+  @if (esEdicion()) {
+    @if (errorAccion(); as mensajeAccion) {
+      <div class="bloque-error" role="alert">{{ mensajeAccion }}</div>
+    }
+
+    @if (campanaActual.value(); as actual) {
+      <section class="gestor-imagenes" aria-label="Imágenes de la campaña">
+        <h2>Imágenes ({{ actual.imagenes.length }} / {{ maximoImagenes }})</h2>
+        <p class="bajada">
+          Formatos permitidos: JPG, PNG o WEBP (máximo 5 MB). Necesitas al menos una imagen de
+          portada para solicitar la revisión.
+        </p>
+
+        @if (actual.imagenes.length > 0) {
+          <ul class="lista-imagenes">
+            @for (img of actual.imagenes; track img.id) {
+              <li class="item-imagen">
+                <img [src]="img.urlPublica" [alt]="img.nombreOriginal" />
+                <div class="info-imagen">
+                  <strong>{{ img.nombreOriginal }}</strong>
+                  @if (img.esPortada) {
+                    <span class="insignia-portada">Portada</span>
+                  }
+                </div>
+                <button
+                  matButton="outlined"
+                  type="button"
+                  [disabled]="procesandoAccion()"
+                  (click)="quitarImagen(img.id)"
+                >
+                  Quitar
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (actual.imagenes.length < maximoImagenes) {
+          <div class="subida-imagen">
+            <label class="selector-archivo">
+              <span>Seleccionar imagen:</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="seleccionarArchivo($event)"
+              />
+            </label>
+            <mat-checkbox
+              [checked]="subirComoPortada()"
+              (change)="subirComoPortada.set($event.checked)"
+            >
+              Marcar como imagen de portada
+            </mat-checkbox>
+            <button
+              matButton="outlined"
+              type="button"
+              [disabled]="!archivoSeleccionado() || procesandoAccion()"
+              (click)="subirImagenSeleccionada()"
+            >
+              Subir imagen
+            </button>
+          </div>
+        }
+      </section>
+
+      <section class="bloque-revision">
+        <h2>Enviar a revisión</h2>
+        <p>
+          Cuando tu borrador esté completo y tenga su imagen de portada, envíalo para que la
+          administración lo revise y publique.
+        </p>
+        <button
+          matButton="filled"
+          type="button"
+          [disabled]="procesandoAccion()"
+          (click)="enviarARevision()"
+        >
+          Solicitar revisión
+        </button>
+      </section>
+    }
+  }
+</section>

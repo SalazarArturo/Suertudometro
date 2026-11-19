@@ -1,0 +1,160 @@
+.encabezado {
+  margin-bottom: 20px;
+
+  h1 {
+    margin: 8px 0 0;
+  }
+}
+
+.etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.insignia {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--color-fondo-suave);
+  color: var(--color-marca);
+  border: 1px solid var(--color-borde);
+}
+
+.aviso-observacion,
+.aviso-cierre,
+.bloque-error {
+  padding: 16px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-fondo-suave);
+}
+
+.distribucion-principal {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 32px;
+
+  @media (min-width: 860px) {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.portada {
+  margin: 0 0 16px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-borde);
+
+  img {
+    display: block;
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+  }
+}
+
+.galeria {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  .miniatura {
+    width: 88px;
+    height: 66px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--color-borde);
+  }
+}
+
+.historia {
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--color-borde);
+  background: #fff;
+
+  .texto-historia {
+    white-space: pre-line;
+    line-height: 1.6;
+  }
+}
+
+.tarjeta-progreso {
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-fondo-suave);
+
+  .recaudado {
+    margin: 0 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    strong {
+      font-size: 1.5rem;
+      color: var(--color-marca);
+    }
+  }
+}
+
+.metadatos-progreso {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.acciones-dueno {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bloque-historial-estados {
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--color-borde);
+
+  .lista-historial {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    li {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-borde);
+    }
+  }
+}
+
+.seccion-aportes {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-borde);
+}
+
+.grilla-aportes {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+
+  @media (min-width: 840px) {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  }
+}

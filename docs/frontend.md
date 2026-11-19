@@ -1,6 +1,6 @@
 # frontend
 
-> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-15 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-19 · **Estado:** Borrador (en revisión del equipo)
 > Angular 22 · TypeScript 6 · Angular Material 22 · Vitest · contenedor `frontend` (Nginx, host `4200` → `80`) · nombre visible: **Go Fund Me** (el proyecto y el repositorio siguen llamándose Suertudómetro).
 
 ## 1. Qué es
@@ -23,18 +23,19 @@ Cada dominio carga sus rutas de forma diferida (*lazy loading*) desde su carpeta
 | Base | `/perfil` | Mi perfil: nombre, correo, rol y fecha de registro | Efrain | Con sesión | `GET /api/identidad/perfil` |
 | Base | `**` | Página no encontrada | Efrain | Público | — |
 | Portal público | `/` (propuesta) | Explorar campañas por categoría, estado o popularidad | Gabo | Público | `/api/busqueda` (por definir) |
-| Portal público | `/campanas/:id` (propuesta) | Detalle: portada, historia, galería, meta, progreso, aportes y novedades | Arturo, con secciones de Raul (aportes y mensajes) y Gabo (novedades) | Público | `/api/campanas`, `/api/aportes`, `/api/novedades` (por definir) |
+| Portal público | `/campanas/:id` | Detalle: portada, historia, galería, meta, progreso, historial de estados, aportes y novedades | Arturo, con secciones de Raul (`<app-aportar>` y `<app-historial-aportes>`) y Gabo (novedades) | Público | `GET /api/campanas/{id}`, `GET /api/campanas/{id}/historial-estados`, `/api/aportes`, `/api/novedades` |
 | Portal público | En el detalle: `<app-aportar>` | Aportar, con nombre o anónimo y con mensaje de apoyo | Raul | Con sesión; sin ella, la sección ofrece iniciar sesión | `POST /api/aportes` |
 | Portal público | En el detalle: `<app-historial-aportes>` | Historial de aportes de la campaña: nombre o "Anónimo", monto, mensaje y fecha | Raul | Público | `GET /api/aportes?idCampana=` |
 | Portal público | `/aportes/campana/:idCampana` (provisoria) | Las dos secciones anteriores juntas, mientras no exista el detalle de la campaña | Raul | Público | Los dos anteriores |
 | Portal público | `/aportes/mios` | Mis aportes | Raul | Con sesión | `GET /api/aportes/mios` |
 | Portal público | En el detalle | Compartir la campaña | Por definir | Público | Pendiente #2 |
 | Organizador | `/panel` | Inicio del panel (hoy, una página provisoria) | Efrain (base) | Con sesión | — |
-| Organizador | `/panel/...` (propuesta) | Mis campañas, crear y editar, solicitar revisión y progreso | Arturo | Con sesión | Por definir |
+| Organizador | `/panel/campanas` | Mis campañas: listado paginado, progreso, eliminación de borradores y cancelación | Arturo | Con sesión | `GET /api/campanas/mias`, `DELETE /api/campanas/{id}`, `POST /api/campanas/{id}/cancelacion` |
+| Organizador | `/panel/campanas/nueva` y `/panel/campanas/:id/editar` | Crear y editar borrador de campaña, gestor de imágenes y solicitar revisión | Arturo | Con sesión | `POST /api/campanas`, `PUT /api/campanas/{id}`, `POST /api/campanas/{id}/imagenes`, `DELETE /api/campanas/{id}/imagenes/{idImagen}`, `POST /api/campanas/{id}/solicitud-revision` |
 | Organizador | `/panel/campanas/:idCampana/aportes` | Aportes recibidos de una campaña | Raul | Con sesión; el servicio exige ser el organizador de la campaña o un administrador | `GET /api/aportes/recibidos?idCampana=` |
 | Organizador | `/panel/...` (propuesta) | Publicar novedades | Gabo | Con sesión | Por definir |
 | Administración | `/administracion` | Inicio del panel (hoy, una página provisoria) | Efrain (base) | Rol `ADMINISTRADOR` | — |
-| Administración | `/administracion/...` (propuesta) | Revisión de campañas: aprobar, rechazar y cancelar | Arturo | Rol `ADMINISTRADOR` | Por definir |
+| Administración | `/administracion/campanas` | Revisión de campañas: aprobar, rechazar con observaciones y cancelar | Arturo | Rol `ADMINISTRADOR` | `GET /api/campanas?estado=`, `POST /api/campanas/{id}/aprobacion`, `POST /api/campanas/{id}/rechazo`, `POST /api/campanas/{id}/cancelacion` |
 | Todas | Por definir | Avisos de notification-service, si tienen pantalla | Efrain, al diseñar notification-service | Con sesión | `/api/notificaciones` (por definir) |
 
 ## 3. Estructura de carpetas
@@ -172,6 +173,7 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-19 | Arturo | §2: filas de las 4 pantallas de campañas (`/campanas/:id`, `/panel/campanas`, `/panel/campanas/nueva`, `/panel/campanas/:id/editar` y `/administracion/campanas`) confirmadas e implementadas en `frontend/src/app/campanas/` (F1, para el dominio de campañas). |
 | 2026-11-15 | Raul | §2: filas de las pantallas de aportes, con sus rutas confirmadas (F1, para su dominio). §10: pendientes F4 (presupuesto del bundle) y F5 (enlace a "Mis aportes" en el menú). |
 | 2026-11-12 | Efrain | §8: sin workflow propio; al frontend lo valida el CI general, y el formato y el build se corren a mano (pedido de Arturo). |
 | 2026-11-08 | Efrain | Nombre visible «Go Fund Me» y la paleta y las letras del mockup del equipo (§6). |

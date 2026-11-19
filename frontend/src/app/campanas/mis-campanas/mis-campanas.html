@@ -1,0 +1,141 @@
+<section class="pagina">
+  <header class="encabezado-panel">
+    <div>
+      <h1>Mis campañas</h1>
+      <p class="bajada">
+        Gestiona tus borradores, envía campañas a revisión y consulta el progreso y los aportes
+        recibidos.
+      </p>
+    </div>
+    <a matButton="filled" [routerLink]="rutaNuevaCampana()">Crear campaña</a>
+  </header>
+
+  @if (errorAccion(); as mensajeAccion) {
+    <div class="bloque-error" role="alert">{{ mensajeAccion }}</div>
+  }
+
+  @if (campanas.isLoading()) {
+    <p role="status">Cargando tus campañas…</p>
+  } @else if (errorLectura(); as mensajeError) {
+    <div class="bloque-error" role="alert">
+      <p>{{ mensajeError }}</p>
+      <button matButton="outlined" type="button" (click)="campanas.reload()">Reintentar</button>
+    </div>
+  } @else if (campanas.value(); as paginaActual) {
+    @if (paginaActual.elementos.length === 0) {
+      <p class="vacio">Todavía no creaste ninguna campaña.</p>
+    } @else {
+      <ul class="lista-campanas">
+        @for (item of paginaActual.elementos; track item.id) {
+          <li class="tarjeta-campana">
+            <div class="cabecera-tarjeta">
+              <div class="etiquetas">
+                <span class="insignia">{{ etiquetasCategoria[item.categoria] }}</span>
+                <span class="insignia estado">{{ etiquetasEstado[item.estado] }}</span>
+              </div>
+              <h2>
+                <a [routerLink]="rutaDetalleCampana(item.id)">{{ item.titulo }}</a>
+              </h2>
+            </div>
+
+            <div class="progreso-tarjeta">
+              <p>
+                <strong>{{ item.montoRecaudado | currency: item.moneda }}</strong>
+                de {{ item.metaFinanciera | currency: item.moneda }} ({{
+                  calcularPorcentajeAvance(item.montoRecaudado, item.metaFinanciera)
+                }}
+                %)
+              </p>
+              <mat-progress-bar
+                mode="determinate"
+                [value]="calcularPorcentajeAvance(item.montoRecaudado, item.metaFinanciera)"
+              />
+              <p class="fecha-limite">Fecha límite: {{ item.fechaLimite | date: 'mediumDate' }}</p>
+            </div>
+
+            <div class="acciones-tarjeta">
+              <a matButton="outlined" [routerLink]="rutaDetalleCampana(item.id)">Ver campaña</a>
+              <a matButton="outlined" [routerLink]="rutaDeAportesRecibidos(item.id)">
+                Aportes recibidos
+              </a>
+
+              @if (item.estado === 'BORRADOR') {
+                <a matButton="outlined" [routerLink]="rutaEditarCampana(item.id)">
+                  Editar borrador
+                </a>
+                <button
+                  matButton="outlined"
+                  type="button"
+                  [disabled]="procesando()"
+                  (click)="eliminarBorrador(item.id)"
+                >
+                  Eliminar borrador
+                </button>
+              }
+
+              @if (item.estado === 'PUBLICADA') {
+                <button
+                  matButton="outlined"
+                  type="button"
+                  [disabled]="procesando()"
+                  (click)="abrirCancelacion(item.id)"
+                >
+                  Cancelar campaña
+                </button>
+              }
+            </div>
+
+            @if (idCampanaCancelando() === item.id) {
+              <div class="panel-cancelacion">
+                <mat-form-field appearance="outline" class="campo-motivo">
+                  <mat-label>Motivo de cancelación</mat-label>
+                  <input
+                    matInput
+                    type="text"
+                    [value]="motivoCancelacion()"
+                    (input)="motivoCancelacion.set($any($event.target).value)"
+                  />
+                </mat-form-field>
+                <div class="botones-cancelacion">
+                  <button
+                    matButton="filled"
+                    type="button"
+                    [disabled]="procesando()"
+                    (click)="confirmarCancelacion(item.id)"
+                  >
+                    Confirmar cancelación
+                  </button>
+                  <button matButton="outlined" type="button" (click)="cerrarCancelacion()">
+                    Descartar
+                  </button>
+                </div>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+
+      @if (paginaActual.totalPaginas > 1) {
+        <nav class="paginacion" aria-label="Paginación de mis campañas">
+          <button
+            matButton="outlined"
+            type="button"
+            [disabled]="pagina() === 0"
+            (click)="paginaAnterior()"
+          >
+            Anterior
+          </button>
+          <span>Página {{ pagina() + 1 }} de {{ paginaActual.totalPaginas }}</span>
+          <button
+            matButton="outlined"
+            type="button"
+            [disabled]="pagina() + 1 >= paginaActual.totalPaginas"
+            (click)="paginaSiguiente(paginaActual.totalPaginas)"
+          >
+            Siguiente
+          </button>
+        </nav>
+      }
+    }
+  }
+</section>
