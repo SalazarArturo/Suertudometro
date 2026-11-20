@@ -39,6 +39,7 @@ class ApiGatewayTest {
   private static final DisposableServer IDENTIDAD = ServicioDePrueba.iniciar("identity-service");
   private static final DisposableServer APORTES = ServicioDePrueba.iniciar("contribution-service");
   private static final DisposableServer NOVEDADES = ServicioDePrueba.iniciar("update-service");
+  private static final DisposableServer BUSQUEDA = ServicioDePrueba.iniciar("search-service");
 
   @DynamicPropertySource
   static void configurar(DynamicPropertyRegistry registro) {
@@ -46,6 +47,7 @@ class ApiGatewayTest {
     registro.add("IDENTITY_URL", () -> url(IDENTIDAD));
     registro.add("CONTRIBUTION_URL", () -> url(APORTES));
     registro.add("UPDATE_URL", () -> url(NOVEDADES));
+    registro.add("SEARCH_URL", () -> url(BUSQUEDA));
     // Menos que los 3 s que tarda la ruta lenta del servicio de prueba.
     registro.add("spring.cloud.gateway.server.webflux.httpclient.response-timeout", () -> "1s");
   }
@@ -56,7 +58,7 @@ class ApiGatewayTest {
 
   @AfterAll
   static void detenerServicios() {
-    Stream.of(IDENTIDAD, APORTES, NOVEDADES).forEach(DisposableServer::disposeNow);
+    Stream.of(IDENTIDAD, APORTES, NOVEDADES, BUSQUEDA).forEach(DisposableServer::disposeNow);
   }
 
   @LocalServerPort private int puerto;
@@ -78,7 +80,8 @@ class ApiGatewayTest {
         Arguments.of("POST", "/api/aportes", "contribution-service"),
         Arguments.of("GET", "/api/aportes/mios", "contribution-service"),
         Arguments.of("POST", "/api/novedades", "update-service"),
-        Arguments.of("GET", "/api/novedades/campana/" + ID_CAMPANA, "update-service"));
+        Arguments.of("GET", "/api/novedades/campana/" + ID_CAMPANA, "update-service"),
+        Arguments.of("GET", "/api/busqueda", "search-service"));
   }
 
   @ParameterizedTest(name = "{0} {1} llega a {2} sin reescribir la ruta")
@@ -102,7 +105,10 @@ class ApiGatewayTest {
         Arguments.of("/api/aportes?idCampana=" + ID_CAMPANA, "contribution-service"),
         Arguments.of("/api/novedades/campana/" + ID_CAMPANA, "update-service"),
         Arguments.of("/api/novedades/esquema", "update-service"),
-        Arguments.of("/api/novedades/documentacion", "update-service"));
+        Arguments.of("/api/novedades/documentacion", "update-service"),
+        Arguments.of("/api/busqueda", "search-service"),
+        Arguments.of(
+            "/api/busqueda?texto=libros&estado=TODOS&orden=popularidad", "search-service"));
   }
 
   @ParameterizedTest(name = "GET {0} pasa sin token")
@@ -126,6 +132,8 @@ class ApiGatewayTest {
         Arguments.of("GET", "/api/aportes/mios"),
         Arguments.of("GET", "/api/aportes/recibidos?idCampana=" + ID_CAMPANA),
         Arguments.of("GET", "/api/aportes/" + ID_APORTE),
+        Arguments.of("POST", "/api/busqueda"),
+        Arguments.of("GET", "/api/busqueda/esquema"),
         Arguments.of("POST", "/api/novedades"),
         // Solo la lectura del historial es pública, no otro método sobre la misma ruta.
         Arguments.of("POST", "/api/novedades/campana/" + ID_CAMPANA));

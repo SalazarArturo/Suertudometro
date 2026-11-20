@@ -32,7 +32,7 @@ No hay comandos REST. El consumidor traduce cada evento válido a un comando int
 
 ## 5. Consultas y endpoints REST
 
-`GET /api/busqueda` es de lectura pública, sin barra final. La ruta por el gateway está pendiente de integración. La consulta `BuscarCampanasConsulta` admite estos filtros combinables.
+`GET /api/busqueda` es de lectura pública, sin barra final, por el gateway en el puerto `8080`. La consulta `BuscarCampanasConsulta` admite estos filtros combinables.
 
 | Parámetro | Valores y comportamiento |
 |---|---|
@@ -87,7 +87,7 @@ Seguir la estructura de Novedades dentro de `search-service/`: `configuracion/` 
 
 - **Arturo (Campañas).** Confirmó el criterio de visibilidad. En la integración conjunta, verificar con un evento real que `rutaPortada` abra la imagen a través del gateway. El destino de cada tarjeta es el detalle público existente en `/campanas/:id`.
 - **Raul (Aportes).** Confirmó que `idAporte` identifica la operación incluso en aportes anónimos o reentregados. Arturo y Raul revisan la aclaración de visibilidad en el contrato compartido.
-- **Efrain (gateway y Compose):** activar `GET /api/busqueda` como público y enrutar el prefijo sin reescritura a `http://search-service:8085`. Coordinar API, consumidor, migraciones y `search-db` en el Compose de la raíz, sin publicar sus puertos al host.
+- **Efrain (gateway y Compose).** El Compose general levanta la API, el consumidor y las migraciones sobre `search-db`. El gateway reenvía la consulta y sus parámetros a `http://search-service:8085`. [Prueba de integración](../../search-service/README.md#probar-el-catálogo-por-el-gateway).
 - **Puesta en marcha:** en la primera prueba conjunta, declarar y enlazar la cola antes de publicar campañas y registrar aportes. Si ya hay datos previos, coordinar con Arturo y Raul la reproducción de los eventos v1 originales con sus IDs; una cola nueva no recibe publicaciones anteriores. La reproducción histórica no forma parte del primer PR de implementación.
 
 ## 11. Pantallas del frontend
@@ -98,7 +98,7 @@ Gabo implementará el catálogo en `/` sobre la [base Angular existente](../fron
 
 - Revisar en el PR la aclaración de visibilidad y completar la aprobación de contratos v1 con los demás servicios (#4).
 - Queda por decidir `CompartirCampana` (#2).
-- Integrar el backend al gateway y al Compose general con Efrain, probar los productores reales del sistema y construir el catálogo en Angular.
+- Probar con Arturo y Raul el recorrido desde los productores reales, incluida la portada de Campañas en el gateway.
 
 ## 13. Pruebas y puesta en marcha
 

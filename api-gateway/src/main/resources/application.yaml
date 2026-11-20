@@ -26,6 +26,10 @@ spring:
               uri: ${UPDATE_URL:http://localhost:8084}
               predicates:
                 - Path=/api/novedades/**
+            - id: search-service
+              uri: ${SEARCH_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/busqueda/**
 
 server:
   port: 8080
@@ -68,3 +72,4 @@ suertudometro:
     - GET /api/novedades/campana/*
     - GET /api/novedades/esquema
     - GET /api/novedades/documentacion
+    - GET /api/busqueda

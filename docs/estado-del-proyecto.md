@@ -71,7 +71,7 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 - crear `notification-service`;
-- sumar a `docker-compose.yml` campaign-service, search-service y notification-service (los demás ya están);
+- sumar a `docker-compose.yml` campaign-service y notification-service (los demás ya están);
 - aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos; Arturo ya aprobó los 4 de `campaign-service` y Raul el de `contribution-service`);
 - el documento de diseño de `notification-service` (los demás servicios y el gateway ya tienen borrador).
 
@@ -79,15 +79,15 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 
 | Servicio / pieza | Responsable | Documento | Código |
 |---|---|---|---|
-| `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Con identity, contribution, update, el gateway, el frontend, RabbitMQ y Mailpit; faltan campaign, search y notification |
+| `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Con identity, contribution, update, search, el gateway, el frontend, RabbitMQ y Mailpit. Faltan campaign y notification. |
 | RabbitMQ (topología) | Efrain | [Borrador](rabbitmq.md) | En el compose; identity-service ya publica `usuario.registrado` |
-| `api-gateway` | Efrain | [Borrador](servicios/api-gateway.md) | Integrado (probado con Docker Compose): rutas de identity, contribution y update; falta el límite de peticiones |
+| `api-gateway` | Efrain | [Borrador](servicios/api-gateway.md) | Integrado con Docker Compose. Rutas de identity, contribution, update y search. Pendiente el límite de peticiones. |
 | `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Integrado por eventos: publica `usuario.registrado`, que esperará en el outbox hasta que exista notification-service |
 | `notification-service` | Efrain | Sin documento | Sin empezar |
 | `campaign-service` | Arturo | [Borrador](servicios/campaign-service.md) | Persistencia y API. Tiene las 5 capas DDD, migración Flyway, almacenamiento de imágenes, outbox y consumidor idempotente, `Dockerfile` y `compose.yaml` propio; falta integrarlo con el gateway y el compose de la raíz |
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Persistencia y API. El outbox y los consumidores de eventos están implementados; ya está en el gateway y en el compose de la raíz, y falta integrarlo con campaign-service |
 | `update-service` | Gabo | [Borrador](servicios/update-service.md) | Persistencia y API; ya está en el gateway y en el compose de la raíz, y falta integrarlo con campaign-service |
-| `search-service` | Gabo | [Borrador](servicios/search-service.md) | Persistencia y API. Catálogo y consumidor probados con su propio Docker Compose. Falta conectarlo al Compose general y al gateway. |
+| `search-service` | Gabo | [Diseño](servicios/search-service.md) | Integrado en el Compose general. Consulta pública probada por el gateway con eventos v1 de prueba. Queda comprobar los productores reales. |
 | `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Integrado (probado con Docker Compose) |
 | `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Campañas (Arturo) y Aportes (Raul): hechas. Las demás, sin empezar |
 
@@ -155,7 +155,7 @@ Valores posibles:
   - Raul (2026-11-15): `contribution-service` tiene dominio, aplicación, persistencia, API y mensajería, con outbox y consumidores idempotentes (rama `feat/contribution-aportes`). Las pruebas pasan, incluidas las de integración con Testcontainers (PostgreSQL y RabbitMQ reales). La imagen de Docker y su `compose.yaml` propio están probados con eventos de campaña simulados. Falta activar su ruta en el gateway y sumarlo al compose de la raíz (con Efrain), y probarlo con los eventos reales de campaign-service. Diseño y pendientes: [contribution-service](servicios/contribution-service.md).
   - Efrain (2026-11-17): contribution-service y update-service entran al compose de la raíz, y el gateway activa `/api/aportes/**` y `/api/novedades/**` con las rutas públicas que confirmaron Raul y Gabo (rama `feat/gateway-rutas-aportes-novedades`). Se probó de punta a punta por el gateway, con un `campana.publicada` simulado desde la consola de RabbitMQ: aportar, el historial público, los aportes recibidos de la organizadora, publicar una novedad y su historial, y los eventos `aporte.registrado` y `campana.actualizada` en el bus, sin nada en las DLQ. Falta probarlos con campaign-service real.
   - Arturo (2026-11-17): `campaign-service` tiene las 5 capas DDD completas (`sharedkernel`, `domain` con `Campana` y `CampanaBuilder`, `application` CQRS con PipelinR, `infrastructure` con Flyway, JPA, almacenamiento de imágenes en volumen, Transactional Outbox y consumidor idempotente de `aporte.registrado` alineados con `docs/rabbitmq.md`, y `api` con errores RFC 9457 y lectura de headers `X-Usuario-*`), además de su `Dockerfile`, `compose.yaml` autónomo (`campaign-db` + `rabbitmq` + `campaign-service`) y pruebas unitarias y de arquitectura de capas (rama `feat/campaign-dominio-y-aplicacion`). Falta activar su ruta en el gateway y sumarlo al compose de la raíz (con Efrain). Diseño: [campaign-service](servicios/campaign-service.md).
-  - Gabo (2026-11-20). `search-service` tiene catálogo en PostgreSQL, `GET /api/busqueda` y consumidor de cuatro eventos v1. El flujo de publicación, aportes, meta y cierre se verificó en un entorno aislado. Queda la integración con el gateway y los productores en el Compose general, y el catálogo en Angular. [Diseño y pruebas](servicios/search-service.md).
+  - Gabo (2026-11-20). El catálogo y el consumidor de cuatro eventos están en el Compose general. Se verificaron por el gateway la búsqueda pública, dos aportes con una reentrega, la meta, el cierre y el error de validación. La prueba con los productores reales depende de la integración de Campañas. [Diseño y pruebas](servicios/search-service.md).
 - **Fase 4 · Frontend:** las pantallas de cada dominio.
   - Raul (2026-11-15): las cuatro pantallas de aportes (aportar, historial de una campaña, "Mis aportes" y "Aportes recibidos") están en `frontend/src/app/aportes/` (rama `feat/contribution-aportes`), con sus pruebas. "Aportar" y el historial son secciones para el detalle de la campaña; mientras ese detalle no exista, se usan desde una página provisoria. Quedan dos pendientes para Efrain en [`frontend.md`](frontend.md) §10: el presupuesto del bundle inicial (F4) y el enlace a "Mis aportes" en el menú (F5).
   - Arturo (2026-11-19): las cuatro pantallas de campañas (detalle público `/campanas/:id` montando `<app-aportar>` y `<app-historial-aportes>`, "Mis campañas" `/panel/campanas` enlazando a los aportes recibidos, formulario de creación/edición e imágenes `/panel/campanas/nueva` y `/panel/campanas/:id/editar`, y bandeja de moderación administrativa `/administracion/campanas`) están en `frontend/src/app/campanas/` (rama `feat/campaign-pantallas`), con sus pruebas en Vitest. Rutas confirmadas en [`frontend.md`](frontend.md) §2.

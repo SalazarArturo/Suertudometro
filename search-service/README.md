@@ -1,6 +1,6 @@
 # Búsqueda de campañas
 
-> **Responsable:** Gabo · **Creado:** 2026-11-20 · **Estado:** Backend probado en entorno aislado
+> **Responsable:** Gabo · **Creado:** 2026-11-20 · **Estado:** Integración con el gateway
 
 `search-service` mantiene su catálogo a partir de los eventos de Campañas y Aportes. La API de lectura y el consumidor comparten la base propia `search-db`. Consulta el [diseño del servicio](../docs/servicios/search-service.md) y las [fichas de los eventos](../docs/contratos-de-eventos.md) para ver los contratos.
 
@@ -47,3 +47,15 @@ Puedes repetir solo el flujo de aceptación con este comando. Publica una campa�
 ```powershell
 docker compose -f compose.pruebas.yaml run --rm --build pruebas pytest -q -k flujo_publicacion
 ```
+
+## Probar el catálogo por el gateway
+
+Desde la raíz del repositorio, estos comandos levantan el sistema de desarrollo y consultan el catálogo sin sesión. Si usas un `.env` existente, incorpora las dos variables `SEARCH_…` de `.env.example`.
+
+```powershell
+docker compose --env-file .env.example up --build -d --wait
+curl.exe "http://localhost:8080/api/busqueda?estado=TODOS&orden=popularidad"
+docker compose --env-file .env.example exec -T search-service python -m pruebas.verificar_gateway
+```
+
+La prueba usa el RabbitMQ compartido y espera al consumidor antes de publicar una campaña de prueba. Consulta el gateway hasta observar los dos aportes y `100.00 BOB`, reenvío incluido. Luego verifica el cierre y la respuesta `400` para relevancia sin texto. Cada ejecución deja una campaña finalizada en los datos de desarrollo.

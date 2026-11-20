@@ -8,9 +8,9 @@
 # Las bases de datos, los servicios y el puerto AMQP de RabbitMQ no se publican
 # al host: todo entra por el gateway.
 #
-# Por ahora están identity-service, contribution-service y update-service (cada
+# Por ahora están identity-service, contribution-service, update-service y search-service (cada
 # uno con su base), el api-gateway, el frontend, RabbitMQ y Mailpit. Faltan
-# campaign-service, search-service y notification-service: cada uno se agrega
+# campaign-service y notification-service: cada uno se agrega
 # aquí, con su base, en el PR que activa su ruta en el gateway. Cómo usa
 # RabbitMQ cada servicio: docs/rabbitmq.md.
 
@@ -33,6 +33,18 @@ x-update-service: &update-service
     POSTGRES_USER: update
     POSTGRES_PASSWORD: ${UPDATE_DB_CONTRASENA:?Falta UPDATE_DB_CONTRASENA en .env (copia .env.example)}
     POSTGRES_HOST: update-db
+    RABBITMQ_URL: amqp://${RABBITMQ_USUARIO}:${RABBITMQ_CLAVE}@rabbitmq:5672/%2F
+
+x-search-service: &search-service
+  image: suertudometro-search:local
+  pull_policy: never
+  environment:
+    DJANGO_CLAVE_SECRETA: ${SEARCH_DJANGO_CLAVE_SECRETA:?Falta SEARCH_DJANGO_CLAVE_SECRETA en .env (copia .env.example)}
+    DJANGO_HOSTS_PERMITIDOS: search-service,127.0.0.1
+    POSTGRES_DB: search
+    POSTGRES_USER: search
+    POSTGRES_PASSWORD: ${SEARCH_DB_CONTRASENA:?Falta SEARCH_DB_CONTRASENA en .env (copia .env.example)}
+    POSTGRES_HOST: search-db
     RABBITMQ_URL: amqp://${RABBITMQ_USUARIO}:${RABBITMQ_CLAVE}@rabbitmq:5672/%2F
 
 services:
@@ -159,6 +171,50 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  search-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: search
+      POSTGRES_USER: search
+      POSTGRES_PASSWORD: ${SEARCH_DB_CONTRASENA}
+    volumes:
+      - search-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U search -d search"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  search-migrations:
+    <<: *search-service
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    depends_on:
+      search-db:
+        condition: service_healthy
+
+  search-service:
+    <<: *search-service
+    build:
+      context: ./search-service
+      target: ejecucion
+    depends_on:
+      search-migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8085/salud', timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  search-worker:
+    <<: *search-service
+    command: ["python", "manage.py", "consumir_eventos"]
+    depends_on:
+      search-migrations:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
   api-gateway:
     build: ./api-gateway
     environment:
@@ -166,6 +222,7 @@ services:
       IDENTITY_URL: http://identity-service:8081
       CONTRIBUTION_URL: http://contribution-service:8083
       UPDATE_URL: http://update-service:8084
+      SEARCH_URL: http://search-service:8085
       CORS_ORIGENES: http://localhost:4200
     ports:
       - "8080:8080"
@@ -173,6 +230,7 @@ services:
       - identity-service
       - contribution-service
       - update-service
+      - search-service
 
   frontend:
     build: ./frontend
@@ -214,4 +272,5 @@ volumes:
   identity-data:
   contribution-data:
   update-data:
+  search-data:
   rabbitmq-data:
