@@ -13,7 +13,7 @@
 | `notification-service` | `notification-service.md` | Efrain | Sin documento |
 | `api-gateway` | [api-gateway.md](api-gateway.md) (corto: rutas, seguridad y CORS) | Efrain | Borrador (en revisión) |
 | `update-service` | [update-service.md](update-service.md) | Gabo | Borrador (en revisión) |
-| `search-service` | `search-service.md` | Gabo | Sin documento |
+| `search-service` | [search-service.md](search-service.md) | Gabo | Borrador (en revisión) |
 
 Cuando crees un documento o cambie su estado, actualiza esta tabla y la de "Avance por servicio" en `docs/estado-del-proyecto.md`.
 

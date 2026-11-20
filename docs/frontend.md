@@ -1,6 +1,6 @@
 # frontend
 
-> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-19 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-20 · **Estado:** Borrador (en revisión del equipo)
 > Angular 22 · TypeScript 6 · Angular Material 22 · Vitest · contenedor `frontend` (Nginx, host `4200` → `80`) · nombre visible: **Go Fund Me** (el proyecto y el repositorio siguen llamándose Suertudómetro).
 
 ## 1. Qué es
@@ -22,7 +22,7 @@ Cada dominio carga sus rutas de forma diferida (*lazy loading*) desde su carpeta
 | Base | `/registro` | Crear cuenta; al terminar, inicia sesión sola | Efrain | Solo sin sesión | `POST /api/identidad/usuarios` y luego `/sesiones` |
 | Base | `/perfil` | Mi perfil: nombre, correo, rol y fecha de registro | Efrain | Con sesión | `GET /api/identidad/perfil` |
 | Base | `**` | Página no encontrada | Efrain | Público | — |
-| Portal público | `/` (propuesta) | Explorar campañas por categoría, estado o popularidad | Gabo | Público | `/api/busqueda` (por definir) |
+| Portal público | `/` (catálogo por implementar) | Búsqueda por texto, filtros por categoría y estado, orden por popularidad y enlace al detalle `/campanas/:id` | Gabo | Público | `GET /api/busqueda` ([diseño en revisión](servicios/search-service.md)) |
 | Portal público | `/campanas/:id` | Detalle: portada, historia, galería, meta, progreso, historial de estados, aportes y novedades | Arturo, con secciones de Raul (`<app-aportar>` y `<app-historial-aportes>`) y Gabo (novedades) | Público | `GET /api/campanas/{id}`, `GET /api/campanas/{id}/historial-estados`, `/api/aportes`, `/api/novedades` |
 | Portal público | En el detalle: `<app-aportar>` | Aportar, con nombre o anónimo y con mensaje de apoyo | Raul | Con sesión; sin ella, la sección ofrece iniciar sesión | `POST /api/aportes` |
 | Portal público | En el detalle: `<app-historial-aportes>` | Historial de aportes de la campaña: nombre o "Anónimo", monto, mensaje y fecha | Raul | Público | `GET /api/aportes?idCampana=` |
@@ -173,6 +173,7 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-20 | Gabo | §2: catálogo público en `/`, consulta de Búsqueda y enlace al detalle de Campañas; catálogo por implementar. |
 | 2026-11-19 | Arturo | §2: filas de las 4 pantallas de campañas (`/campanas/:id`, `/panel/campanas`, `/panel/campanas/nueva`, `/panel/campanas/:id/editar` y `/administracion/campanas`) confirmadas e implementadas en `frontend/src/app/campanas/` (F1, para el dominio de campañas). |
 | 2026-11-15 | Raul | §2: filas de las pantallas de aportes, con sus rutas confirmadas (F1, para su dominio). §10: pendientes F4 (presupuesto del bundle) y F5 (enlace a "Mis aportes" en el menú). |
 | 2026-11-12 | Efrain | §8: sin workflow propio; al frontend lo valida el CI general, y el formato y el build se corren a mano (pedido de Arturo). |
