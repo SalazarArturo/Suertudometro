@@ -8,6 +8,10 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-20 · Efrain** · campaign-service y search-service en el `docker-compose.yml` de la raíz (→ [`servicios/api-gateway.md`](servicios/api-gateway.md) §2 y §3):
+  - **`GET /api/campanas/{id}` es pública con un `{id}` que solo admite un UUID** (`{id:[0-9a-fA-F-]+}` en `application.yaml`). Así `GET /api/campanas/mias` sigue pidiendo sesión en el gateway, sin agregar código para excepciones. Qué campaña se ve sin sesión lo decide campaign-service por su estado.
+  - **Las imágenes (`GET /api/campanas/{id}/imagenes/{idImagen}`) son públicas**, porque el navegador las pide con `<img>`, sin el token. Viven en el volumen `campaign-images`.
+  - **search-service corre en tres contenedores con la misma imagen**, como en su compose propio: `search-migrations`, `search-service` y `search-worker`.
 - **2026-11-20 · Gabo y Raul** · Búsqueda ordena por cantidad de aportes distintos (`idAporte`), incluidos los anónimos. Dos aportes de la misma cuenta cuentan por separado. Resuelve el pendiente #7. [Diseño de Búsqueda](servicios/search-service.md#2-modelo-de-dominio)
 - **2026-11-20 · Gabo y Arturo** · Búsqueda muestra `PUBLICADA` por defecto. Las campañas antes publicadas que pasaron a `FINALIZADA` o `CANCELADA` aparecen por filtro, y el visitante puede abrir el detalle público. Resuelve el pendiente #14. [Diseño de Búsqueda](servicios/search-service.md#3-estados-y-visibilidad)
 - **2026-11-17 · Efrain** · contribution-service y update-service en el `docker-compose.yml` de la raíz (→ [`servicios/api-gateway.md`](servicios/api-gateway.md) §2 y §3):
@@ -99,6 +103,7 @@ Hitos del proyecto, los más recientes arriba.
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
 | 2026-11-20 | Gabo | «Explorar campañas» pasa a ser la portada pública de Angular, con filtros persistidos en la URL y enlace al detalle de Arturo. | `feat/frontend-explorar-campanas` |
+| 2026-11-20 | Efrain | **campaign-service y search-service en el compose y detrás del gateway.** `docker compose up --build` levanta todos los servicios menos notification-service, y el gateway enruta `/api/campanas/**` y `/api/busqueda/**` con sus rutas públicas. Pruebas del gateway por cada ruta. Probado de punta a punta por el gateway con los eventos reales: crear una campaña con portada, revisión, aprobar y rechazar, catálogo, aportar, novedades, meta alcanzada (`FINALIZADA`) y cancelación (`CANCELADA`). | Rama `feat/gateway-rutas-campanas-busqueda` |
 | 2026-11-20 | Gabo | **Backend de `search-service`.** Consulta pública del catálogo, índices de búsqueda y proyección de los cuatro eventos, con pruebas en PostgreSQL y RabbitMQ y Compose autónomo. | [Diseño](servicios/search-service.md) y [pruebas](../search-service/README.md#validar-el-backend) |
 | 2026-11-19 | Arturo | **Pantallas de campañas en el frontend.** Detalle público (`/campanas/:id`, integrando `<app-aportar>` y `<app-historial-aportes>`), "Mis campañas" (`/panel/campanas`, con enlace a aportes recibidos), creación/edición de borrador y gestor de imágenes (`/panel/campanas/nueva` y `/panel/campanas/:id/editar`, con Signal Forms) y bandeja de moderación (`/administracion/campanas`), en `frontend/src/app/campanas/`, con pruebas en Vitest y rutas confirmadas en `docs/frontend.md` §2. | Rama `feat/campaign-pantallas` |
 | 2026-11-17 | Arturo | **`campaign-service`: backend completo.** Implementación de las 5 capas DDD (`sharedkernel`, `domain` con `Campana` y `CampanaBuilder`, `application` CQRS con PipelinR, `infrastructure` con migración Flyway `V1__crear_esquema_campanas.sql`, JPA, mappers, almacenamiento de imágenes en disco, Transactional Outbox para `campana.publicada`, `campana.rechazada`, `meta.alcanzada` y `campana.cerrada`, y consumidor idempotente de `aporte.registrado`, y `api` REST con cabeceras `X-Usuario-*` y errores RFC 9457), junto con `Dockerfile`, `compose.yaml` autónomo y suite de pruebas JUnit 5 (dominio, aplicación, adaptadores, API y arquitectura de capas). | Rama `feat/campaign-dominio-y-aplicacion` |
@@ -152,13 +157,13 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 | `docs/stack-y-convenciones.md` | Raul (2026-11-04); Efrain (2026-11-06, paso al español); Raul (2026-11-07); Efrain (2026-11-08, Vitest en NestJS, pendiente de revisión de Raul). El `.html` que lo acompañaba se borró el 2026-11-07. |
 | `docs/diagramas/arquitectura.excalidraw` y `despliegue.excalidraw` | Raul (2026-11-04, como `docs/diagrama-*.excalidraw`); Raul (2026-11-07, paso al español y movidos) |
 | `docs/diagramas/event-storming.excalidraw` | Primera versión subida por Raul (2026-11-04, como `docs/event-storming-suertudometro.excalidraw`); Arturo (2026-11-04, renombrado a `-updated`); Gabo (2026-11-06: agregados, read models y sistemas externos); Raul (2026-11-07: opción A y movido) |
-| `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, roles de identity); Efrain (2026-11-08, enlace a `docs/frontend.md`); Efrain (2026-11-09, cómo ejecutar con Docker Compose); Efrain (2026-11-17, el compose con contribution-service y update-service) |
+| `README.md` | Arturo (2026-10-16); Efrain (2026-11-06, paso al español); Gabo (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, roles de identity); Efrain (2026-11-08, enlace a `docs/frontend.md`); Efrain (2026-11-09, cómo ejecutar con Docker Compose); Efrain (2026-11-17, el compose con contribution-service y update-service); Efrain (2026-11-20, el compose con todos los servicios menos notification) |
 | `AGENTS.md` | Arturo (2026-10-16); Efrain (2026-11-06); Raul (2026-11-07); Efrain (2026-11-07, fila del contrato de identidad); Efrain (2026-11-08, filas del frontend y del gateway) |
 | `CLAUDE.md` | Arturo (2026-10-16); Raul (2026-11-07) |
 | `.agents/skills/` y `skills-lock.json` | Arturo (2026-10-16, primeras skills); Efrain (2026-11-06, skill propia y skills nuevas); Raul (2026-11-07, quitó 4 skills y convirtió la skill propia en checklist) |
 | `.gitignore` | Arturo (2026-10-16); Raul (2026-11-07); Efrain (2026-11-17, `docker-compose.override.yml`) |
 | `identity-service/` | Efrain (2026-11-07, esqueleto) |
 | `docs/frontend.md` y `frontend/` | Efrain (2026-11-08, base del frontend) |
-| `api-gateway/` | Efrain (2026-11-08, base del gateway; 2026-11-17, rutas de contribution-service y update-service) |
-| `docker-compose.yml` y `.env.example` | Efrain (2026-11-09: identity, gateway y frontend; 2026-11-17: RabbitMQ y Mailpit, y después contribution-service y update-service) |
-| `docs/rabbitmq.md` | Efrain (2026-11-17) |
+| `api-gateway/` | Efrain (2026-11-08, base del gateway; 2026-11-17, rutas de contribution-service y update-service; 2026-11-20, rutas de campaign-service y search-service) |
+| `docker-compose.yml` y `.env.example` | Efrain (2026-11-09: identity, gateway y frontend; 2026-11-17: RabbitMQ y Mailpit, y después contribution-service y update-service; 2026-11-20: campaign-service y search-service) |
+| `docs/rabbitmq.md` | Efrain (2026-11-17; 2026-11-20, §9) |

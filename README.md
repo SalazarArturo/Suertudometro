@@ -177,9 +177,7 @@ docker compose up --build
 
 Después abre `http://localhost:4200`. El administrador inicial tiene el correo y la contraseña de `ADMIN_CORREO` y `ADMIN_CONTRASENA` en el `.env`.
 
-> **Por ahora** se levantan identity-service, contribution-service y update-service (cada uno con su base), el api-gateway, el frontend, RabbitMQ y Mailpit: crear cuenta, iniciar sesión, ver el perfil, aportar y publicar novedades. Cada servicio nuevo se agrega a `docker-compose.yml` cuando está listo.
->
-> Para aportar o publicar una novedad hace falta una campaña publicada. Mientras no exista campaign-service, se simula publicando un `campana.publicada` desde la consola de RabbitMQ ([`docs/rabbitmq.md`](docs/rabbitmq.md) §9).
+> **Por ahora** se levantan todos los servicios menos notification-service, cada uno con su base, más el api-gateway, el frontend, RabbitMQ y Mailpit. Funciona el flujo completo salvo los correos: crear cuenta e iniciar sesión, crear una campaña y pedir su revisión, aprobarla o rechazarla con la cuenta del administrador, encontrarla en el catálogo, aportar, publicar novedades y cerrarla. notification-service se agrega a `docker-compose.yml` cuando esté listo.
 
 Puertos publicados en la máquina (según el diagrama de despliegue):
 

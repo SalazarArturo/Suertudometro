@@ -36,16 +36,21 @@ class ApiGatewayTest {
   private static final String FRONTEND = "http://localhost:4200";
   private static final String ID_CAMPANA = "3f1c2a4e-8b7d-4c21-9f0e-5a6b7c8d9e01";
   private static final String ID_APORTE = "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d";
+  private static final String ID_IMAGEN = "0c1d2e3f-4a5b-4c6d-8e7f-90a1b2c3d4e5";
   private static final DisposableServer IDENTIDAD = ServicioDePrueba.iniciar("identity-service");
+  private static final DisposableServer CAMPANAS = ServicioDePrueba.iniciar("campaign-service");
   private static final DisposableServer APORTES = ServicioDePrueba.iniciar("contribution-service");
   private static final DisposableServer NOVEDADES = ServicioDePrueba.iniciar("update-service");
+  private static final DisposableServer BUSQUEDA = ServicioDePrueba.iniciar("search-service");
 
   @DynamicPropertySource
   static void configurar(DynamicPropertyRegistry registro) {
     registro.add("JWT_SECRETO", () -> Tokens.SECRETO);
     registro.add("IDENTITY_URL", () -> url(IDENTIDAD));
+    registro.add("CAMPAIGN_URL", () -> url(CAMPANAS));
     registro.add("CONTRIBUTION_URL", () -> url(APORTES));
     registro.add("UPDATE_URL", () -> url(NOVEDADES));
+    registro.add("SEARCH_URL", () -> url(BUSQUEDA));
     // Menos que los 3 s que tarda la ruta lenta del servicio de prueba.
     registro.add("spring.cloud.gateway.server.webflux.httpclient.response-timeout", () -> "1s");
   }
@@ -56,7 +61,8 @@ class ApiGatewayTest {
 
   @AfterAll
   static void detenerServicios() {
-    Stream.of(IDENTIDAD, APORTES, NOVEDADES).forEach(DisposableServer::disposeNow);
+    Stream.of(IDENTIDAD, CAMPANAS, APORTES, NOVEDADES, BUSQUEDA)
+        .forEach(DisposableServer::disposeNow);
   }
 
   @LocalServerPort private int puerto;
@@ -75,10 +81,14 @@ class ApiGatewayTest {
   static Stream<Arguments> rutasDeCadaServicio() {
     return Stream.of(
         Arguments.of("GET", "/api/identidad/perfil", "identity-service"),
+        Arguments.of("POST", "/api/campanas", "campaign-service"),
+        Arguments.of("GET", "/api/campanas/mias", "campaign-service"),
+        Arguments.of("POST", "/api/campanas/" + ID_CAMPANA + "/aprobacion", "campaign-service"),
         Arguments.of("POST", "/api/aportes", "contribution-service"),
         Arguments.of("GET", "/api/aportes/mios", "contribution-service"),
         Arguments.of("POST", "/api/novedades", "update-service"),
-        Arguments.of("GET", "/api/novedades/campana/" + ID_CAMPANA, "update-service"));
+        Arguments.of("GET", "/api/novedades/campana/" + ID_CAMPANA, "update-service"),
+        Arguments.of("GET", "/api/busqueda?texto=libros&pagina=2", "search-service"));
   }
 
   @ParameterizedTest(name = "{0} {1} llega a {2} sin reescribir la ruta")
@@ -99,10 +109,13 @@ class ApiGatewayTest {
 
   static Stream<Arguments> lecturasPublicasDeLosServicios() {
     return Stream.of(
+        Arguments.of("/api/campanas/" + ID_CAMPANA, "campaign-service"),
+        Arguments.of("/api/campanas/" + ID_CAMPANA + "/imagenes/" + ID_IMAGEN, "campaign-service"),
         Arguments.of("/api/aportes?idCampana=" + ID_CAMPANA, "contribution-service"),
         Arguments.of("/api/novedades/campana/" + ID_CAMPANA, "update-service"),
         Arguments.of("/api/novedades/esquema", "update-service"),
-        Arguments.of("/api/novedades/documentacion", "update-service"));
+        Arguments.of("/api/novedades/documentacion", "update-service"),
+        Arguments.of("/api/busqueda?categoria=EDUCACION&estado=TODOS", "search-service"));
   }
 
   @ParameterizedTest(name = "GET {0} pasa sin token")
@@ -122,6 +135,14 @@ class ApiGatewayTest {
 
   static Stream<Arguments> rutasProtegidasDeLosServicios() {
     return Stream.of(
+        Arguments.of("POST", "/api/campanas"),
+        // El {id} público solo admite un UUID: "mias" no entra.
+        Arguments.of("GET", "/api/campanas/mias"),
+        Arguments.of("GET", "/api/campanas?estado=EN_REVISION"),
+        Arguments.of("GET", "/api/campanas/" + ID_CAMPANA + "/historial-estados"),
+        Arguments.of("PUT", "/api/campanas/" + ID_CAMPANA),
+        Arguments.of("POST", "/api/campanas/" + ID_CAMPANA + "/aprobacion"),
+        Arguments.of("DELETE", "/api/campanas/" + ID_CAMPANA + "/imagenes/" + ID_IMAGEN),
         Arguments.of("POST", "/api/aportes"),
         Arguments.of("GET", "/api/aportes/mios"),
         Arguments.of("GET", "/api/aportes/recibidos?idCampana=" + ID_CAMPANA),
