@@ -191,7 +191,9 @@ La administración rechazó la solicitud de publicación. La campaña vuelve a `
 
 ## Reentregas y orden de llegada
 
-Si RabbitMQ reentrega un `AporteRegistrado`, el total y el número de avisos deben quedar iguales. Cada consumidor identifica los hechos ya aplicados mediante `idEvento`. Un consumidor que reciba un aporte antes de conocer la campaña necesita conservarlo para procesarlo cuando llegue la publicación. Un cierre recibido primero debe seguir teniendo efecto al llegar una publicación o una meta atrasada, de modo que la campaña permanezca fuera del catálogo y siga bloqueada para nuevos aportes y novedades.
+Si RabbitMQ reentrega un `AporteRegistrado`, el total y el número de avisos deben quedar iguales. Cada consumidor identifica los hechos ya aplicados mediante `idEvento`. Un consumidor que reciba un aporte antes de conocer la campaña necesita conservarlo para procesarlo cuando llegue la publicación. Un cierre recibido primero debe seguir teniendo efecto al llegar una publicación o una meta atrasada: la campaña conserva el estado terminal y sigue bloqueada para nuevos aportes y novedades.
+
+Las campañas cerradas quedan disponibles mediante el filtro de estado una vez que se recibe `CampanaPublicada`. El listado predeterminado muestra las campañas en `PUBLICADA` según el acuerdo #14. Consulta el [diseño de Búsqueda](servicios/search-service.md#3-estados-y-visibilidad).
 
 ## Decisiones para aprobar la versión 1
 

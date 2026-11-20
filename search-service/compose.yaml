@@ -1,0 +1,75 @@
+name: suertudometro-search
+
+x-search-service: &search-service
+  image: suertudometro-search:local
+  pull_policy: never
+  environment:
+    DJANGO_CLAVE_SECRETA: ${DJANGO_CLAVE_SECRETA:?Falta DJANGO_CLAVE_SECRETA en el archivo de entorno}
+    DJANGO_HOSTS_PERMITIDOS: search-service,localhost,127.0.0.1
+    POSTGRES_DB: search-db
+    POSTGRES_USER: ${POSTGRES_USER:?Falta POSTGRES_USER en el archivo de entorno}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en el archivo de entorno}
+    POSTGRES_HOST: search-db
+    RABBITMQ_URL: amqp://${RABBITMQ_USUARIO}:${RABBITMQ_CLAVE}@rabbitmq:5672/%2F
+
+services:
+  search-db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: search-db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - search-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d search-db']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:4.3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USUARIO:?Falta RABBITMQ_USUARIO en el archivo de entorno}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_CLAVE:?Falta RABBITMQ_CLAVE en el archivo de entorno}
+    volumes:
+      - search-rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  search-migrations:
+    <<: *search-service
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    depends_on:
+      search-db:
+        condition: service_healthy
+
+  search-service:
+    <<: *search-service
+    build:
+      context: .
+      target: ejecucion
+    depends_on:
+      search-migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8085/salud', timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  search-worker:
+    <<: *search-service
+    command: ["python", "manage.py", "consumir_eventos"]
+    depends_on:
+      search-migrations:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  search-db-data:
+  search-rabbitmq-data:
