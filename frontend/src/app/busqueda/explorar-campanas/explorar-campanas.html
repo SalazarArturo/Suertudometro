@@ -1,0 +1,155 @@
+<section class="pagina catalogo" aria-labelledby="titulo-catalogo">
+  <header class="cabecera">
+    <h1 id="titulo-catalogo">Explorar campañas</h1>
+    <form role="search" aria-label="Buscar campañas" (submit)="buscar($event)">
+      <div class="buscador">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Buscar en el título o la historia</mat-label>
+          <input matInput type="search" [formField]="formulario.texto" />
+        </mat-form-field>
+        <button matButton="filled" type="submit">Buscar</button>
+      </div>
+      <div class="filtros">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Categoría</mat-label>
+          <select matNativeControl [formField]="formulario.categoria">
+            <option value="">Todas las categorías</option>
+            @for (categoria of categorias; track categoria.codigo) {
+              <option [value]="categoria.codigo">{{ categoria.etiqueta }}</option>
+            }
+          </select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Estado</mat-label>
+          <select matNativeControl [formField]="formulario.estado">
+            <option value="PUBLICADA">Publicadas</option>
+            <option value="FINALIZADA">Finalizadas</option>
+            <option value="CANCELADA">Canceladas</option>
+            <option value="TODOS">Todos los estados</option>
+          </select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Ordenar por</mat-label>
+          <select matNativeControl [formField]="formulario.orden">
+            <option value="">
+              Automático ({{ filtros().texto.trim() ? 'relevancia' : 'más recientes' }})
+            </option>
+            <option value="recientes">Más recientes</option>
+            <option value="popularidad">Más aportes</option>
+            <option value="relevancia" [disabled]="!filtros().texto.trim()">Relevancia</option>
+          </select>
+        </mat-form-field>
+      </div>
+    </form>
+  </header>
+
+  @if (catalogo.isLoading()) {
+    <p role="status">Buscando campañas…</p>
+    <mat-progress-bar mode="indeterminate" aria-label="Buscando campañas" />
+  } @else if (error(); as mensaje) {
+    <div class="estado">
+      <p role="alert">{{ mensaje }}</p>
+      <button matButton="outlined" type="button" (click)="catalogo.reload()">Reintentar</button>
+    </div>
+  } @else if (catalogo.hasValue()) {
+    @let pagina = catalogo.value();
+    @if (pagina.resultados.length) {
+      <p class="total" role="status">
+        {{ pagina.total }} {{ pagina.total === 1 ? 'campaña' : 'campañas' }}
+      </p>
+      <ul class="tarjetas" aria-label="Campañas encontradas">
+        @for (ficha of pagina.resultados; track ficha.idCampana) {
+          <li>
+            <article>
+              <div class="portada">
+                <span class="sin-portada">Portada no disponible</span>
+                @if (api.urlPortada(ficha.rutaPortada); as url) {
+                  <img
+                    #imagen
+                    [src]="url"
+                    alt=""
+                    loading="lazy"
+                    (error)="imagen.hidden = true"
+                    (load)="imagen.hidden = false"
+                  />
+                }
+              </div>
+              <div class="contenido">
+                <div class="clasificacion">
+                  <span>{{ etiquetaCategoria[ficha.categoria] }}</span>
+                  <span class="estado-campana">{{ etiquetaEstado[ficha.estado] }}</span>
+                </div>
+                <h2>
+                  <a [routerLink]="rutaDetalle(ficha.idCampana)">{{ ficha.titulo }}</a>
+                </h2>
+                <p class="resumen">{{ ficha.resumen }}</p>
+                <div class="recaudacion">
+                  <p>
+                    <strong
+                      >{{ ficha.montoRecaudado | currency: ficha.moneda : '' }}
+                      {{ ficha.moneda }}</strong
+                    >
+                    de {{ ficha.metaFinanciera | currency: ficha.moneda : '' }} {{ ficha.moneda }}
+                  </p>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="math.min(100, ficha.porcentajeAvance)"
+                    [attr.aria-label]="'Avance de ' + ficha.titulo"
+                  />
+                  <p class="cifras">
+                    <span>{{ ficha.porcentajeAvance | number: '1.0-2' }} %</span
+                    ><span
+                      >{{ ficha.cantidadAportes }}
+                      {{ ficha.cantidadAportes === 1 ? 'aporte' : 'aportes' }}</span
+                    >
+                  </p>
+                </div>
+              </div>
+            </article>
+          </li>
+        }
+      </ul>
+      @if (pagina.total > tamanoPagina) {
+        <nav class="paginacion" aria-label="Páginas del catálogo">
+          <button
+            matButton="outlined"
+            type="button"
+            [disabled]="consulta().pagina === 1"
+            (click)="irAPagina(consulta().pagina - 1)"
+          >
+            Anterior
+          </button>
+          <span
+            >Página {{ consulta().pagina }} de {{ math.ceil(pagina.total / tamanoPagina) }}</span
+          >
+          <button
+            matButton="outlined"
+            type="button"
+            [disabled]="consulta().pagina * tamanoPagina >= pagina.total"
+            (click)="irAPagina(consulta().pagina + 1)"
+          >
+            Siguiente
+          </button>
+        </nav>
+      }
+    } @else {
+      <div class="estado">
+        @if (consulta().pagina > 1) {
+          <p role="status">Esta página no tiene campañas.</p>
+          <button matButton="outlined" type="button" (click)="irAPagina(1)">
+            Volver a la primera página
+          </button>
+        } @else {
+          <p role="status">No se encontraron campañas con estos filtros.</p>
+          @if (
+            consulta().filtros.texto ||
+            consulta().filtros.categoria ||
+            consulta().filtros.estado !== 'PUBLICADA'
+          ) {
+            <a matButton="outlined" routerLink="/">Limpiar filtros</a>
+          }
+        }
+      </div>
+    }
+  }
+</section>

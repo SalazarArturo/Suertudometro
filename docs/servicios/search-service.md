@@ -92,7 +92,7 @@ Seguir la estructura de Novedades dentro de `search-service/`: `configuracion/` 
 
 ## 11. Pantallas del frontend
 
-Gabo implementará el catálogo en `/` sobre la [base Angular existente](../frontend.md). Tendrá búsqueda, filtros por categoría y estado, orden y paginación; incluirá estados de carga, error y resultados vacíos. Cada tarjeta muestra portada, título, categoría, estado, meta y avance, y enlaza a `/campanas/:id`. La portada se carga por el gateway con la ruta publicada; la app limita la barra visual al 100 % si la recaudación supera la meta. No se duplica la pantalla de detalle.
+«Explorar campañas» en `/` consulta el catálogo desde la [base Angular](../frontend.md). Conserva el texto, los filtros, el orden y la página en la URL. Una búsqueda nueva vuelve a la primera página. La pantalla distingue carga, error con reintento y resultados vacíos. Cada tarjeta enlaza a `/campanas/:id` y muestra la portada cuando la ruta publicada está disponible en el gateway. Si la recaudación supera la meta, el porcentaje se muestra completo y la barra se detiene en el 100 %.
 
 ## 12. Pendientes de este servicio
 
