@@ -85,7 +85,7 @@ Seguir la estructura de Novedades dentro de `search-service/`: `configuracion/` 
 
 ## 10. Dependencias con otros integrantes
 
-- **Arturo (Campañas).** Confirmó el criterio de visibilidad. En la integración conjunta, verificar con un evento real que `rutaPortada` abra la imagen a través del gateway. El destino de cada tarjeta es el detalle público existente en `/campanas/:id`.
+- **Arturo (Campañas).** Confirmó el criterio de visibilidad. La portada y el detalle público se sirven a través del [gateway](api-gateway.md#3-quién-puede-llamar-a-cada-ruta). Cada tarjeta abre `/campanas/:id`.
 - **Raul (Aportes).** Confirmó que `idAporte` identifica la operación incluso en aportes anónimos o reentregados. Arturo y Raul revisan la aclaración de visibilidad en el contrato compartido.
 - **Efrain (gateway y Compose).** El Compose general levanta la API, el consumidor y las migraciones sobre `search-db`. El gateway reenvía la consulta y sus parámetros a `http://search-service:8085`. [Prueba de integración](../../search-service/README.md#probar-el-catálogo-por-el-gateway).
 - **Puesta en marcha:** en la primera prueba conjunta, declarar y enlazar la cola antes de publicar campañas y registrar aportes. Si ya hay datos previos, coordinar con Arturo y Raul la reproducción de los eventos v1 originales con sus IDs; una cola nueva no recibe publicaciones anteriores. La reproducción histórica no forma parte del primer PR de implementación.
@@ -98,13 +98,13 @@ Gabo implementará el catálogo en `/` sobre la [base Angular existente](../fron
 
 - Revisar en el PR la aclaración de visibilidad y completar la aprobación de contratos v1 con los demás servicios (#4).
 - Queda por decidir `CompartirCampana` (#2).
-- Probar con Arturo y Raul el recorrido desde los productores reales, incluida la portada de Campañas en el gateway.
+- Comprobar desde Angular el enlace al detalle y la carga de la portada de una campaña real.
 
 ## 13. Pruebas y puesta en marcha
 
 1. **Suite rápida.** Valida la proyección en el dominio, los parámetros de consulta, las respuestas `400` RFC 9457 y el manejo de errores de mensajería. El CI general ejecuta Ruff y pytest.
 2. **Suite con PostgreSQL 18 y RabbitMQ.** Usa los mensajes v1 para publicar, aportar, alcanzar la meta y cerrar. Verifica las reentregas, los aportes concurrentes, el cierre anterior a la publicación, los mensajes inválidos en la DLQ y las consultas por texto, filtros, orden y paginación. Los comandos de arranque y verificación están en el [README de Búsqueda](../../search-service/README.md).
-3. **Integración y portal.** Al integrar el Compose general y el gateway, repetir el flujo con los productores reales y comprobar desde Angular que la tarjeta abra la portada y el detalle de Arturo.
+3. **Integración por el gateway.** Efrain verificó el flujo con Campañas y Aportes reales. La [prueba reproducible del catálogo](../../search-service/README.md#probar-el-catálogo-por-el-gateway) publica eventos de prueba para comprobar el reenvío de un aporte, el cierre y la respuesta de validación.
 
 ## Historial de este documento
 

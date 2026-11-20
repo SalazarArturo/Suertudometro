@@ -8,11 +8,10 @@
 # Las bases de datos, los servicios y el puerto AMQP de RabbitMQ no se publican
 # al host: todo entra por el gateway.
 #
-# Por ahora están identity-service, contribution-service, update-service y search-service (cada
-# uno con su base), el api-gateway, el frontend, RabbitMQ y Mailpit. Faltan
-# campaign-service y notification-service: cada uno se agrega
-# aquí, con su base, en el PR que activa su ruta en el gateway. Cómo usa
-# RabbitMQ cada servicio: docs/rabbitmq.md.
+# Están todos los servicios menos notification-service, cada uno con su base,
+# más el api-gateway, el frontend, RabbitMQ y Mailpit. notification-service se
+# agrega aquí, con su base, cuando exista. Cómo usa RabbitMQ cada servicio:
+# docs/rabbitmq.md.
 
 name: suertudometro
 
@@ -35,11 +34,18 @@ x-update-service: &update-service
     POSTGRES_HOST: update-db
     RABBITMQ_URL: amqp://${RABBITMQ_USUARIO}:${RABBITMQ_CLAVE}@rabbitmq:5672/%2F
 
+# search-service corre en tres contenedores con la misma imagen, como en
+# search-service/compose.yaml: las migraciones (una vez, al arrancar), la API y
+# el consumidor de eventos que arma el catálogo.
 x-search-service: &search-service
-  image: suertudometro-search:local
-  pull_policy: never
+  image: suertudometro-search-service
+  build:
+    context: ./search-service
+    target: ejecucion
   environment:
     DJANGO_CLAVE_SECRETA: ${SEARCH_DJANGO_CLAVE_SECRETA:?Falta SEARCH_DJANGO_CLAVE_SECRETA en .env (copia .env.example)}
+    # search-service es el Host con el que llama el gateway; 127.0.0.1, el del
+    # healthcheck.
     DJANGO_HOSTS_PERMITIDOS: search-service,127.0.0.1
     POSTGRES_DB: search
     POSTGRES_USER: search
@@ -80,6 +86,48 @@ services:
         condition: service_healthy
       # No la necesita para arrancar (los eventos esperan en el outbox), pero así
       # el primer arranque no llena el log de reintentos de conexión.
+      rabbitmq:
+        condition: service_healthy
+
+  campaign-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: campaign
+      POSTGRES_USER: campaign
+      POSTGRES_PASSWORD: ${CAMPAIGN_DB_CONTRASENA:?Falta CAMPAIGN_DB_CONTRASENA en .env (copia .env.example)}
+    volumes:
+      - campaign-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campaign -d campaign"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Publica los eventos de campaña y consume aporte.registrado (cola
+  # campaign-service.aportes). Guarda las imágenes en el volumen campaign-images.
+  campaign-service:
+    build:
+      context: ./campaign-service
+      target: ejecucion
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://campaign-db:5432/campaign
+      SPRING_DATASOURCE_USERNAME: campaign
+      SPRING_DATASOURCE_PASSWORD: ${CAMPAIGN_DB_CONTRASENA}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USUARIO}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_CLAVE}
+      CAMPANA_DIRECTORIO_IMAGENES: /var/lib/suertudometro/campaign-images
+    volumes:
+      - campaign-images:/var/lib/suertudometro/campaign-images
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8082/salud"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+    depends_on:
+      campaign-db:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
@@ -176,7 +224,7 @@ services:
     environment:
       POSTGRES_DB: search
       POSTGRES_USER: search
-      POSTGRES_PASSWORD: ${SEARCH_DB_CONTRASENA}
+      POSTGRES_PASSWORD: ${SEARCH_DB_CONTRASENA:?Falta SEARCH_DB_CONTRASENA en .env (copia .env.example)}
     volumes:
       - search-data:/var/lib/postgresql
     healthcheck:
@@ -185,6 +233,7 @@ services:
       timeout: 3s
       retries: 10
 
+  # Aplica las migraciones de Django y termina.
   search-migrations:
     <<: *search-service
     command: ["python", "manage.py", "migrate", "--noinput"]
@@ -194,9 +243,6 @@ services:
 
   search-service:
     <<: *search-service
-    build:
-      context: ./search-service
-      target: ejecucion
     depends_on:
       search-migrations:
         condition: service_completed_successfully
@@ -205,7 +251,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 6
+      start_period: 10s
 
+  # Arma el catálogo con campana.publicada, aporte.registrado, meta.alcanzada y
+  # campana.cerrada (cola search-service.campanas).
   search-worker:
     <<: *search-service
     command: ["python", "manage.py", "consumir_eventos"]
@@ -220,6 +269,7 @@ services:
     environment:
       JWT_SECRETO: ${JWT_SECRETO:?Falta JWT_SECRETO en .env (copia .env.example)}
       IDENTITY_URL: http://identity-service:8081
+      CAMPAIGN_URL: http://campaign-service:8082
       CONTRIBUTION_URL: http://contribution-service:8083
       UPDATE_URL: http://update-service:8084
       SEARCH_URL: http://search-service:8085
@@ -228,6 +278,7 @@ services:
       - "8080:8080"
     depends_on:
       - identity-service
+      - campaign-service
       - contribution-service
       - update-service
       - search-service
@@ -270,6 +321,8 @@ services:
 
 volumes:
   identity-data:
+  campaign-data:
+  campaign-images:
   contribution-data:
   update-data:
   search-data:

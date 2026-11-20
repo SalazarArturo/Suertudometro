@@ -177,9 +177,7 @@ docker compose up --build
 
 Después abre `http://localhost:4200`. El administrador inicial tiene el correo y la contraseña de `ADMIN_CORREO` y `ADMIN_CONTRASENA` en el `.env`.
 
-> El Compose levanta Identidad, Aportes, Novedades y Búsqueda con sus bases, el gateway, Angular, RabbitMQ y Mailpit. El catálogo público se consulta en `http://localhost:8080/api/busqueda`. Si ya tienes un `.env` anterior, añade `SEARCH_DB_CONTRASENA` y `SEARCH_DJANGO_CLAVE_SECRETA` tomando como referencia `.env.example`.
->
-> Mientras se integra Campañas al Compose, se puede publicar un evento desde la [consola de RabbitMQ](docs/rabbitmq.md) o ejecutar la [prueba del catálogo por el gateway](search-service/README.md#probar-el-catálogo-por-el-gateway).
+> **Por ahora** se levantan todos los servicios menos notification-service, cada uno con su base, más el api-gateway, el frontend, RabbitMQ y Mailpit. Funciona el flujo completo salvo los correos: crear cuenta e iniciar sesión, crear una campaña y pedir su revisión, aprobarla o rechazarla con la cuenta del administrador, encontrarla en el catálogo, aportar, publicar novedades y cerrarla. notification-service se agrega a `docker-compose.yml` cuando esté listo.
 
 Puertos publicados en la máquina (según el diagrama de despliegue):
 
