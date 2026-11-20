@@ -18,6 +18,10 @@ spring:
               uri: ${IDENTITY_URL:http://localhost:8081}
               predicates:
                 - Path=/api/identidad/**
+            - id: campaign-service
+              uri: ${CAMPAIGN_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/campanas/**
             - id: contribution-service
               uri: ${CONTRIBUTION_URL:http://localhost:8083}
               predicates:
@@ -26,6 +30,10 @@ spring:
               uri: ${UPDATE_URL:http://localhost:8084}
               predicates:
                 - Path=/api/novedades/**
+            - id: search-service
+              uri: ${SEARCH_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/busqueda/**
 
 server:
   port: 8080
@@ -61,6 +69,11 @@ suertudometro:
     - POST /api/identidad/sesiones
     - GET /api/identidad/docs/**
     - GET /api/identidad/docs-json
+    # campaign-service: el detalle de una campaña y sus imágenes. Sin sesión, el
+    # servicio solo muestra las PUBLICADA, FINALIZADA y CANCELADA. {id} solo
+    # admite un UUID, para que GET /api/campanas/mias siga pidiendo sesión.
+    - "GET /api/campanas/{id:[0-9a-fA-F-]+}"
+    - "GET /api/campanas/{id:[0-9a-fA-F-]+}/imagenes/*"
     # contribution-service: el historial de aportes de una campaña (?idCampana=).
     # Solo esa ruta exacta; /mios, /recibidos y /{idAporte} piden sesión.
     - GET /api/aportes
@@ -68,3 +81,5 @@ suertudometro:
     - GET /api/novedades/campana/*
     - GET /api/novedades/esquema
     - GET /api/novedades/documentacion
+    # search-service: el catálogo (texto, filtros, orden y páginas).
+    - GET /api/busqueda
