@@ -107,7 +107,7 @@ El servicio se conecta entonces a `amqp://<usuario>:<clave>@localhost:5672`. Con
 
 ## 9. Simular un evento desde la consola
 
-Mientras no exista el servicio que publica un evento, se puede publicar a mano para probar a quienes lo consumen. Por ejemplo, sin campaign-service, un `campana.publicada` deja aportar (contribution-service) y publicar novedades (update-service) en una campaña:
+Para probar a quienes consumen un evento sin pasar por el servicio que lo publica (o mientras ese servicio no exista), se puede publicar a mano. Lo normal es crear y aprobar la campaña desde la aplicación; esto sirve para probar un consumidor por separado. Por ejemplo, un `campana.publicada` deja aportar (contribution-service) y publicar novedades (update-service) en una campaña que campaign-service no conoce:
 
 1. **Exchanges** → `suertudometro.events` → **Publish message**.
 2. **Routing key:** `campana.publicada`.
@@ -126,6 +126,7 @@ Cada consumidor guarda la campaña en su propia base. Para borrar esas campañas
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-20 | Efrain | §9: ya existe campaign-service; la simulación queda para probar un consumidor por separado. |
 | 2026-11-17 | Efrain | §9: cómo simular un evento desde la consola, mientras falta el servicio que lo publica. |
 | 2026-11-17 | Efrain | §2: las colas siempre son durables (RabbitMQ 4.3 rechaza las no durables compartidas). §4: identity-service también publica con `mandatory`. |
 | 2026-11-17 | Efrain | Primera versión: deja escrita la topología que ya usaban `update-service` y `contribution-service`, cómo publicar y consumir, la DLQ y la conexión desde el IDE. |

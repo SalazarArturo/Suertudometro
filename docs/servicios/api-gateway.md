@@ -1,6 +1,6 @@
 # api-gateway
 
-> **Responsable:** Efrain · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-17 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Efrain · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-20 · **Estado:** Borrador (en revisión del equipo)
 > Componente perimetral, sin dominio propio · Spring Cloud Gateway (WebFlux) · Spring Boot 4.1 · Java 21 · sin base de datos · atiende `/api/**` · puerto 8080, publicado en el host.
 
 ## 1. Responsabilidad
@@ -26,10 +26,10 @@ Cada servicio monta su propio prefijo, como hace identity-service con `api/ident
 | Prefijo | Servicio | Destino en Docker Compose | Variable | Estado |
 |---|---|---|---|---|
 | `/api/identidad/**` | identity-service | `http://identity-service:8081` | `IDENTITY_URL` | Activa |
-| `/api/campanas/**` | campaign-service | `http://campaign-service:8082` | — | Cuando exista el servicio |
+| `/api/campanas/**` | campaign-service | `http://campaign-service:8082` | `CAMPAIGN_URL` | Activa |
 | `/api/aportes/**` | contribution-service | `http://contribution-service:8083` | `CONTRIBUTION_URL` | Activa |
 | `/api/novedades/**` | update-service | `http://update-service:8084` | `UPDATE_URL` | Activa |
-| `/api/busqueda/**` | search-service | `http://search-service:8085` | — | Cuando exista el servicio |
+| `/api/busqueda/**` | search-service | `http://search-service:8085` | `SEARCH_URL` | Activa |
 | `/api/notificaciones/**` | notification-service | `http://notification-service:8086` | — | Cuando exista el servicio |
 
 Los puertos son los del diagrama de despliegue. **Para activar una ruta**, se agregan en `application.yaml` la ruta (con su variable) y sus rutas públicas (§3), en un PR que revisa Efrain.
@@ -45,13 +45,16 @@ Resuelve el pendiente "qué rutas son públicas, cuáles requieren sesión y cu�
   | `POST /api/identidad/usuarios` | Crear cuenta |
   | `POST /api/identidad/sesiones` | Iniciar sesión |
   | `GET /api/identidad/docs/**` y `GET /api/identidad/docs-json` | Swagger de identity-service (desarrollo) |
+  | `GET /api/campanas/{id}` | Detalle de una campaña. Sin sesión, campaign-service solo muestra las `PUBLICADA`, `FINALIZADA` y `CANCELADA`; con sesión, también le muestra a su organizador las que están en borrador o en revisión. En `application.yaml` el `{id}` solo admite un UUID (`{id:[0-9a-fA-F-]+}`), para que `GET /api/campanas/mias` siga pidiendo sesión. Lo confirmó Arturo en [`campaign-service.md`](campaign-service.md) §5. |
+  | `GET /api/campanas/{id}/imagenes/{idImagen}` | Portada y galería de una campaña. Las pide el navegador con `<img>`, que no lleva el token. También lo confirmó Arturo. |
   | `GET /api/aportes` | Historial de aportes de una campaña (`?idCampana=`). Es solo esa ruta exacta: `/mios`, `/recibidos` y `/{idAporte}` piden sesión. Lo confirmó Raul en [`contribution-service.md`](contribution-service.md) §5. |
   | `GET /api/novedades/campana/{idCampana}` | Historial de novedades de una campaña. Lo confirmó Gabo en [`update-service.md`](update-service.md) §5. |
   | `GET /api/novedades/esquema` y `GET /api/novedades/documentacion` | Swagger de update-service (desarrollo). También lo confirmó Gabo. |
+  | `GET /api/busqueda` | Catálogo de campañas: texto, filtros, orden y páginas. Lo confirmó Gabo en [`search-service.md`](search-service.md) §5. |
 
-- **Todo lo demás requiere sesión**, es decir, un token válido. Así una ruta nueva nace protegida, igual que en identity-service. Por ejemplo, aportar (`POST /api/aportes`) y publicar una novedad (`POST /api/novedades`).
+- **Todo lo demás requiere sesión**, es decir, un token válido. Así una ruta nueva nace protegida, igual que en identity-service. Por ejemplo, crear una campaña (`POST /api/campanas`), aprobarla (`POST /api/campanas/{id}/aprobacion`), aportar (`POST /api/aportes`) y publicar una novedad (`POST /api/novedades`).
 - **El rol lo revisa cada servicio**, no el gateway. El gateway no conoce las reglas de cada dominio: por ejemplo, al organizador de una campaña se lo reconoce por su id, no por un rol.
-- **Propuesta para los servicios que faltan.** Cada responsable la confirma en su documento y en el PR que activa su ruta: lecturas públicas del catálogo (`GET /api/busqueda/**`) y del detalle de una campaña (`GET /api/campanas/{id}`).
+- **Para notification-service**, sus rutas públicas, si tiene alguna, se declaran en el PR que activa su ruta.
 
 ## 4. Autenticación y headers
 
@@ -103,8 +106,10 @@ Las respuestas de error también llevan los headers de CORS. Si no los llevaran,
 |---|---|---|
 | `JWT_SECRETO` | — (obligatoria, de 32 bytes o más) | Validar la firma del token. Es la misma de identity-service. |
 | `IDENTITY_URL` | `http://localhost:8081` | Destino de `/api/identidad`. En Docker Compose, `http://identity-service:8081`. |
+| `CAMPAIGN_URL` | `http://localhost:8082` | Destino de `/api/campanas`. En Docker Compose, `http://campaign-service:8082`. |
 | `CONTRIBUTION_URL` | `http://localhost:8083` | Destino de `/api/aportes`. En Docker Compose, `http://contribution-service:8083`. |
 | `UPDATE_URL` | `http://localhost:8084` | Destino de `/api/novedades`. En Docker Compose, `http://update-service:8084`. |
+| `SEARCH_URL` | `http://localhost:8085` | Destino de `/api/busqueda`. En Docker Compose, `http://search-service:8085`. |
 | `CORS_ORIGENES` | `http://localhost:4200` | Orígenes del frontend |
 
 - Escucha en el puerto 8080.
@@ -142,8 +147,8 @@ api-gateway/
 ## 10. Pruebas
 
 JUnit 5 y `WebTestClient` contra el gateway completo. Cada ruta activa apunta a su propio servidor HTTP de prueba, que devuelve su nombre y los headers que recibió.
-- Cada prefijo llega a su servicio (identity, contribution y update) sin reescribir la ruta.
-- Una ruta pública pasa sin token, y los `X-Usuario-*` falsos del cliente no llegan al servicio. Las lecturas públicas de contribution-service y update-service pasan sin token, y sus demás rutas dan `401`; también un `POST` sobre una ruta que solo es pública para `GET`.
+- Cada prefijo llega a su servicio (identity, campaign, contribution, update y search) sin reescribir la ruta.
+- Una ruta pública pasa sin token, y los `X-Usuario-*` falsos del cliente no llegan al servicio. Las lecturas públicas de cada servicio pasan sin token, y sus demás rutas dan `401`: también un `POST` o un `DELETE` sobre una ruta que solo es pública para `GET`, y `GET /api/campanas/mias`, que no entra en el `{id}` público.
 - Sin token, una ruta protegida da `401 no-autenticado` en formato RFC 9457, y la petición no llega al servicio.
 - Con un token válido llegan los tres headers (el nombre con tildes, codificado) y no llega el `Authorization`. Un `X-Usuario-Rol: ADMINISTRADOR` falso del cliente se reemplaza por el rol del token.
 - Dan `401`: un token vencido, uno firmado con otro secreto, uno sin `rol` y uno inválido en una ruta pública.
@@ -159,7 +164,7 @@ El gateway no tiene workflow propio: lo valida el CI general (`.github/workflows
 
 | Qué | Con quién | Para qué |
 |---|---|---|
-| Que confirmen sus rutas públicas (§3) y avisen cuando su servicio esté listo para activar su ruta | Arturo y Gabo (search-service). Raul y Gabo ya lo hicieron para contribution-service y update-service. | Enrutar sus servicios con el acceso correcto |
+| Que confirmen sus rutas públicas (§3) y avisen cuando su servicio esté listo para activar su ruta | Ya lo hicieron Arturo, Raul y Gabo para sus servicios. Falta notification-service (Efrain). | Enrutar sus servicios con el acceso correcto |
 | Que monten el prefijo de su servicio en sus rutas (`/api/campanas`…) | Arturo, Raul y Gabo | Que el gateway no reescriba rutas |
 | Que el CI general (`.github/workflows/ci.yml`) siga corriendo Spotless y las pruebas del gateway | Arturo | El gateway no tiene workflow propio (§10) |
 
@@ -168,8 +173,8 @@ El gateway no tiene workflow propio: lo valida el CI general (`.github/workflows
 | # | Pendiente | Decide | Estado |
 |---|---|---|---|
 | G1 | Límite de peticiones (Bucket4j + Caffeine): cuántas por IP, y si el inicio de sesión tiene un límite propio | Efrain | Siguiente PR |
-| G2 | Las rutas públicas de cada servicio (§3) | Cada responsable | Abierto: ya están las de identity-service, contribution-service y update-service; faltan las de campaign-service y search-service |
-| G3 | ¿El Swagger de cada servicio también se publica por el gateway? Hoy se publican el de identity-service y el de update-service, que Gabo declaró público en desarrollo. El de contribution-service no, porque Raul solo declaró `GET /api/aportes`. | Equipo | Abierto |
+| G2 | Las rutas públicas de cada servicio (§3) | Cada responsable | Resuelto para los cinco servicios que existen; falta notification-service |
+| G3 | ¿El Swagger de cada servicio también se publica por el gateway? Hoy se publican el de identity-service y el de update-service, que Gabo declaró público en desarrollo. El de contribution-service no, porque Raul solo declaró `GET /api/aportes`; campaign-service y search-service no publican Swagger. | Equipo | Abierto |
 
 ## 13. Plan de implementación
 
@@ -177,12 +182,14 @@ El gateway no tiene workflow propio: lo valida el CI general (`.github/workflows
 - [ ] **Fase 2 · Límite de peticiones** (`feat/gateway-limite-peticiones`).
 - [ ] **Rutas de los demás servicios**, a medida que existan.
   - [x] contribution-service y update-service (`feat/gateway-rutas-aportes-novedades`).
-  - [ ] campaign-service, search-service y notification-service.
+  - [x] campaign-service y search-service (`feat/gateway-rutas-campanas-busqueda`).
+  - [ ] notification-service.
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-20 | Efrain | §2, §3, §7 y §10 a §13: rutas de campaign-service y search-service activas, con las rutas públicas que confirmaron Arturo y Gabo. |
 | 2026-11-17 | Efrain | §2, §3, §7 y §10 a §13: rutas de contribution-service y update-service activas, con las rutas públicas que confirmaron Raul y Gabo. |
 | 2026-11-12 | Efrain | §10 y §11: sin workflow propio; al gateway lo valida el CI general (pedido de Arturo). |
 | 2026-11-08 | Efrain | Primera versión: rutas, rutas públicas, autenticación y headers, errores, CORS, configuración y plan. |
