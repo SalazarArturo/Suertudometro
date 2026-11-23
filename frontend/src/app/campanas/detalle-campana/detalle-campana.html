@@ -33,14 +33,14 @@
       <div class="columna-contenido">
         @if (imagenPortada(); as portada) {
           <figure class="portada">
-            <img [src]="portada.urlPublica" [alt]="datos.titulo" />
+            <img [src]="urlImagen(portada.urlPublica)" [alt]="datos.titulo" />
           </figure>
         }
 
         @if (datos.imagenes.length > 1) {
           <div class="galeria" aria-label="Galería de imágenes de la campaña">
             @for (img of datos.imagenes; track img.id) {
-              <img class="miniatura" [src]="img.urlPublica" [alt]="img.nombreOriginal" />
+              <img class="miniatura" [src]="urlImagen(img.urlPublica)" [alt]="img.nombreOriginal" />
             }
           </div>
         }

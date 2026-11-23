@@ -88,4 +88,8 @@ export class DetalleCampana {
     historial.recargar();
     this.campana.reload();
   }
+
+  protected urlImagen(urlPublica: string): string {
+    return this.api.urlImagen(urlPublica);
+  }
 }

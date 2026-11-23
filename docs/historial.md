@@ -102,6 +102,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-23 | Arturo | **URLs de imágenes de campaña por el gateway.** `CampanasApi.urlImagen` antepone el origen de `URL_API` a las rutas `/api/campanas/{id}/imagenes/{idImagen}` en `DetalleCampana` y `FormularioCampana`, con pruebas unitarias en Vitest y actualización de `docs/servicios/campaign-service.md`. | Rama `fix/campaign-imagenes-gateway` |
 | 2026-11-20 | Gabo | «Explorar campañas» pasa a ser la portada pública de Angular, con filtros persistidos en la URL y enlace al detalle de Arturo. | `feat/frontend-explorar-campanas` |
 | 2026-11-20 | Efrain | **campaign-service y search-service en el compose y detrás del gateway.** `docker compose up --build` levanta todos los servicios menos notification-service, y el gateway enruta `/api/campanas/**` y `/api/busqueda/**` con sus rutas públicas. Pruebas del gateway por cada ruta. Probado de punta a punta por el gateway con los eventos reales: crear una campaña con portada, revisión, aprobar y rechazar, catálogo, aportar, novedades, meta alcanzada (`FINALIZADA`) y cancelación (`CANCELADA`). | Rama `feat/gateway-rutas-campanas-busqueda` |
 | 2026-11-20 | Gabo | **Backend de `search-service`.** Consulta pública del catálogo, índices de búsqueda y proyección de los cuatro eventos, con pruebas en PostgreSQL y RabbitMQ y Compose autónomo. | [Diseño](servicios/search-service.md) y [pruebas](../search-service/README.md#validar-el-backend) |

@@ -191,6 +191,10 @@ export class FormularioCampana {
     this.archivoSeleccionado.set(archivo);
   }
 
+  protected urlImagen(urlPublica: string): string {
+    return this.api.urlImagen(urlPublica);
+  }
+
   protected async subirImagenSeleccionada(): Promise<void> {
     const idCampana = this.id();
     const archivo = this.archivoSeleccionado();

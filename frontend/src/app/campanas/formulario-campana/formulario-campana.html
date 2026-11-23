@@ -94,7 +94,7 @@
           <ul class="lista-imagenes">
             @for (img of actual.imagenes; track img.id) {
               <li class="item-imagen">
-                <img [src]="img.urlPublica" [alt]="img.nombreOriginal" />
+                <img [src]="urlImagen(img.urlPublica)" [alt]="img.nombreOriginal" />
                 <div class="info-imagen">
                   <strong>{{ img.nombreOriginal }}</strong>
                   @if (img.esPortada) {
