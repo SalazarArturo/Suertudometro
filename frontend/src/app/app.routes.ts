@@ -10,7 +10,7 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    loadComponent: () => import('./inicio/inicio').then((m) => m.Inicio),
+    loadChildren: () => import('./busqueda/busqueda.routes').then((m) => m.rutasBusqueda),
   },
   {
     path: '',

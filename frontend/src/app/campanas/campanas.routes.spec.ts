@@ -78,6 +78,11 @@ describe('rutas de campañas', { timeout: 15000 }, () => {
   it('la bandeja de moderación (/administracion/campanas) exige rol ADMINISTRADOR', async () => {
     sesion.iniciar(sesionDePrueba('USUARIO'));
     await navegar(rutaModeracionCampanas().join('/'));
+    backend
+      .expectOne(
+        (peticion) => peticion.method === 'GET' && peticion.url === `${URL_API_PRUEBA}/busqueda`,
+      )
+      .flush({ total: 0, resultados: [] });
 
     expect(router.url).toBe('/');
   });
