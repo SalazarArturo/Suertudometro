@@ -34,6 +34,10 @@ spring:
               uri: ${SEARCH_URL:http://localhost:8085}
               predicates:
                 - Path=/api/busqueda/**
+            - id: notification-service
+              uri: ${NOTIFICATION_URL:http://localhost:8086}
+              predicates:
+                - Path=/api/notificaciones/**
 
 server:
   port: 8080
@@ -83,3 +87,6 @@ suertudometro:
     - GET /api/novedades/documentacion
     # search-service: el catálogo (texto, filtros, orden y páginas).
     - GET /api/busqueda
+    # notification-service: su Swagger. La bandeja siempre pide sesión.
+    - GET /api/notificaciones/docs/**
+    - GET /api/notificaciones/docs-json

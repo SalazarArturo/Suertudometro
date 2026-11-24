@@ -1,6 +1,6 @@
 # api-gateway
 
-> **Responsable:** Efrain · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-20 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Efrain · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-24 · **Estado:** Borrador (en revisión del equipo)
 > Componente perimetral, sin dominio propio · Spring Cloud Gateway (WebFlux) · Spring Boot 4.1 · Java 21 · sin base de datos · atiende `/api/**` · puerto 8080, publicado en el host.
 
 ## 1. Responsabilidad
@@ -30,7 +30,8 @@ Cada servicio monta su propio prefijo, como hace identity-service con `api/ident
 | `/api/aportes/**` | contribution-service | `http://contribution-service:8083` | `CONTRIBUTION_URL` | Activa |
 | `/api/novedades/**` | update-service | `http://update-service:8084` | `UPDATE_URL` | Activa |
 | `/api/busqueda/**` | search-service | `http://search-service:8085` | `SEARCH_URL` | Activa |
-| `/api/notificaciones/**` | notification-service | `http://notification-service:8086` | — | Cuando exista el servicio |
+| `NOTIFICATION_URL` | `http://localhost:8086` | Destino de `/api/notificaciones`. En Docker Compose, `http://notification-service:8086`. |
+| `/api/notificaciones/**` | notification-service | `http://notification-service:8086` | `NOTIFICATION_URL` | Activa |
 
 Los puertos son los del diagrama de despliegue. **Para activar una ruta**, se agregan en `application.yaml` la ruta (con su variable) y sus rutas públicas (§3), en un PR que revisa Efrain.
 
@@ -51,10 +52,10 @@ Resuelve el pendiente "qué rutas son públicas, cuáles requieren sesión y cu�
   | `GET /api/novedades/campana/{idCampana}` | Historial de novedades de una campaña. Lo confirmó Gabo en [`update-service.md`](update-service.md) §5. |
   | `GET /api/novedades/esquema` y `GET /api/novedades/documentacion` | Swagger de update-service (desarrollo). También lo confirmó Gabo. |
   | `GET /api/busqueda` | Catálogo de campañas: texto, filtros, orden y páginas. Lo confirmó Gabo en [`search-service.md`](search-service.md) §5. |
+  | `GET /api/notificaciones/docs/**` y `GET /api/notificaciones/docs-json` | Swagger de notification-service (desarrollo). La bandeja siempre pide sesión. |
 
 - **Todo lo demás requiere sesión**, es decir, un token válido. Así una ruta nueva nace protegida, igual que en identity-service. Por ejemplo, crear una campaña (`POST /api/campanas`), aprobarla (`POST /api/campanas/{id}/aprobacion`), aportar (`POST /api/aportes`) y publicar una novedad (`POST /api/novedades`).
 - **El rol lo revisa cada servicio**, no el gateway. El gateway no conoce las reglas de cada dominio: por ejemplo, al organizador de una campaña se lo reconoce por su id, no por un rol.
-- **Para notification-service**, sus rutas públicas, si tiene alguna, se declaran en el PR que activa su ruta.
 
 ## 4. Autenticación y headers
 
@@ -147,7 +148,7 @@ api-gateway/
 ## 10. Pruebas
 
 JUnit 5 y `WebTestClient` contra el gateway completo. Cada ruta activa apunta a su propio servidor HTTP de prueba, que devuelve su nombre y los headers que recibió.
-- Cada prefijo llega a su servicio (identity, campaign, contribution, update y search) sin reescribir la ruta.
+- Cada prefijo llega a su servicio (identity, campaign, contribution, update, search y notification) sin reescribir la ruta.
 - Una ruta pública pasa sin token, y los `X-Usuario-*` falsos del cliente no llegan al servicio. Las lecturas públicas de cada servicio pasan sin token, y sus demás rutas dan `401`: también un `POST` o un `DELETE` sobre una ruta que solo es pública para `GET`, y `GET /api/campanas/mias`, que no entra en el `{id}` público.
 - Sin token, una ruta protegida da `401 no-autenticado` en formato RFC 9457, y la petición no llega al servicio.
 - Con un token válido llegan los tres headers (el nombre con tildes, codificado) y no llega el `Authorization`. Un `X-Usuario-Rol: ADMINISTRADOR` falso del cliente se reemplaza por el rol del token.
@@ -164,7 +165,7 @@ El gateway no tiene workflow propio: lo valida el CI general (`.github/workflows
 
 | Qué | Con quién | Para qué |
 |---|---|---|
-| Que confirmen sus rutas públicas (§3) y avisen cuando su servicio esté listo para activar su ruta | Ya lo hicieron Arturo, Raul y Gabo para sus servicios. Falta notification-service (Efrain). | Enrutar sus servicios con el acceso correcto |
+| Que confirmen sus rutas públicas (§3) y avisen cuando su servicio esté listo para activar su ruta | Ya lo hicieron los cuatro para todos los servicios. | Enrutar sus servicios con el acceso correcto |
 | Que monten el prefijo de su servicio en sus rutas (`/api/campanas`…) | Arturo, Raul y Gabo | Que el gateway no reescriba rutas |
 | Que el CI general (`.github/workflows/ci.yml`) siga corriendo Spotless y las pruebas del gateway | Arturo | El gateway no tiene workflow propio (§10) |
 
@@ -173,8 +174,8 @@ El gateway no tiene workflow propio: lo valida el CI general (`.github/workflows
 | # | Pendiente | Decide | Estado |
 |---|---|---|---|
 | G1 | Límite de peticiones (Bucket4j + Caffeine): cuántas por IP, y si el inicio de sesión tiene un límite propio | Efrain | Siguiente PR |
-| G2 | Las rutas públicas de cada servicio (§3) | Cada responsable | Resuelto para los cinco servicios que existen; falta notification-service |
-| G3 | ¿El Swagger de cada servicio también se publica por el gateway? Hoy se publican el de identity-service y el de update-service, que Gabo declaró público en desarrollo. El de contribution-service no, porque Raul solo declaró `GET /api/aportes`; campaign-service y search-service no publican Swagger. | Equipo | Abierto |
+| G2 | Las rutas públicas de cada servicio (§3) | Cada responsable | Resuelto para los seis servicios |
+| G3 | ¿El Swagger de cada servicio también se publica por el gateway? Hoy se publican el de identity-service, el de notification-service y el de update-service, que Gabo declaró público en desarrollo. El de contribution-service no, porque Raul solo declaró `GET /api/aportes`; campaign-service y search-service no publican Swagger. | Equipo | Abierto |
 
 ## 13. Plan de implementación
 
@@ -183,12 +184,13 @@ El gateway no tiene workflow propio: lo valida el CI general (`.github/workflows
 - [ ] **Rutas de los demás servicios**, a medida que existan.
   - [x] contribution-service y update-service (`feat/gateway-rutas-aportes-novedades`).
   - [x] campaign-service y search-service (`feat/gateway-rutas-campanas-busqueda`).
-  - [ ] notification-service.
+  - [x] notification-service (`chore/compose-notification`).
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-24 | Efrain | §2, §3, §7 y §10 a §13: ruta de notification-service activa, con su Swagger público. |
 | 2026-11-20 | Efrain | §2, §3, §7 y §10 a §13: rutas de campaign-service y search-service activas, con las rutas públicas que confirmaron Arturo y Gabo. |
 | 2026-11-17 | Efrain | §2, §3, §7 y §10 a §13: rutas de contribution-service y update-service activas, con las rutas públicas que confirmaron Raul y Gabo. |
 | 2026-11-12 | Efrain | §10 y §11: sin workflow propio; al gateway lo valida el CI general (pedido de Arturo). |

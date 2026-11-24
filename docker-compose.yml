@@ -8,9 +8,8 @@
 # Las bases de datos, los servicios y el puerto AMQP de RabbitMQ no se publican
 # al host: todo entra por el gateway.
 #
-# Están todos los servicios menos notification-service, cada uno con su base,
-# más el api-gateway, el frontend, RabbitMQ y Mailpit. notification-service se
-# agrega aquí, con su base, cuando exista. Cómo usa RabbitMQ cada servicio:
+# Están los seis servicios, cada uno con su base, más el api-gateway, el
+# frontend, RabbitMQ y Mailpit. Cómo usa RabbitMQ cada servicio:
 # docs/rabbitmq.md.
 
 name: suertudometro
@@ -264,6 +263,42 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  notification-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: notification
+      POSTGRES_USER: notification
+      POSTGRES_PASSWORD: ${NOTIFICATION_DB_CONTRASENA:?Falta NOTIFICATION_DB_CONTRASENA en .env (copia .env.example)}
+    volumes:
+      - notification-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification -d notification"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Consume los siete eventos (cola notification-service.avisos), guarda los
+  # avisos y los manda por correo a Mailpit. El healthcheck (GET /salud) viene en
+  # su Dockerfile.
+  notification-service:
+    build: ./notification-service
+    environment:
+      NODE_ENV: production
+      PUERTO: 8086
+      DATABASE_URL: postgresql://notification:${NOTIFICATION_DB_CONTRASENA}@notification-db:5432/notification
+      RABBITMQ_URL: amqp://${RABBITMQ_USUARIO}:${RABBITMQ_CLAVE}@rabbitmq:5672
+      SMTP_HOST: mailpit
+      SMTP_PUERTO: 1025
+      # Para los enlaces de los correos: los abre el navegador, en el host.
+      URL_FRONTEND: http://localhost:4200
+    depends_on:
+      notification-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
   api-gateway:
     build: ./api-gateway
     environment:
@@ -273,6 +308,7 @@ services:
       CONTRIBUTION_URL: http://contribution-service:8083
       UPDATE_URL: http://update-service:8084
       SEARCH_URL: http://search-service:8085
+      NOTIFICATION_URL: http://notification-service:8086
       CORS_ORIGENES: http://localhost:4200
     ports:
       - "8080:8080"
@@ -282,6 +318,7 @@ services:
       - contribution-service
       - update-service
       - search-service
+      - notification-service
 
   frontend:
     build: ./frontend
@@ -326,4 +363,5 @@ volumes:
   contribution-data:
   update-data:
   search-data:
+  notification-data:
   rabbitmq-data:

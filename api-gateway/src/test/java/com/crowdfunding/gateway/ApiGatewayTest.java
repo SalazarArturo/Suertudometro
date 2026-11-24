@@ -42,6 +42,7 @@ class ApiGatewayTest {
   private static final DisposableServer APORTES = ServicioDePrueba.iniciar("contribution-service");
   private static final DisposableServer NOVEDADES = ServicioDePrueba.iniciar("update-service");
   private static final DisposableServer BUSQUEDA = ServicioDePrueba.iniciar("search-service");
+  private static final DisposableServer AVISOS = ServicioDePrueba.iniciar("notification-service");
 
   @DynamicPropertySource
   static void configurar(DynamicPropertyRegistry registro) {
@@ -51,6 +52,7 @@ class ApiGatewayTest {
     registro.add("CONTRIBUTION_URL", () -> url(APORTES));
     registro.add("UPDATE_URL", () -> url(NOVEDADES));
     registro.add("SEARCH_URL", () -> url(BUSQUEDA));
+    registro.add("NOTIFICATION_URL", () -> url(AVISOS));
     // Menos que los 3 s que tarda la ruta lenta del servicio de prueba.
     registro.add("spring.cloud.gateway.server.webflux.httpclient.response-timeout", () -> "1s");
   }
@@ -61,7 +63,7 @@ class ApiGatewayTest {
 
   @AfterAll
   static void detenerServicios() {
-    Stream.of(IDENTIDAD, CAMPANAS, APORTES, NOVEDADES, BUSQUEDA)
+    Stream.of(IDENTIDAD, CAMPANAS, APORTES, NOVEDADES, BUSQUEDA, AVISOS)
         .forEach(DisposableServer::disposeNow);
   }
 
@@ -88,7 +90,9 @@ class ApiGatewayTest {
         Arguments.of("GET", "/api/aportes/mios", "contribution-service"),
         Arguments.of("POST", "/api/novedades", "update-service"),
         Arguments.of("GET", "/api/novedades/campana/" + ID_CAMPANA, "update-service"),
-        Arguments.of("GET", "/api/busqueda?texto=libros&pagina=2", "search-service"));
+        Arguments.of("GET", "/api/busqueda?texto=libros&pagina=2", "search-service"),
+        Arguments.of("GET", "/api/notificaciones/avisos?pagina=1", "notification-service"),
+        Arguments.of("POST", "/api/notificaciones/avisos/lectura", "notification-service"));
   }
 
   @ParameterizedTest(name = "{0} {1} llega a {2} sin reescribir la ruta")
@@ -115,7 +119,9 @@ class ApiGatewayTest {
         Arguments.of("/api/novedades/campana/" + ID_CAMPANA, "update-service"),
         Arguments.of("/api/novedades/esquema", "update-service"),
         Arguments.of("/api/novedades/documentacion", "update-service"),
-        Arguments.of("/api/busqueda?categoria=EDUCACION&estado=TODOS", "search-service"));
+        Arguments.of("/api/busqueda?categoria=EDUCACION&estado=TODOS", "search-service"),
+        Arguments.of("/api/notificaciones/docs", "notification-service"),
+        Arguments.of("/api/notificaciones/docs-json", "notification-service"));
   }
 
   @ParameterizedTest(name = "GET {0} pasa sin token")
@@ -135,6 +141,9 @@ class ApiGatewayTest {
 
   static Stream<Arguments> rutasProtegidasDeLosServicios() {
     return Stream.of(
+        Arguments.of("GET", "/api/notificaciones/avisos"),
+        Arguments.of("GET", "/api/notificaciones/avisos/no-leidos"),
+        Arguments.of("POST", "/api/notificaciones/avisos/lectura"),
         Arguments.of("POST", "/api/campanas"),
         // El {id} público solo admite un UUID: "mias" no entra.
         Arguments.of("GET", "/api/campanas/mias"),
