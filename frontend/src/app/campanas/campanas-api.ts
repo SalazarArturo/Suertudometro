@@ -26,7 +26,20 @@ export type LecturaHistorialEstados = HttpResourceRef<
 @Service()
 export class CampanasApi {
   private readonly http = inject(HttpClient);
-  private readonly url = `${inject(URL_API)}/campanas`;
+  private readonly urlApi = inject(URL_API);
+  private readonly url = `${this.urlApi}/campanas`;
+  private readonly origenGateway = new URL(this.urlApi).origin;
+
+  /**
+   * Convierte la ruta relativa devuelta por el backend (`/api/campanas/{id}/imagenes/{idImagen}`)
+   * en una URL absoluta hacia el API Gateway.
+   */
+  urlImagen(urlPublica: string): string {
+    if (!urlPublica.startsWith('/') || urlPublica.startsWith('//')) {
+      return urlPublica;
+    }
+    return `${this.origenGateway}${urlPublica}`;
+  }
 
   /** Detalle de una campaña (`GET /api/campanas/{id}`). */
   detalleDeCampana(idCampana: () => string | undefined): LecturaDetalleCampana {

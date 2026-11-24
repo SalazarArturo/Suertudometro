@@ -52,6 +52,9 @@ describe('FormularioCampana', () => {
       'Por favor adjunta el presupuesto detallado de la librería.',
     );
     expect(pantalla().textContent).toContain('portada.jpg');
+    expect(pantalla().querySelector<HTMLImageElement>('.item-imagen img')?.src).toBe(
+      `http://api.prueba${CAMPANA_BORRADOR_PRUEBA.imagenes[0].urlPublica}`,
+    );
     expect(pantalla().textContent).toContain('Solicitar revisión');
   });
 });

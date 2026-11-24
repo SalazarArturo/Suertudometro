@@ -1,8 +1,8 @@
 # campaign-service
 
-> **Responsable:** Arturo · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-19 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Arturo · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-23 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Campañas** (subdominio core) · Spring Boot 4.1 · Java 21 · base de datos `campaign-db` · volumen `campaign-images` · ruta en el gateway `/api/campanas` · puerto interno 8082.
-> **Implementación:** el backend completo está en `campaign-service/` con su `Dockerfile` y `compose.yaml` propio, y las 4 pantallas del frontend están en `frontend/src/app/campanas/`. Cómo correrlo: [`campaign-service/README.md`](../../campaign-service/README.md).
+> **Implementación:** el backend completo está en `campaign-service/` integrado en el `docker-compose.yml` de la raíz detrás del `api-gateway`, y las 4 pantallas del frontend están en `frontend/src/app/campanas/`. Cómo correrlo: [`campaign-service/README.md`](../../campaign-service/README.md).
 
 ## 1. Responsabilidad
 
@@ -259,7 +259,7 @@ campaign-service/
 |---|---|---|
 | Confirmación de las fichas `CampanaPublicada`, `CampanaCerrada` y `MetaAlcanzada` | Raul, Gabo y Efrain | Cerrar el pendiente #4 de contratos v1. |
 | Confirmación de cómo viajan el `idUsuario` y el `rol` (`ORGANIZADOR`, `ADMINISTRADOR`) desde el gateway | Efrain | Validar autoría del organizador y permisos de moderación en los endpoints REST (pendiente #5). |
-| Contenedor `campaign-db`, volumen `campaign-images` y RabbitMQ en `docker-compose.yml` | Efrain | Ejecutar e integrar el servicio en el entorno completo. |
+| Contenedor `campaign-db`, volumen `campaign-images` y RabbitMQ en `docker-compose.yml` | Efrain | Ejecutar e integrar el servicio en el entorno completo (resuelto el 2026-11-20 en `feat/gateway-rutas-campanas-busqueda`). |
 | Eventos `aporte.registrado` emitidos según la ficha `AporteRegistrado` | Raul | Sumar el monto recaudado y disparar el cierre automático al alcanzar la meta. |
 | Base de Angular (shell, rutas e interceptor JWT) | Efrain | Montar las pantallas del dominio de campañas. |
 
@@ -289,13 +289,14 @@ campaign-service/
 - [x] Implementar `application` (comandos, consultas CQRS, puertos, DTOs y manejador de `AporteRegistrado`) con pruebas unitarias.
 - [x] Implementar `infrastructure` (migración Flyway `V1__crear_esquema_campanas.sql`, entidades JPA, mappers, almacenamiento de imágenes en volumen, Transactional Outbox, consumidor idempotente de RabbitMQ, `Dockerfile` y `compose.yaml` propio) con pruebas de adaptadores y de arquitectura de capas.
 - [x] Implementar `api` (controladores REST, DTOs, lectura de headers `X-Usuario-*` y errores RFC 9457) con pruebas unitarias.
-- [ ] Integrar en `docker-compose.yml` de la raíz detrás del `api-gateway` (con Efrain).
-- [x] Construir las 4 pantallas de campañas en Angular (`frontend/src/app/campanas/`) con sus pruebas en Vitest (2026-11-19).
+- [x] Integrar en `docker-compose.yml` de la raíz detrás del `api-gateway` (con Efrain, 2026-11-20).
+- [x] Construir las 4 pantallas de campañas en Angular (`frontend/src/app/campanas/`) con sus pruebas en Vitest (2026-11-19) y resolver las URLs de imágenes contra el origen del gateway (2026-11-23).
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-23 | Arturo | §10 y §13: se marca completada la integración en `docker-compose.yml` detrás del `api-gateway` y se antepone el origen del gateway en las URLs de imágenes de `DetalleCampana` y `FormularioCampana`. |
 | 2026-11-19 | Arturo | §11 y §13: implementación de las 4 pantallas de campañas en `frontend/src/app/campanas/` (`DetalleCampana`, `MisCampanas`, `FormularioCampana` y `ModeracionCampanas`) con Signal Forms, integración de `<app-aportar>` y `<app-historial-aportes>`, y pruebas en Vitest. |
 | 2026-11-17 | Arturo | Implementación completa del backend de `campaign-service` (capas `sharedkernel`, `domain`, `application`, `infrastructure` y `api`), migración Flyway, Outbox/Inbox RabbitMQ, `Dockerfile`, `compose.yaml` autónomo y suite de pruebas JUnit 5. |
 | 2026-11-08 | Arturo | Primera versión completa del diseño de `campaign-service`. |

@@ -59,6 +59,9 @@ describe('DetalleCampana', () => {
     expect(pantalla().querySelector('h1')?.textContent).toContain(
       'Libros para la biblioteca comunitaria',
     );
+    expect(pantalla().querySelector<HTMLImageElement>('figure.portada img')?.src).toBe(
+      `http://api.prueba${CAMPANA_PUBLICADA_PRUEBA.imagenes[0].urlPublica}`,
+    );
     expect(pantalla().textContent).toContain('25 % de la meta');
     expect(pantalla().textContent).toContain('1.250,00');
     expect(pantalla().textContent).toContain('5.000,00');
