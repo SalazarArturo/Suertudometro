@@ -76,6 +76,7 @@ Qué hace cada servicio, su rol DDD y su ruta en el gateway: `README.md` → Arq
 | **Migraciones de BD** | Flyway | Prisma Migrate | Migraciones nativas de Django |
 | **Integración RabbitMQ** | Spring AMQP | `amqplib` nativo * | `pika` |
 | **Documentación OpenAPI** | `springdoc-openapi` | `@nestjs/swagger` | `drf-spectacular` |
+| **Envío de correo (SMTP)** | — | `nodemailer` (solo `notification`) | — |
 | **Testing Suite** | JUnit 5 + Testcontainers | Vitest (runner oficial de NestJS 12) ** + Supertest + Testcontainers | `pytest` + `pytest-django` |
 | **Linter y Formato** | Spotless (`google-java-format`) | ESLint + Prettier | Ruff |
 

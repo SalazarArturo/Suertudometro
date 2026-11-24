@@ -24,7 +24,7 @@ La lista de eventos, las rutas de RabbitMQ y el sobre del mensaje ya están docu
 | `AporteRegistrado` | `aporte.registrado` | `contribution-service` | `campaign-service`, `search-service`, `notification-service` |
 | `MetaAlcanzada` | `meta.alcanzada` | `campaign-service` | `search-service`, `notification-service` |
 | `CampanaActualizada` | `campana.actualizada` | `update-service` | `notification-service` |
-| `CampanaCerrada` | `campana.cerrada` | `campaign-service` | `contribution-service`, `search-service`, `update-service`, `notification-service` *(propuesto por Arturo; confirma Efrain)* |
+| `CampanaCerrada` | `campana.cerrada` | `campaign-service` | `contribution-service`, `search-service`, `update-service`, `notification-service` |
 
 ## Cómo leer las fichas
 
@@ -94,7 +94,7 @@ Campañas publica el cierre definitivo por meta alcanzada, plazo vencido o cance
 - **Novedades** bloquea nuevas publicaciones y conserva el historial.
 - **Búsqueda** actualiza el estado de la campaña en el catálogo (`FINALIZADA` o `CANCELADA`, según lo que se acuerde en el pendiente #14 de `estado-del-proyecto.md`).
 - **Contribuciones** cambia el estado en `CampanaAportable` a `estadoFinal` y bloquea nuevos aportes.
-- **Notificaciones** *(propuesto por Arturo; confirma Efrain)* avisa del cierre/cancelación de la campaña usando la asociación (`idCampana`, `idOrganizador`, `titulo`) registrada al publicarse.
+- **Notificaciones** *(propuesto por Arturo; confirmado por Efrain, 2026-11-24)* avisa del cierre/cancelación de la campaña al organizador y a los aportantes, usando la asociación (`idCampana`, `idOrganizador`, `titulo`) registrada al publicarse. Si el motivo es `META_ALCANZADA` no avisa, porque ya lo hizo con `MetaAlcanzada`.
 - El instante de cierre viene en `ocurridoEn`.
 
 ## CampanaActualizada
@@ -158,7 +158,7 @@ Campañas comprobó que el total recaudado alcanzó o superó la meta. `montoRec
 }
 ```
 
-**Búsqueda** marca la meta como alcanzada y sigue calculando el importe acumulado con los aportes individuales, para evitar contar dos veces el último aporte. **Notificaciones** usa ambos importes en el aviso de meta alcanzada, dirigido al organizador y a los aportantes de la campaña (a confirmar con Efrain).
+**Búsqueda** marca la meta como alcanzada y sigue calculando el importe acumulado con los aportes individuales, para evitar contar dos veces el último aporte. **Notificaciones** usa ambos importes en el aviso de meta alcanzada, dirigido al organizador y a los aportantes de la campaña (confirmado por Efrain, 2026-11-24).
 
 ## UsuarioRegistrado
 
@@ -200,6 +200,6 @@ Las campañas cerradas quedan disponibles mediante el filtro de estado una vez q
 | Participantes | Acuerdo pendiente |
 |---|---|
 | Campañas, Búsqueda, Novedades y Contribuciones | **Definido por Arturo (productor, 2026-11-08):** `idOrganizador` UUID obligatorio; `categoria` como código de enum ASCII (`EDUCACION`, `SALUD`, `APOYO_COMUNITARIO`, `EMERGENCIAS`, `PROYECTOS_PERSONALES`, `OTROS`); `moneda` `"BOB"`; `fechaLimite` obligatoria en toda campaña; `CampanaCerrada` lleva `estadoFinal` (`FINALIZADA` \| `CANCELADA`) y `motivoCierre` (`META_ALCANZADA` \| `PLAZO_VENCIDO` \| `CANCELACION`). *Pendiente de confirmación de los consumidores (Gabo y Raul).* |
-| Contribuciones y Notificaciones | Decidir cuándo una cuenta que aporta anónimamente puede quedar vinculada en privado para recibir novedades. Los visitantes sin cuenta carecen de bandeja. |
-| Novedades y Notificaciones | Confirmar si el aviso muestra el contenido completo de la novedad o requiere un extracto. La ficha propone contenido completo. |
-| Campañas y Notificaciones | **Propuesto por Arturo (2026-11-08):** `MetaAlcanzada` notifica al organizador y a los aportantes, y `notification-service` también consume `CampanaCerrada`. *Pendiente de confirmación de Efrain.* |
+| Contribuciones y Notificaciones | **Definido por Efrain (consumidor, 2026-11-24):** quien aporta, también de forma anónima, queda vinculado en privado, solo para recibir los avisos de esa campaña; el vínculo no se muestra a nadie. *Pendiente de confirmación de Raul.* |
+| Novedades y Notificaciones | **Definido por Efrain (consumidor, 2026-11-24):** el aviso muestra el contenido completo, como propone la ficha. *Pendiente de confirmación de Gabo.* |
+| Campañas y Notificaciones | **Propuesto por Arturo (2026-11-08):** `MetaAlcanzada` notifica al organizador y a los aportantes, y `notification-service` también consume `CampanaCerrada`. **Confirmado por Efrain (2026-11-24).** |

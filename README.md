@@ -102,6 +102,7 @@ BORRADOR ──► EN_REVISION ──► PUBLICADA ──┬──► FINALIZADA
 | `campaign-service` | `CrearCampana`, `EditarBorrador`, `SolicitarRevisionCampana`, `AprobarCampana`, `RechazarCampana`, `EliminarCampana`, `CerrarPorMetaAlcanzada`, `CerrarPorPlazoVencido`, `CancelarCampana`, `FinalizarCampana` |
 | `contribution-service` | `RealizarAporte` (con mensaje de apoyo y anonimato opcionales) |
 | `update-service` | `PublicarActualizacion` |
+| `notification-service` | `MarcarAvisoLeido`, `MarcarAvisosLeidos`. Lo demás lo hace al reaccionar a los eventos. |
 | *Pendientes de ubicar* | `CompartirCampana` (lo pide el enunciado) y `EnviarComentario` (los comentarios son una mejora opcional). Ver [`docs/estado-del-proyecto.md`](docs/estado-del-proyecto.md). |
 
 ### Agregados y modelos de lectura
@@ -113,7 +114,7 @@ BORRADOR ──► EN_REVISION ──► PUBLICADA ──┬──► FINALIZADA
 | `contribution-service` | `Aporte` | Historial de Aportes |
 | `update-service` | `Actualizacion` | Actualizaciones de Campaña |
 | `search-service` | — (solo lectura) | Catálogo de Campañas |
-| `notification-service` | Por definir | — |
+| `notification-service` | `Aviso`, `CampanaSeguida`, `Contacto` | Bandeja de avisos |
 
 ### Eventos de integración (bus de RabbitMQ)
 
@@ -127,7 +128,7 @@ La comunicación entre servicios es **asíncrona**: entre microservicios **no ha
 | `AporteRegistrado` | `aporte.registrado` | contribution-service | campaign, search, notification |
 | `MetaAlcanzada` | `meta.alcanzada` | campaign-service | search, notification |
 | `CampanaActualizada` | `campana.actualizada` | update-service | notification-service |
-| `CampanaCerrada` | `campana.cerrada` | campaign-service | contribution, search, update |
+| `CampanaCerrada` | `campana.cerrada` | campaign-service | contribution, search, update, notification |
 
 > Los eventos van en pasado y **sin** sufijo `Event`/`Evento`. El formato de los mensajes (envelope JSON) está en [`docs/stack-y-convenciones.md`](docs/stack-y-convenciones.md) §5.5. La ficha de cada evento (los campos de `datos`) y lo que falta acordar para aprobarla están en [`docs/contratos-de-eventos.md`](docs/contratos-de-eventos.md).
 

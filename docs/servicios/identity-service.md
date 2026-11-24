@@ -1,6 +1,6 @@
 # identity-service
 
-> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-17 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Efrain · **Creado:** 2026-11-07 · **Última actualización:** 2026-11-24 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Identidad** (subdominio genérico) · NestJS 12 · Node.js 24 · TypeScript · base de datos `identity-db` · ruta en el gateway `/api/identidad` · puerto interno 8081.
 
 ## 1. Responsabilidad
@@ -12,7 +12,7 @@ Lo que **no** hace, y qué servicio lo hace:
 - **Decidir quién organiza una campaña:** lo hace `campaign-service`, comparando el usuario con el `idOrganizador` de la campaña. "Organizador" no es un rol de este servicio (§2).
 - **Validar el JWT en cada petición:** lo hace `api-gateway`, que reenvía la identidad en headers (§5.1).
 - **CORS y límite de peticiones:** los aplica `api-gateway`.
-- **Enviar correos (bienvenida u otros):** lo hace `notification-service`, al recibir `UsuarioRegistrado`.
+- **Enviar correos:** lo hace `notification-service`. De `UsuarioRegistrado` solo toma el correo de la cuenta; no manda un correo de bienvenida.
 - **Moderar cuentas de usuario** (suspender, bloquear o cambiar roles): **no se implementa**. Así se mantiene el modelo del event storming, que no tiene comandos de moderación de usuarios (decisión de Efrain del 2026-11-07, era el pendiente #6).
   > [!WARNING]
   > **Riesgo frente al enunciado.** El enunciado pide "Moderación de campañas, usuarios y estados desde administración", y es la fuente de mayor prioridad. La parte de usuarios queda sin cubrir. Está anotado en `docs/historial.md` para que lo vea el equipo.
@@ -349,7 +349,7 @@ Las pantallas del panel de administración (aprobar, rechazar y cancelar campañ
 
 | # | Pendiente | Decide | Estado |
 |---|---|---|---|
-| P1 | ¿`UsuarioRegistrado` necesita `nombre` para personalizar los correos? Hoy la ficha lleva solo `idUsuario` y `correo`. | Efrain, al diseñar notification-service | Abierto. Si hace falta, se propone una versión 2 de la ficha por PR. |
+| P1 | ¿`UsuarioRegistrado` necesita `nombre` para personalizar los correos? | Efrain | **Resuelto (2026-11-24):** no. Los avisos no saludan por nombre, y la ficha se queda con `idUsuario` y `correo`. |
 | P2 | Confirmar los límites del nombre y de la contraseña (R3 y R4) | Efrain | Propuesta: nombre de 2 a 100 caracteres; contraseña de 8 a 128 |
 
 ## 13. Plan de implementación
@@ -386,6 +386,7 @@ Una rama y un PR por fase (`docs/stack-y-convenciones.md` §5.8). Al terminar ca
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-24 | Efrain | §1 y P1: notification-service no manda correo de bienvenida y no necesita el nombre. |
 | 2026-11-17 | Efrain | Fase 6: §6 con lo que hace el publicador al implementarlo (`mandatory`, la espera entre vueltas que fallan, sin conexión no suma intentos, `RABBITMQ_URL` opcional) y §8 con los archivos de `mensajeria/`. |
 | 2026-11-12 | Efrain | §10 y §13: sin workflow propio; al servicio lo valida el CI general, y lo que ese CI no corre se revisa a mano (pedido de Arturo). |
 | 2026-11-09 | Efrain | La fase 7 se hizo en `chore/compose-base`, junto con el gateway y el frontend. Falta RabbitMQ, que llega con la fase 6. |

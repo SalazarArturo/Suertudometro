@@ -10,7 +10,7 @@
 | `contribution-service` | [contribution-service.md](contribution-service.md) | Raul | Borrador (en revisión) |
 | `campaign-service` | [campaign-service.md](campaign-service.md) | Arturo | Borrador (en revisión) |
 | `identity-service` | [identity-service.md](identity-service.md) | Efrain | Borrador (en revisión) |
-| `notification-service` | `notification-service.md` | Efrain | Sin documento |
+| `notification-service` | [notification-service.md](notification-service.md) | Efrain | Borrador (en revisión) |
 | `api-gateway` | [api-gateway.md](api-gateway.md) (corto: rutas, seguridad y CORS) | Efrain | Borrador (en revisión) |
 | `update-service` | [update-service.md](update-service.md) | Gabo | Borrador (en revisión) |
 | `search-service` | [search-service.md](search-service.md) | Gabo | Borrador (en revisión) |

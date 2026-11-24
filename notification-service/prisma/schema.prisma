@@ -1,0 +1,103 @@
+// Esquema de notification-db (docs/servicios/notification-service.md §7).
+// Estos modelos son del ORM, no del dominio: los mappers de infrastructure los
+// convierten. Tablas y columnas en snake_case ASCII.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/infrastructure/persistencia/prisma/generado"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EstadoEnvioCorreo {
+  PENDIENTE
+  ENVIADO
+  FALLIDO
+
+  @@map("estado_envio_correo")
+}
+
+/// El correo de cada cuenta, de UsuarioRegistrado.
+model ContactoFila {
+  idUsuario    String   @id @map("id_usuario") @db.Uuid
+  correo       String   @db.VarChar(254)
+  registradoEn DateTime @map("registrado_en") @db.Timestamptz(3)
+
+  @@map("contactos")
+}
+
+/// Lo mínimo de cada campaña publicada, de CampanaPublicada.
+model CampanaFila {
+  idCampana     String                 @id @map("id_campana") @db.Uuid
+  idOrganizador String                 @map("id_organizador") @db.Uuid
+  titulo        String
+  publicadaEn   DateTime               @map("publicada_en") @db.Timestamptz(3)
+  aportantes    AportanteCampanaFila[]
+
+  @@map("campanas")
+}
+
+/// Quién aportó a cada campaña, también de forma anónima. Es privado (R3): solo
+/// sirve para saber a quién avisar.
+model AportanteCampanaFila {
+  idCampana   String      @map("id_campana") @db.Uuid
+  idUsuario   String      @map("id_usuario") @db.Uuid
+  vinculadoEn DateTime    @map("vinculado_en") @db.Timestamptz(3)
+  campana     CampanaFila @relation(fields: [idCampana], references: [idCampana], onDelete: Cascade)
+
+  @@id([idCampana, idUsuario])
+  @@map("aportantes_campana")
+}
+
+/// Un aviso para una persona: su bandeja y, a la vez, la cola de correos.
+model AvisoFila {
+  idAviso          String            @id @map("id_aviso") @db.Uuid
+  idDestinatario   String            @map("id_destinatario") @db.Uuid
+  tipo             String            @db.VarChar(40)
+  contenido        Json              @db.JsonB
+  idCampana        String            @map("id_campana") @db.Uuid
+  idEvento         String            @map("id_evento") @db.Uuid
+  ocurridoEn       DateTime          @map("ocurrido_en") @db.Timestamptz(3)
+  creadoEn         DateTime          @map("creado_en") @db.Timestamptz(3)
+  leidoEn          DateTime?         @map("leido_en") @db.Timestamptz(3)
+  envioEstado      EstadoEnvioCorreo @map("envio_estado")
+  envioIntentos    Int               @map("envio_intentos")
+  envioProximoEn   DateTime          @map("envio_proximo_en") @db.Timestamptz(3)
+  envioUltimoError String?           @map("envio_ultimo_error")
+  enviadoEn        DateTime?         @map("enviado_en") @db.Timestamptz(3)
+
+  @@unique([idEvento, idDestinatario], map: "uq_avisos_evento_destinatario")
+  // La bandeja: del más nuevo al más antiguo.
+  @@index([idDestinatario, ocurridoEn(sort: Desc), idAviso(sort: Desc)], map: "ix_avisos_bandeja")
+  // La cantidad sin leer.
+  @@index([idDestinatario, leidoEn], map: "ix_avisos_no_leidos")
+  // El despachador busca los correos pendientes que ya se pueden intentar.
+  @@index([envioEstado, envioProximoEn], map: "ix_avisos_por_enviar")
+  @@map("avisos")
+}
+
+/// Inbox: los eventos que ya se procesaron (idempotencia por idEvento).
+model EventoProcesadoFila {
+  idEvento    String   @id @map("id_evento") @db.Uuid
+  tipoEvento  String   @map("tipo_evento") @db.VarChar(100)
+  procesadoEn DateTime @map("procesado_en") @db.Timestamptz(3)
+
+  @@map("eventos_procesados")
+}
+
+/// Eventos de una campaña que todavía no se conoce (R6).
+model EventoEnEsperaFila {
+  idEvento   String   @id @map("id_evento") @db.Uuid
+  idCampana  String   @map("id_campana") @db.Uuid
+  tipoEvento String   @map("tipo_evento") @db.VarChar(100)
+  ocurridoEn DateTime @map("ocurrido_en") @db.Timestamptz(3)
+  contenido  Json     @db.JsonB
+  recibidoEn DateTime @map("recibido_en") @db.Timestamptz(3)
+
+  @@index([idCampana, ocurridoEn], map: "ix_eventos_en_espera_campana")
+  @@map("eventos_en_espera")
+}
