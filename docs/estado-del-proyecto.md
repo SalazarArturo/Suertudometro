@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-24 (Efrain: notification-service, en el compose y en el gateway).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-25 (Efrain: bandeja de avisos y enlaces del menú).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -71,7 +71,7 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 - aprobar los contratos de los 7 eventos (hay una propuesta v1 de todos; Arturo ya aprobó los 4 de `campaign-service` y Raul el de `contribution-service`);
-- la pantalla de la bandeja de avisos y las de novedades.
+- las pantallas de novedades.
 
 ## Avance por servicio
 
@@ -81,13 +81,13 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 | RabbitMQ (topología) | Efrain | [Borrador](rabbitmq.md) | En el compose; identity-service ya publica `usuario.registrado` |
 | `api-gateway` | Efrain | [Borrador](servicios/api-gateway.md) | Integrado (probado con Docker Compose): rutas de los seis servicios; falta el límite de peticiones |
 | `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Integrado por eventos: publica `usuario.registrado`, que consume notification-service |
-| `notification-service` | Efrain | [Borrador](servicios/notification-service.md) | Integrado por eventos: consume los siete, en el compose y detrás del gateway, probado con Mailpit. Falta la pantalla de la bandeja |
+| `notification-service` | Efrain | [Borrador](servicios/notification-service.md) | Integrado por eventos: consume los siete, en el compose y detrás del gateway, probado con Mailpit. Su bandeja ya tiene pantalla |
 | `campaign-service` | Arturo | [Borrador](servicios/campaign-service.md) | Persistencia y API. Tiene las 5 capas DDD, migración Flyway, almacenamiento de imágenes, outbox y consumidor idempotente, `Dockerfile` y `compose.yaml` propio; ya está en el gateway y en el compose de la raíz, probado con los demás servicios |
 | `contribution-service` | Raul | [Borrador](servicios/contribution-service.md) | Persistencia y API. El outbox y los consumidores de eventos están implementados; ya está en el gateway y en el compose de la raíz, probado con los eventos reales de campaign-service |
 | `update-service` | Gabo | [Borrador](servicios/update-service.md) | Persistencia y API; ya está en el gateway y en el compose de la raíz, probado con los eventos reales de campaign-service |
 | `search-service` | Gabo | [Borrador](servicios/search-service.md) | Persistencia y API. Catálogo y consumidor probados con su propio Docker Compose; ya está en el gateway y en el compose de la raíz, probado con los eventos reales. |
-| `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Integrado (probado con Docker Compose) |
-| `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Campañas (Arturo), Aportes (Raul) y catálogo de Búsqueda (Gabo). |
+| `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Integrado (probado con Docker Compose); la barra, el menú y los paneles enlazan las pantallas de los dominios |
+| `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Campañas (Arturo), Aportes (Raul), catálogo de Búsqueda (Gabo) y bandeja de avisos (Efrain). Faltan las de novedades (Gabo). |
 
 Valores posibles:
 - **Documento:** Sin documento · Borrador · Vigente.
@@ -155,8 +155,9 @@ Valores posibles:
   - Arturo (2026-11-17): `campaign-service` tiene las 5 capas DDD completas (`sharedkernel`, `domain` con `Campana` y `CampanaBuilder`, `application` CQRS con PipelinR, `infrastructure` con Flyway, JPA, almacenamiento de imágenes en volumen, Transactional Outbox y consumidor idempotente de `aporte.registrado` alineados con `docs/rabbitmq.md`, y `api` con errores RFC 9457 y lectura de headers `X-Usuario-*`), además de su `Dockerfile`, `compose.yaml` autónomo (`campaign-db` + `rabbitmq` + `campaign-service`) y pruebas unitarias y de arquitectura de capas (rama `feat/campaign-dominio-y-aplicacion`). Falta activar su ruta en el gateway y sumarlo al compose de la raíz (con Efrain). Diseño: [campaign-service](servicios/campaign-service.md).
   - Gabo (2026-11-20). `search-service` tiene catálogo en PostgreSQL, `GET /api/busqueda` y consumidor de cuatro eventos v1. El flujo de publicación, aportes, meta y cierre se verificó en un entorno aislado. Queda la integración con el gateway y los productores en el Compose general, y el catálogo en Angular. [Diseño y pruebas](servicios/search-service.md).
   - Efrain (2026-11-20): campaign-service y search-service entran al compose de la raíz, y el gateway activa `/api/campanas/**` y `/api/busqueda/**` con las rutas públicas que confirmaron Arturo y Gabo (rama `feat/gateway-rutas-campanas-busqueda`). Se probó de punta a punta por el gateway, con los eventos reales: crear una campaña con su portada, pedir la revisión, aprobar y rechazar, el catálogo, aportar, la suma del aporte en la campaña y en el catálogo, publicar una novedad, la meta alcanzada (`FINALIZADA`) y la cancelación (`CANCELADA`), con contribution-service y update-service rechazando lo que llega después del cierre y sin nada en las cuatro DLQ.
-  - Efrain (2026-11-24): `notification-service` tiene diseño, dominio, aplicación, persistencia, API y mensajería (rama `feat/notification-avisos`). Consume los siete eventos, guarda los avisos en una bandeja y los manda por correo. Las pruebas pasan, incluidas las de integración con PostgreSQL, RabbitMQ y Mailpit reales. Está en el compose y detrás del gateway (rama `chore/compose-notification`), probado de punta a punta desde volúmenes vacíos. Falta la pantalla de la bandeja. Diseño y pendientes: [notification-service](servicios/notification-service.md).
+  - Efrain (2026-11-24): `notification-service` tiene diseño, dominio, aplicación, persistencia, API y mensajería (rama `feat/notification-avisos`). Consume los siete eventos, guarda los avisos en una bandeja y los manda por correo. Las pruebas pasan, incluidas las de integración con PostgreSQL, RabbitMQ y Mailpit reales. Está en el compose y detrás del gateway (rama `chore/compose-notification`), probado de punta a punta desde volúmenes vacíos. Diseño y pendientes: [notification-service](servicios/notification-service.md).
 - **Fase 4 · Frontend:** las pantallas de cada dominio.
+  - Efrain (2026-11-25): la campanita y la bandeja de avisos (`/avisos`), y los enlaces de la barra, del menú y de los paneles, que antes eran páginas provisorias (rama `feat/frontend-bandeja-avisos`). Resuelve F3 y F5 de [`frontend.md`](frontend.md) §10; F4 (presupuesto del bundle) sigue abierto. Probado en el navegador con el sistema levantado desde volúmenes vacíos.
   - Gabo (2026-11-20). «Explorar campañas» es la portada pública y usa Búsqueda por el gateway. Los filtros y la página se conservan en la URL. La portada y el detalle con datos reales se validarán cuando Campañas se integre al gateway.
   - Raul (2026-11-15): las cuatro pantallas de aportes (aportar, historial de una campaña, "Mis aportes" y "Aportes recibidos") están en `frontend/src/app/aportes/` (rama `feat/contribution-aportes`), con sus pruebas. "Aportar" y el historial son secciones para el detalle de la campaña; mientras ese detalle no exista, se usan desde una página provisoria. Quedan dos pendientes para Efrain en [`frontend.md`](frontend.md) §10: el presupuesto del bundle inicial (F4) y el enlace a "Mis aportes" en el menú (F5).
   - Arturo (2026-11-19; actualizado 2026-11-23): las cuatro pantallas de campañas (detalle público `/campanas/:id` montando `<app-aportar>` y `<app-historial-aportes>`, "Mis campañas" `/panel/campanas` enlazando a los aportes recibidos, formulario de creación/edición e imágenes `/panel/campanas/nueva` y `/panel/campanas/:id/editar`, y bandeja de moderación administrativa `/administracion/campanas`) están en `frontend/src/app/campanas/` (ramas `feat/campaign-pantallas` y `fix/campaign-imagenes-gateway`), con las URLs de imágenes resueltas hacia el origen del gateway y sus pruebas en Vitest. Rutas confirmadas en [`frontend.md`](frontend.md) §2.

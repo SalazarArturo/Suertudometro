@@ -1,0 +1,92 @@
+<section class="pagina">
+  <header class="cabecera">
+    <h1>Avisos</h1>
+    <button
+      matButton="outlined"
+      type="button"
+      [disabled]="!puedeMarcarTodos()"
+      (click)="marcarTodos()"
+    >
+      Marcar todos como leídos
+    </button>
+  </header>
+
+  <mat-checkbox [checked]="soloNoLeidos()" (change)="filtrar($event.checked)">
+    Solo los que no leí
+  </mat-checkbox>
+
+  <!-- Al recargar se mantiene la lista: la barra no la reemplaza. -->
+  <div class="carga">
+    @if (avisos.isLoading()) {
+      <mat-progress-bar mode="indeterminate" aria-label="Cargando los avisos" />
+    }
+  </div>
+
+  @if (error(); as detalle) {
+    <p class="mensaje-error" role="alert">{{ detalle }}</p>
+    <button matButton="outlined" type="button" (click)="avisos.reload()">Reintentar</button>
+  } @else if (avisos.hasValue()) {
+    @let resultado = avisos.value();
+    @if (resultado.elementos.length === 0) {
+      <p class="vacio">
+        {{ soloNoLeidos() ? 'No tienes avisos sin leer.' : 'Todavía no tienes avisos.' }}
+      </p>
+    } @else {
+      <ul class="avisos" aria-label="Avisos">
+        @for (aviso of resultado.elementos; track aviso.id) {
+          <li class="aviso" [class.sin-leer]="!aviso.leido">
+            <mat-icon class="icono" aria-hidden="true">{{ icono(aviso.tipo) }}</mat-icon>
+            <div class="texto">
+              <h2>
+                <a [routerLink]="ruta(aviso)" (click)="alAbrir(aviso)">{{ aviso.titulo }}</a>
+                @if (!aviso.leido) {
+                  <span class="etiqueta">Sin leer</span>
+                }
+              </h2>
+              <p class="mensaje">{{ aviso.mensaje }}</p>
+              <p class="pie">
+                <time [attr.datetime]="aviso.ocurridoEn">
+                  {{ aviso.ocurridoEn | date: 'longDate' }},
+                  {{ aviso.ocurridoEn | date: 'shortTime' }}
+                </time>
+                @if (!aviso.leido) {
+                  <button
+                    matButton
+                    type="button"
+                    [disabled]="procesando()"
+                    [attr.aria-label]="'Marcar como leído: ' + aviso.titulo"
+                    (click)="marcarLeido(aviso)"
+                  >
+                    Marcar como leído
+                  </button>
+                }
+              </p>
+            </div>
+          </li>
+        }
+      </ul>
+
+      @if (resultado.totalPaginas > 1) {
+        <nav class="paginas" aria-label="Páginas de avisos">
+          <button
+            matButton="outlined"
+            type="button"
+            [disabled]="resultado.pagina <= 1"
+            (click)="pagina.set(resultado.pagina - 1)"
+          >
+            Anterior
+          </button>
+          <span>Página {{ resultado.pagina }} de {{ resultado.totalPaginas }}</span>
+          <button
+            matButton="outlined"
+            type="button"
+            [disabled]="resultado.pagina >= resultado.totalPaginas"
+            (click)="pagina.set(resultado.pagina + 1)"
+          >
+            Siguiente
+          </button>
+        </nav>
+      }
+    }
+  }
+</section>

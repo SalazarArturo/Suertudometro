@@ -108,6 +108,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-25 | Efrain | **Bandeja de avisos y enlaces del menú.** Campanita en la barra superior con la cantidad sin leer y bandeja en `/avisos` (paginación, filtro, marcar uno o todos). Enlaces principales del mockup en la barra, más opciones en el menú de la cuenta, y "Mi panel" y "Administración" con sus enlaces en lugar de las páginas provisorias. El sondeo de la campanita no saca a nadie de su pantalla si la sesión vence. Probado en el navegador con el sistema levantado desde volúmenes vacíos. | Rama `feat/frontend-bandeja-avisos` |
 | 2026-11-24 | Efrain | **notification-service en el compose y detrás del gateway.** `docker compose up --build` levanta los seis servicios. Probado desde volúmenes vacíos con los eventos reales: cada aviso llega a la bandeja y por correo a Mailpit (rechazo, publicación, aporte con nombre y anónimo, novedad, meta, cancelación y plazo vencido), y con Mailpit o el servicio apagados no se pierde nada. | Rama `chore/compose-notification` |
 | 2026-11-24 | Efrain | **notification-service: diseño y servicio.** Consume los siete eventos con inbox, guarda los avisos en una bandeja con API REST y los manda por correo, con reintentos. Dominio, aplicación, persistencia, API, consumidor y correo, con pruebas unitarias, e2e y de integración con PostgreSQL 18, RabbitMQ 4.3 y Mailpit reales. Falta sumarlo al compose y al gateway. | Rama `feat/notification-avisos` |
 | 2026-11-23 | Arturo | **URLs de imágenes de campaña por el gateway.** `CampanasApi.urlImagen` antepone el origen de `URL_API` a las rutas `/api/campanas/{id}/imagenes/{idImagen}` en `DetalleCampana` y `FormularioCampana`, con pruebas unitarias en Vitest y actualización de `docs/servicios/campaign-service.md`. | Rama `fix/campaign-imagenes-gateway` |
@@ -173,7 +174,7 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 | `.gitignore` | Arturo (2026-10-16); Raul (2026-11-07); Efrain (2026-11-17, `docker-compose.override.yml`) |
 | `identity-service/` | Efrain (2026-11-07, esqueleto) |
 | `notification-service/` y `docs/servicios/notification-service.md` | Efrain (2026-11-24) |
-| `docs/frontend.md` y `frontend/` | Efrain (2026-11-08, base del frontend) |
+| `docs/frontend.md` y `frontend/` | Efrain (2026-11-08, base del frontend; 2026-11-25, `frontend/src/app/notificaciones/`, la barra superior y los paneles) |
 | `api-gateway/` | Efrain (2026-11-08, base del gateway; 2026-11-17, rutas de contribution-service y update-service; 2026-11-20, rutas de campaign-service y search-service; 2026-11-24, ruta de notification-service) |
 | `docker-compose.yml` y `.env.example` | Efrain (2026-11-09: identity, gateway y frontend; 2026-11-17: RabbitMQ y Mailpit, y después contribution-service y update-service; 2026-11-20: campaign-service y search-service; 2026-11-24: notification-service) |
 | `docs/rabbitmq.md` | Efrain (2026-11-17; 2026-11-20, §9) |

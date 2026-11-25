@@ -3,7 +3,21 @@
 
   <span class="separador"></span>
 
+  <nav class="principal" aria-label="Principal">
+    @for (enlace of enlaces; track enlace.ruta) {
+      <a
+        matButton
+        [routerLink]="enlace.ruta"
+        routerLinkActive="activo"
+        [routerLinkActiveOptions]="mismaRuta"
+        ariaCurrentWhenActive="page"
+        >{{ enlace.texto }}</a
+      >
+    }
+  </nav>
+
   @if (sesion.usuario(); as usuario) {
+    <app-campanita />
     <button matButton type="button" [matMenuTriggerFor]="menuCuenta">
       <mat-icon aria-hidden="true">account_circle</mat-icon>
       <span class="nombre">{{ usuario.nombre }}</span>
@@ -17,10 +31,27 @@
         <mat-icon aria-hidden="true">dashboard</mat-icon>
         <span>Mi panel</span>
       </a>
+      <a mat-menu-item routerLink="/panel/campanas">
+        <mat-icon aria-hidden="true">campaign</mat-icon>
+        <span>Mis campañas</span>
+      </a>
+      <a mat-menu-item routerLink="/aportes/mios">
+        <mat-icon aria-hidden="true">volunteer_activism</mat-icon>
+        <span>Mis aportes</span>
+      </a>
+      <!-- En pantallas angostas la barra no muestra los enlaces principales. -->
+      <a mat-menu-item class="solo-angosto" routerLink="/panel/campanas/nueva">
+        <mat-icon aria-hidden="true">add_circle</mat-icon>
+        <span>Crear campaña</span>
+      </a>
       @if (sesion.esAdministrador()) {
         <a mat-menu-item routerLink="/administracion">
           <mat-icon aria-hidden="true">admin_panel_settings</mat-icon>
           <span>Administración</span>
+        </a>
+        <a mat-menu-item routerLink="/administracion/campanas">
+          <mat-icon aria-hidden="true">fact_check</mat-icon>
+          <span>Moderación de campañas</span>
         </a>
       }
       <button mat-menu-item type="button" (click)="cerrarSesion()">

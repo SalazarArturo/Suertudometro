@@ -1,0 +1,34 @@
+@use '@angular/material' as mat;
+
+// Está sobre el azul marino de la barra.
+:host {
+  @include mat.icon-button-overrides(
+    (
+      icon-color: #ffffff,
+      state-layer-color: #ffffff,
+      ripple-color: rgb(255 255 255 / 12%),
+    )
+  );
+}
+
+a {
+  position: relative;
+}
+
+.globo {
+  position: absolute;
+  // Material deja el ícono en la capa 1: sin esto, la campana tapa el número.
+  z-index: 2;
+  top: 2px;
+  left: 24px;
+  min-width: 18px;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border-radius: var(--mat-sys-corner-full);
+  background-color: var(--color-accion);
+  color: var(--color-marca);
+  font: var(--mat-sys-label-small);
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}

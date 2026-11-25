@@ -171,24 +171,33 @@ Las capas y sus reglas de importación (ESLint) son las mismas de identity-servi
 
 ## 11. Pantallas del frontend
 
-La bandeja ("campanita" en la barra superior, con la cantidad sin leer, y la lista de avisos) va en un PR aparte, sobre la base de Angular ([`docs/frontend.md`](../frontend.md), F3). El API ya queda listo para ella.
+En `frontend/src/app/notificaciones/`, sobre la base de Angular ([`docs/frontend.md`](../frontend.md) §2):
+
+- **Campanita** (`<app-campanita>`, en la barra superior, solo con sesión): lleva a la bandeja y muestra la cantidad sin leer.
+  - Pregunta al abrir la aplicación, cada 30 segundos mientras la pestaña está a la vista, y al volver a ella. No usa WebSocket ni SSE: el enunciado no pide tiempo real, y así el gateway no mantiene conexiones abiertas.
+  - Si el servicio no responde, se queda sin número y el resto de la aplicación sigue igual.
+- **Bandeja** (`/avisos`, con sesión): lista de a 10 por página, filtro "Solo los que no leí", marcar un aviso o todos.
+  - Abrir un aviso lo marca y lleva a la misma pantalla que su correo: editar la campaña (rechazo), los aportes recibidos (aporte) o el detalle (los demás).
+  - Si llegan avisos con la bandeja abierta, aparecen solos.
+  - Los textos que escriben las personas se muestran como texto, nunca como HTML.
 
 ## 12. Pendientes de este servicio
 
 | # | Pendiente | Decide | Estado |
 |---|---|---|---|
-| N1 | La pantalla de la bandeja | Efrain | PR aparte |
+| N1 | La pantalla de la bandeja | Efrain | Hecho (§11) |
 | N2 | Las campañas publicadas y las cuentas creadas **antes** de que existiera este servicio no se conocen, salvo las cuentas que siguen en el outbox de identity. Con volúmenes nuevos no pasa. | — | Documentado |
 
 ## 13. Plan de implementación
 
 - [x] **Fase 1 · Diseño y servicio** (`feat/notification-avisos`): este documento, dominio, aplicación, persistencia, API, consumidor y correo, con sus pruebas.
 - [x] **Fase 2 · Integración** (`chore/compose-notification`): `notification-db` y el servicio en el compose, la ruta del gateway y la prueba de punta a punta con Mailpit.
-- [ ] **Fase 3 · Pantalla** (`feat/frontend-notificaciones`).
+- [x] **Fase 3 · Pantalla** (`feat/frontend-bandeja-avisos`): la campanita y la bandeja, probadas en el navegador con el sistema levantado.
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-25 | Efrain | Fase 3: la campanita y la bandeja (§11). |
 | 2026-11-24 | Efrain | Fase 2: en el compose y detrás del gateway, probado de punta a punta con Mailpit. |
 | 2026-11-24 | Efrain | Primera versión, con las decisiones de cierre, destinatarios, aportes anónimos y canales. |
