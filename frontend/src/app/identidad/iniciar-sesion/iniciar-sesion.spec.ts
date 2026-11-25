@@ -104,6 +104,24 @@ describe('IniciarSesion', () => {
     expect(navegar).not.toHaveBeenCalled();
   });
 
+  it('si el servicio no responde, se puede reintentar sin volver a escribir', async () => {
+    completarYEnviar();
+    backend.expectOne(URL_SESIONES).flush(null, { status: 503, statusText: 'x' });
+    await vi.waitFor(() => expect(pantalla().querySelector('[role=alert]')).not.toBeNull());
+
+    pantalla().querySelector<HTMLButtonElement>('button[type=submit]')?.click();
+    const peticion = backend.expectOne(URL_SESIONES);
+    expect(peticion.request.body).toEqual({
+      correo: 'ana@example.org',
+      contrasena: 'una frase larga',
+    });
+    await fixture.whenStable();
+    expect(pantalla().querySelector('[role=alert]')).toBeNull();
+    peticion.flush(inicioSesionDePrueba());
+
+    await vi.waitFor(() => expect(sesion.autenticado()).toBe(true));
+  });
+
   it('avisa cuando llega porque la sesión venció', async () => {
     fixture.componentRef.setInput('motivo', 'sesion-vencida');
     await fixture.whenStable();

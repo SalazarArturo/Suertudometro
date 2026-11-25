@@ -127,6 +127,20 @@ describe('Registro', () => {
     );
   });
 
+  it('si el servicio no responde, se puede reintentar sin volver a escribir', async () => {
+    const navegar = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    completar();
+    enviar();
+    backend.expectOne(URL_USUARIOS).flush(null, { status: 503, statusText: 'x' });
+    await vi.waitFor(() => expect(pantalla().querySelector('[role=alert]')).not.toBeNull());
+
+    enviar();
+    backend.expectOne(URL_USUARIOS).flush(PERFIL_DE_PRUEBA, { status: 201, statusText: 'Created' });
+    (await vi.waitFor(() => backend.expectOne(URL_SESIONES))).flush(inicioSesionDePrueba());
+
+    await vi.waitFor(() => expect(navegar).toHaveBeenCalledWith('/'));
+  });
+
   it('si falla el inicio de sesión automático, manda a iniciar sesión', async () => {
     const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     completar();
