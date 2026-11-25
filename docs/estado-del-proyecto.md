@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-> **Documento vivo · última actualización: 2026-11-25 (Efrain: bandeja de avisos y enlaces del menú).** Claude Code lo carga en cada sesión.
+> **Documento vivo · última actualización: 2026-11-25 (Efrain: sin límite de peticiones en el gateway).** Claude Code lo carga en cada sesión.
 > Aquí está el presente y lo que sigue: meta, equipo, fase, avance, próximos pasos y pendientes. El pasado (decisiones tomadas, bitácora y quién hizo cada cosa) está en [`historial.md`](historial.md). Las reglas están en `AGENTS.md`.
 > **Quien cambie el estado actualiza este archivo en el mismo PR, con su nombre.**
 
@@ -79,7 +79,7 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 |---|---|---|---|
 | `docker-compose.yml` + `.env.example` | Efrain | Diagrama de despliegue | Completo: los seis servicios, el gateway, el frontend, RabbitMQ y Mailpit |
 | RabbitMQ (topología) | Efrain | [Borrador](rabbitmq.md) | En el compose; identity-service ya publica `usuario.registrado` |
-| `api-gateway` | Efrain | [Borrador](servicios/api-gateway.md) | Integrado (probado con Docker Compose): rutas de los seis servicios; falta el límite de peticiones |
+| `api-gateway` | Efrain | [Borrador](servicios/api-gateway.md) | Integrado (probado con Docker Compose): rutas de los seis servicios |
 | `identity-service` | Efrain | [Borrador](servicios/identity-service.md) | Integrado por eventos: publica `usuario.registrado`, que consume notification-service |
 | `notification-service` | Efrain | [Borrador](servicios/notification-service.md) | Integrado por eventos: consume los siete, en el compose y detrás del gateway, probado con Mailpit. Su bandeja ya tiene pantalla |
 | `campaign-service` | Arturo | [Borrador](servicios/campaign-service.md) | Persistencia y API. Tiene las 5 capas DDD, migración Flyway, almacenamiento de imágenes, outbox y consumidor idempotente, `Dockerfile` y `compose.yaml` propio; ya está en el gateway y en el compose de la raíz, probado con los demás servicios |
@@ -145,7 +145,7 @@ Valores posibles:
   - gateway ruteando `/api/**`;
   - identity con JWT;
   - base de Angular según `docs/frontend.md`.
-  - *Avance:* las cuatro cosas están hechas y probadas juntas con Docker Compose (ramas `feat/frontend-base`, `feat/gateway-base` y `chore/compose-base`). RabbitMQ y Mailpit ya están en el compose, y también contribution-service y update-service (2026-11-17) campaign-service y search-service (2026-11-20) y notification-service (2026-11-24), con sus rutas en el gateway; falta el límite de peticiones del gateway (Efrain).
+  - *Avance:* las cuatro cosas están hechas y probadas juntas con Docker Compose (ramas `feat/frontend-base`, `feat/gateway-base` y `chore/compose-base`). RabbitMQ y Mailpit ya están en el compose, y también contribution-service y update-service (2026-11-17) campaign-service y search-service (2026-11-20) y notification-service (2026-11-24), con sus rutas en el gateway (Efrain).
   - *CI:* identity-service, el api-gateway y el frontend no tienen workflow propio; los valida el CI general (`.github/workflows/ci.yml`), a pedido de Arturo. Ese CI no corre el formato con Prettier, la revisión de tipos, las pruebas e2e y de integración, los builds ni las imágenes de Docker: Efrain los corre a mano antes de cada PR (Efrain, 2026-11-12).
 - **Fase 2 · Dominio en aislado (todos, en paralelo):** agregados, objetos de valor, reglas y tests unitarios.
 - **Fase 3 · Persistencia, API y eventos:** migraciones, endpoints por el gateway y eventos con idempotencia por `idEvento`.
