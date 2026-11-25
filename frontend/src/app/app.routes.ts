@@ -25,6 +25,11 @@ export const routes: Routes = [
     loadChildren: () => import('./campanas/campanas.routes').then((m) => m.rutasCampanas),
   },
   {
+    path: '',
+    loadChildren: () =>
+      import('./notificaciones/notificaciones.routes').then((m) => m.rutasNotificaciones),
+  },
+  {
     path: 'panel',
     title: 'Mi panel',
     canActivate: [guardSesion],

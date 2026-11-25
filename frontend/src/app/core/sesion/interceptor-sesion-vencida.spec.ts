@@ -1,5 +1,6 @@
 import {
   HttpClient,
+  HttpContext,
   HttpErrorResponse,
   provideHttpClient,
   withInterceptors,
@@ -10,6 +11,7 @@ import { provideRouter, Router } from '@angular/router';
 import type { MockInstance } from 'vitest';
 import { problemaDePrueba, sesionDePrueba, URL_API_PRUEBA } from '../../../testing/datos-de-prueba';
 import { URL_API } from '../api/url-api';
+import { EN_SEGUNDO_PLANO } from '../http/en-segundo-plano';
 import { interceptorSesionVencida, MOTIVO_SESION_VENCIDA } from './interceptor-sesion-vencida';
 import { interceptorToken } from './interceptor-token';
 import { Sesion } from './sesion';
@@ -61,6 +63,25 @@ describe('interceptorSesionVencida', () => {
     });
     // El error sigue su camino: la pantalla también se entera.
     expect(recibido).toBeInstanceOf(HttpErrorResponse);
+  });
+
+  it('en segundo plano cierra la sesión, pero no saca a nadie de su pantalla', () => {
+    sesion.iniciar(sesionDePrueba());
+
+    http
+      .get(`${URL_API_PRUEBA}/notificaciones/avisos/no-leidos`, {
+        context: new HttpContext().set(EN_SEGUNDO_PLANO, true),
+      })
+      .subscribe({ error: () => undefined });
+    backend
+      .expectOne(`${URL_API_PRUEBA}/notificaciones/avisos/no-leidos`)
+      .flush(problemaDePrueba('no-autenticado', 401, 'Token vencido.'), {
+        status: 401,
+        statusText: 'Unauthorized',
+      });
+
+    expect(sesion.autenticado()).toBe(false);
+    expect(navegar).not.toHaveBeenCalled();
   });
 
   it('un 401 sin token, como credenciales inválidas, lo deja a la pantalla', () => {

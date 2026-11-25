@@ -1,6 +1,6 @@
 # frontend
 
-> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-20 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-25 · **Estado:** Borrador (en revisión del equipo)
 > Angular 22 · TypeScript 6 · Angular Material 22 · Vitest · contenedor `frontend` (Nginx, host `4200` → `80`) · nombre visible: **Go Fund Me** (el proyecto y el repositorio siguen llamándose Suertudómetro).
 
 ## 1. Qué es
@@ -28,14 +28,22 @@ Cada dominio carga sus rutas de forma diferida (*lazy loading*) desde su carpeta
 | Portal público | `/aportes/campana/:idCampana` (provisoria) | Las dos secciones anteriores juntas, mientras no exista el detalle de la campaña | Raul | Público | Los dos anteriores |
 | Portal público | `/aportes/mios` | Mis aportes | Raul | Con sesión | `GET /api/aportes/mios` |
 | Portal público | En el detalle | Compartir la campaña | Por definir | Público | Pendiente #2 |
-| Organizador | `/panel` | Inicio del panel (hoy, una página provisoria) | Efrain (base) | Con sesión | — |
+| Organizador | `/panel` | Inicio del panel: enlaces a Mis campañas, Crear campaña, Mis aportes y Avisos | Efrain (base) | Con sesión | — |
 | Organizador | `/panel/campanas` | Mis campañas: listado paginado, progreso, eliminación de borradores y cancelación | Arturo | Con sesión | `GET /api/campanas/mias`, `DELETE /api/campanas/{id}`, `POST /api/campanas/{id}/cancelacion` |
 | Organizador | `/panel/campanas/nueva` y `/panel/campanas/:id/editar` | Crear y editar borrador de campaña, gestor de imágenes y solicitar revisión | Arturo | Con sesión | `POST /api/campanas`, `PUT /api/campanas/{id}`, `POST /api/campanas/{id}/imagenes`, `DELETE /api/campanas/{id}/imagenes/{idImagen}`, `POST /api/campanas/{id}/solicitud-revision` |
 | Organizador | `/panel/campanas/:idCampana/aportes` | Aportes recibidos de una campaña | Raul | Con sesión; el servicio exige ser el organizador de la campaña o un administrador | `GET /api/aportes/recibidos?idCampana=` |
 | Organizador | `/panel/...` (propuesta) | Publicar novedades | Gabo | Con sesión | Por definir |
-| Administración | `/administracion` | Inicio del panel (hoy, una página provisoria) | Efrain (base) | Rol `ADMINISTRADOR` | — |
+| Administración | `/administracion` | Inicio del panel: enlace a la moderación de campañas | Efrain (base) | Rol `ADMINISTRADOR` | — |
 | Administración | `/administracion/campanas` | Revisión de campañas: aprobar, rechazar con observaciones y cancelar | Arturo | Rol `ADMINISTRADOR` | `GET /api/campanas?estado=`, `POST /api/campanas/{id}/aprobacion`, `POST /api/campanas/{id}/rechazo`, `POST /api/campanas/{id}/cancelacion` |
-| Todas | Por definir | Bandeja de avisos, con la cantidad sin leer en la barra superior | Efrain | Con sesión | `GET /api/notificaciones/avisos`, `GET /api/notificaciones/avisos/no-leidos`, `POST /api/notificaciones/avisos/{id}/lectura`, `POST /api/notificaciones/avisos/lectura` |
+| Todas | `/avisos` | Bandeja de avisos: lista paginada, filtro de no leídos, marcar uno o todos | Efrain | Con sesión | `GET /api/notificaciones/avisos`, `POST /api/notificaciones/avisos/{id}/lectura`, `POST /api/notificaciones/avisos/lectura` |
+| Todas | En la barra superior: `<app-campanita>` | Acceso a la bandeja, con la cantidad sin leer | Efrain | Con sesión; sin ella no aparece | `GET /api/notificaciones/avisos/no-leidos` |
+
+**Cómo se llega a cada pantalla** (lo mantiene Efrain, en `core/layout/barra-superior` y `zonas/`):
+- **Barra superior**, como en el mockup: Explorar, Crear campaña y Mis aportes. Se ven también sin sesión: las que la piden llevan a iniciarla y después vuelven. Debajo de 840 px la barra no las muestra y Crear campaña pasa al menú.
+- **Menú de la cuenta:** Mi perfil, Mi panel, Mis campañas y Mis aportes; con rol `ADMINISTRADOR`, también Administración y Moderación de campañas.
+- **Los paneles** (`/panel` y `/administracion`) son tarjetas con enlaces. Para sumar una pantalla, se agrega un elemento a `enlaces`.
+
+`app.routes.spec.ts` sigue cada enlace de la barra, del menú y de los paneles contra las rutas reales, y falla si alguno no lleva a una pantalla.
 
 ## 3. Estructura de carpetas
 
@@ -52,13 +60,13 @@ frontend/
         ├── app.config.ts · app.routes.ts        # proveedores y rutas de primer nivel (cada dominio agrega una línea)
         ├── core/                                # piezas de la base, una sola instancia (Efrain)
         │   ├── api/url-api.ts                   # token URL_API
-        │   ├── http/                            # leer errores RFC 9457
+        │   ├── http/                            # leer errores RFC 9457 y marcar peticiones en segundo plano
         │   ├── sesion/                          # Sesion, interceptores y guards
         │   ├── titulo/                          # título de la pestaña: "<pantalla> · Suertudómetro"
         │   └── layout/barra-superior/
         ├── shared/                              # componentes de presentación reutilizables, sin lógica de negocio
         ├── identidad/                           # pantallas de identity-service (Efrain)
-        ├── zonas/                               # páginas provisorias de los paneles del organizador y de administración
+        ├── zonas/                               # inicio de los paneles del organizador y de administración
         └── <dominio>/                           # campanas (Arturo), aportes (Raul), novedades y busqueda (Gabo), notificaciones (Efrain)
 ```
 
@@ -80,6 +88,7 @@ Aplica el contrato de [`servicios/identity-service.md`](servicios/identity-servi
    - al llegar `expiraEn`, `Sesion` se cierra sola;
    - al recargar la página, una sesión vencida se descarta.
 5. **`401` del API en una petición que llevaba token:** `interceptorSesionVencida` cierra la sesión y manda a `/ingresar?volverA=<ruta actual>`, con un aviso de que la sesión venció. Un `401` sin token (por ejemplo, una contraseña incorrecta al iniciar sesión) lo maneja la pantalla.
+   - **Peticiones en segundo plano** (las que nadie pidió, como la campanita): llevan `EN_SEGUNDO_PLANO` en su `HttpContext`. Ante un `401` la sesión se cierra, pero no se cambia de pantalla, para que nadie pierda lo que está escribiendo.
 6. **Cerrar sesión** borra el token. No hay endpoint, porque el token no tiene estado en el servidor.
 
 **Guards de rutas** (en `core/sesion/`):
@@ -163,14 +172,15 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 |---|---|---|
 | F1 | Confirmar las rutas y las pantallas de cada dominio (tabla del §2) | Cada responsable, en su documento de diseño |
 | F2 | Compartir la campaña: solo frontend o también backend (pendiente #2 del estado) | Equipo |
-| F3 | Pantalla de la bandeja de avisos ("campanita" en la barra superior y lista). **Decidido (Efrain, 2026-11-24):** sí, en un PR aparte; el API está en [`notification-service.md`](servicios/notification-service.md) §5 | Efrain |
-| F4 | Presupuesto del bundle inicial. Con las pantallas de aportes pasa de 487,8 kB a 502,1 kB, y el aviso de `angular.json` está en 500 kB (el error, en 1 MB). El aumento no depende de las pantallas en sí: es la primera vez que la aplicación usa `CurrencyPipe` (7,3 kB; lo pide el §6) y `@for` (unos 7 kB), y su código queda en el bloque inicial. Opciones: subir el aviso, o mostrar el dinero con `Intl.NumberFormat` en lugar de `CurrencyPipe`. Lo anotó Raul el 2026-11-15. | Efrain |
-| F5 | Enlace a "Mis aportes" en el menú de la cuenta (`core/layout/barra-superior`), como en el mockup del enunciado. Hoy la pantalla existe, pero solo se llega por su URL. | Efrain, con Raul |
+| F3 | Pantalla de la bandeja de avisos ("campanita" en la barra superior y lista). **Hecho (Efrain, 2026-11-25):** [`notification-service.md`](servicios/notification-service.md) §11 | Efrain |
+| F4 | Presupuesto del bundle inicial. Con las pantallas de aportes pasa de 487,8 kB a 502,1 kB, y el aviso de `angular.json` está en 500 kB (el error, en 1 MB). El aumento no depende de las pantallas en sí: es la primera vez que la aplicación usa `CurrencyPipe` (7,3 kB; lo pide el §6) y `@for` (unos 7 kB), y su código queda en el bloque inicial. Opciones: subir el aviso, o mostrar el dinero con `Intl.NumberFormat` en lugar de `CurrencyPipe`. Lo anotó Raul el 2026-11-15. Con los enlaces de la barra y la campanita, que se cargan siempre, el inicial pasa de unos 503 kB a unos 515 kB (Efrain, 2026-11-25). **Sigue abierto.** | Efrain |
+| F5 | Enlace a "Mis aportes" en el menú de la cuenta (`core/layout/barra-superior`), como en el mockup del enunciado. **Hecho (Efrain, 2026-11-25):** está en la barra, en el menú y en "Mi panel". Falta que Raul lo revise. | Efrain, con Raul |
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-25 | Efrain | §2: bandeja de avisos en `/avisos`, campanita, enlaces de la barra, del menú y de los paneles. §4: peticiones en segundo plano. F3 y F5 hechos; F4 con el tamaño nuevo. |
 | 2026-11-24 | Efrain | §2 y F3: la bandeja de avisos tendrá pantalla, en un PR aparte. |
 | 2026-11-20 | Gabo | §2: catálogo público en `/`, consulta de Búsqueda y enlace al detalle de Campañas; catálogo por implementar. |
 | 2026-11-20 | Gabo | «Explorar campañas» reemplaza el inicio provisorio. Los filtros y la página se conservan en la URL. |

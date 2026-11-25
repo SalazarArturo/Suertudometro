@@ -41,6 +41,28 @@
   vertical-align: bottom;
 }
 
+// Los enlaces principales, como en el mockup. Sin lugar para ellos, están en el
+// menú de la cuenta.
+.principal {
+  display: none;
+
+  @media (min-width: 840px) {
+    display: flex;
+    gap: 4px;
+  }
+}
+
+.activo {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+.solo-angosto {
+  @media (min-width: 840px) {
+    display: none;
+  }
+}
+
 // En pantallas angostas solo queda "Iniciar sesión"; su pantalla lleva a crear cuenta.
 .crear-cuenta {
   display: none;
