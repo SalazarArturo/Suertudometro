@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+test
+*.md
+.env
+.env.*
+Dockerfile
+.dockerignore
+# El cliente de Prisma se genera dentro de la imagen, al instalar.
+src/infrastructure/persistencia/prisma/generado

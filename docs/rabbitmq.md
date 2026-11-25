@@ -74,6 +74,7 @@ Qué hacer cuando falla:
 Cada tecnología lo resuelve a su manera; lo que importa es esperar entre intentos y terminar en la DLQ:
 - `contribution-service` (Spring AMQP) reintenta 3 veces, a 1, 2 y 4 segundos, y después lo manda a la DLQ.
 - `update-service` (pika) lo reencola y espera a reconectarse con la base.
+- `notification-service` (amqplib) reintenta 5 veces, a 1, 2, 4, 8 y 16 segundos, y después lo manda a la DLQ. Un mensaje que no cumple su ficha va a la DLQ de inmediato.
 
 ## 6. Revisar la cola de errores
 
@@ -126,6 +127,7 @@ Cada consumidor guarda la campaña en su propia base. Para borrar esas campañas
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-24 | Efrain | §5: cómo reintenta `notification-service`. |
 | 2026-11-20 | Efrain | §9: ya existe campaign-service; la simulación queda para probar un consumidor por separado. |
 | 2026-11-17 | Efrain | §9: cómo simular un evento desde la consola, mientras falta el servicio que lo publica. |
 | 2026-11-17 | Efrain | §2: las colas siempre son durables (RabbitMQ 4.3 rechaza las no durables compartidas). §4: identity-service también publica con `mandatory`. |

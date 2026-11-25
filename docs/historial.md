@@ -8,6 +8,12 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-24 · Efrain** · Decisiones de `notification-service` (→ [`servicios/notification-service.md`](servicios/notification-service.md)):
+  - **Consume `campana.cerrada`.** Reemplaza su decisión del 2026-11-07 y cierra ese riesgo: el enunciado pide avisos ante "cambios de estado", y ahora se avisan la cancelación y el plazo vencido. Un cierre por meta alcanzada no manda un segundo aviso. Lo había propuesto Arturo.
+  - **La meta y el cierre se avisan al organizador y a los aportantes** (propuesta de Arturo).
+  - **Quien aporta como anónimo recibe los avisos en privado:** se guarda el vínculo con su id, nunca su nombre, y no se muestra a nadie. *Falta que Raul lo confirme.*
+  - **Canales:** cada aviso va a una bandeja con su API y por correo. La pantalla de la bandeja va en un PR aparte. No hay correo de bienvenida.
+  - **`nodemailer`** para enviar el correo, agregado a `stack-y-convenciones.md` §3.2. *Falta que Raul lo revise.*
 - **2026-11-20 · Efrain** · campaign-service y search-service en el `docker-compose.yml` de la raíz (→ [`servicios/api-gateway.md`](servicios/api-gateway.md) §2 y §3):
   - **`GET /api/campanas/{id}` es pública con un `{id}` que solo admite un UUID** (`{id:[0-9a-fA-F-]+}` en `application.yaml`). Así `GET /api/campanas/mias` sigue pidiendo sesión en el gateway, sin agregar código para excepciones. Qué campaña se ve sin sesión lo decide campaign-service por su estado.
   - **Las imágenes (`GET /api/campanas/{id}/imagenes/{idImagen}`) son públicas**, porque el navegador las pide con `<img>`, sin el token. Viven en el volumen `campaign-images`.
@@ -102,6 +108,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-24 | Efrain | **notification-service: diseño y servicio.** Consume los siete eventos con inbox, guarda los avisos en una bandeja con API REST y los manda por correo, con reintentos. Dominio, aplicación, persistencia, API, consumidor y correo, con pruebas unitarias, e2e y de integración con PostgreSQL 18, RabbitMQ 4.3 y Mailpit reales. Falta sumarlo al compose y al gateway. | Rama `feat/notification-avisos` |
 | 2026-11-23 | Arturo | **URLs de imágenes de campaña por el gateway.** `CampanasApi.urlImagen` antepone el origen de `URL_API` a las rutas `/api/campanas/{id}/imagenes/{idImagen}` en `DetalleCampana` y `FormularioCampana`, con pruebas unitarias en Vitest y actualización de `docs/servicios/campaign-service.md`. | Rama `fix/campaign-imagenes-gateway` |
 | 2026-11-20 | Gabo | «Explorar campañas» pasa a ser la portada pública de Angular, con filtros persistidos en la URL y enlace al detalle de Arturo. | `feat/frontend-explorar-campanas` |
 | 2026-11-20 | Efrain | **campaign-service y search-service en el compose y detrás del gateway.** `docker compose up --build` levanta todos los servicios menos notification-service, y el gateway enruta `/api/campanas/**` y `/api/busqueda/**` con sus rutas públicas. Pruebas del gateway por cada ruta. Probado de punta a punta por el gateway con los eventos reales: crear una campaña con portada, revisión, aprobar y rechazar, catálogo, aportar, novedades, meta alcanzada (`FINALIZADA`) y cancelación (`CANCELADA`). | Rama `feat/gateway-rutas-campanas-busqueda` |
@@ -164,6 +171,7 @@ Quién creó o cambió cada archivo, según git. Los archivos movidos o renombra
 | `.agents/skills/` y `skills-lock.json` | Arturo (2026-10-16, primeras skills); Efrain (2026-11-06, skill propia y skills nuevas); Raul (2026-11-07, quitó 4 skills y convirtió la skill propia en checklist) |
 | `.gitignore` | Arturo (2026-10-16); Raul (2026-11-07); Efrain (2026-11-17, `docker-compose.override.yml`) |
 | `identity-service/` | Efrain (2026-11-07, esqueleto) |
+| `notification-service/` y `docs/servicios/notification-service.md` | Efrain (2026-11-24) |
 | `docs/frontend.md` y `frontend/` | Efrain (2026-11-08, base del frontend) |
 | `api-gateway/` | Efrain (2026-11-08, base del gateway; 2026-11-17, rutas de contribution-service y update-service; 2026-11-20, rutas de campaign-service y search-service) |
 | `docker-compose.yml` y `.env.example` | Efrain (2026-11-09: identity, gateway y frontend; 2026-11-17: RabbitMQ y Mailpit, y después contribution-service y update-service; 2026-11-20: campaign-service y search-service) |

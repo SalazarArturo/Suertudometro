@@ -1,0 +1,2 @@
+# Cliente de Prisma: se genera con `npm run prisma:generar` (también al instalar).
+src/infrastructure/persistencia/prisma/generado/

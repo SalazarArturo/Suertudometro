@@ -35,7 +35,7 @@ Cada dominio carga sus rutas de forma diferida (*lazy loading*) desde su carpeta
 | Organizador | `/panel/...` (propuesta) | Publicar novedades | Gabo | Con sesión | Por definir |
 | Administración | `/administracion` | Inicio del panel (hoy, una página provisoria) | Efrain (base) | Rol `ADMINISTRADOR` | — |
 | Administración | `/administracion/campanas` | Revisión de campañas: aprobar, rechazar con observaciones y cancelar | Arturo | Rol `ADMINISTRADOR` | `GET /api/campanas?estado=`, `POST /api/campanas/{id}/aprobacion`, `POST /api/campanas/{id}/rechazo`, `POST /api/campanas/{id}/cancelacion` |
-| Todas | Por definir | Avisos de notification-service, si tienen pantalla | Efrain, al diseñar notification-service | Con sesión | `/api/notificaciones` (por definir) |
+| Todas | Por definir | Bandeja de avisos, con la cantidad sin leer en la barra superior | Efrain | Con sesión | `GET /api/notificaciones/avisos`, `GET /api/notificaciones/avisos/no-leidos`, `POST /api/notificaciones/avisos/{id}/lectura`, `POST /api/notificaciones/avisos/lectura` |
 
 ## 3. Estructura de carpetas
 
@@ -163,7 +163,7 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 |---|---|---|
 | F1 | Confirmar las rutas y las pantallas de cada dominio (tabla del §2) | Cada responsable, en su documento de diseño |
 | F2 | Compartir la campaña: solo frontend o también backend (pendiente #2 del estado) | Equipo |
-| F3 | Si las notificaciones tienen pantalla en el frontend | Efrain, al diseñar notification-service |
+| F3 | Pantalla de la bandeja de avisos ("campanita" en la barra superior y lista). **Decidido (Efrain, 2026-11-24):** sí, en un PR aparte; el API está en [`notification-service.md`](servicios/notification-service.md) §5 | Efrain |
 | F4 | Presupuesto del bundle inicial. Con las pantallas de aportes pasa de 487,8 kB a 502,1 kB, y el aviso de `angular.json` está en 500 kB (el error, en 1 MB). El aumento no depende de las pantallas en sí: es la primera vez que la aplicación usa `CurrencyPipe` (7,3 kB; lo pide el §6) y `@for` (unos 7 kB), y su código queda en el bloque inicial. Opciones: subir el aviso, o mostrar el dinero con `Intl.NumberFormat` en lugar de `CurrencyPipe`. Lo anotó Raul el 2026-11-15. | Efrain |
 | F5 | Enlace a "Mis aportes" en el menú de la cuenta (`core/layout/barra-superior`), como en el mockup del enunciado. Hoy la pantalla existe, pero solo se llega por su URL. | Efrain, con Raul |
 
@@ -171,6 +171,7 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-24 | Efrain | §2 y F3: la bandeja de avisos tendrá pantalla, en un PR aparte. |
 | 2026-11-20 | Gabo | §2: catálogo público en `/`, consulta de Búsqueda y enlace al detalle de Campañas; catálogo por implementar. |
 | 2026-11-20 | Gabo | «Explorar campañas» reemplaza el inicio provisorio. Los filtros y la página se conservan en la URL. |
 | 2026-11-19 | Arturo | §2: filas de las 4 pantallas de campañas (`/campanas/:id`, `/panel/campanas`, `/panel/campanas/nueva`, `/panel/campanas/:id/editar` y `/administracion/campanas`) confirmadas e implementadas en `frontend/src/app/campanas/` (F1, para el dominio de campañas). |
