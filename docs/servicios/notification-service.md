@@ -183,11 +183,12 @@ La bandeja ("campanita" en la barra superior, con la cantidad sin leer, y la lis
 ## 13. Plan de implementación
 
 - [x] **Fase 1 · Diseño y servicio** (`feat/notification-avisos`): este documento, dominio, aplicación, persistencia, API, consumidor y correo, con sus pruebas.
-- [ ] **Fase 2 · Integración** (`chore/compose-notification`): `notification-db` y el servicio en el compose, la ruta del gateway y la prueba de punta a punta con Mailpit.
+- [x] **Fase 2 · Integración** (`chore/compose-notification`): `notification-db` y el servicio en el compose, la ruta del gateway y la prueba de punta a punta con Mailpit.
 - [ ] **Fase 3 · Pantalla** (`feat/frontend-notificaciones`).
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-24 | Efrain | Fase 2: en el compose y detrás del gateway, probado de punta a punta con Mailpit. |
 | 2026-11-24 | Efrain | Primera versión, con las decisiones de cierre, destinatarios, aportes anónimos y canales. |
