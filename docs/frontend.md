@@ -114,6 +114,8 @@ Los guards solo ordenan la navegación. **La seguridad la ponen el gateway y cad
 
 Los formularios ponen el error **en el campo** que corresponde (por ejemplo, `correo-ya-registrado` va al correo). Lo que no tiene campo se muestra arriba del botón.
 
+**Volver a enviar sin editar:** Signal Forms cuenta un error del servidor como uno de validación, y hasta que la persona cambia un campo el botón no hace nada. Los formularios donde repetir el envío no duplica nada (iniciar sesión y registro) usan `envioReintentable` (`core/http/`) en su `submission`. Un error del servidor en un campo sí hay que corregirlo antes.
+
 ## 6. Convenciones para las pantallas
 
 - **Angular 22:**
@@ -175,11 +177,13 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 | F3 | Pantalla de la bandeja de avisos ("campanita" en la barra superior y lista). **Hecho (Efrain, 2026-11-25):** [`notification-service.md`](servicios/notification-service.md) §11 | Efrain |
 | F4 | Presupuesto del bundle inicial. Con las pantallas de aportes pasa de 487,8 kB a 502,1 kB, y el aviso de `angular.json` está en 500 kB (el error, en 1 MB). El aumento no depende de las pantallas en sí: es la primera vez que la aplicación usa `CurrencyPipe` (7,3 kB; lo pide el §6) y `@for` (unos 7 kB), y su código queda en el bloque inicial. Opciones: subir el aviso, o mostrar el dinero con `Intl.NumberFormat` en lugar de `CurrencyPipe`. Lo anotó Raul el 2026-11-15. Con los enlaces de la barra y la campanita, que se cargan siempre, el inicial pasa de unos 503 kB a unos 515 kB (Efrain, 2026-11-25). **Sigue abierto.** | Efrain |
 | F5 | Enlace a "Mis aportes" en el menú de la cuenta (`core/layout/barra-superior`), como en el mockup del enunciado. **Hecho (Efrain, 2026-11-25):** está en la barra, en el menú y en "Mi panel". Falta que Raul lo revise. | Efrain, con Raul |
+| F6 | Volver a enviar sin editar después de un error del servidor (§5) en «Aportar» y en el formulario de campaña. Tras un corte o un `504` no se sabe si el primer envío llegó, así que reintentar podría duplicar el aporte o el borrador. | Raul (Aportar) y Arturo (campaña) |
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-25 | Efrain | §5 y F6: volver a enviar un formulario después de un error del servidor. |
 | 2026-11-25 | Efrain | §2: bandeja de avisos en `/avisos`, campanita, enlaces de la barra, del menú y de los paneles. §4: peticiones en segundo plano. F3 y F5 hechos; F4 con el tamaño nuevo. |
 | 2026-11-24 | Efrain | §2 y F3: la bandeja de avisos tendrá pantalla, en un PR aparte. |
 | 2026-11-20 | Gabo | §2: catálogo público en `/`, consulta de Búsqueda y enlace al detalle de Campañas; catálogo por implementar. |

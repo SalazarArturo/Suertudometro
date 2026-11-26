@@ -17,6 +17,7 @@ import { MatInput } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { envioReintentable } from '../../core/http/envio-reintentable';
 import { leerErrorDeApi } from '../../core/http/error-de-api';
 import { erroresDeFormulario } from '../../core/http/errores-de-formulario';
 import { rutaDeRetorno } from '../../core/sesion/ruta-de-retorno';
@@ -90,7 +91,7 @@ export class Registro {
           : undefined,
       );
     },
-    { submission: { action: () => this.crearCuenta() } },
+    { submission: envioReintentable(this.datos, () => this.crearCuenta()) },
   );
 
   private async crearCuenta(): Promise<TreeValidationResult> {
