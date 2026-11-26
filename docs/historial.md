@@ -8,6 +8,8 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-26 · Gabo** · Aprobó `CampanaActualizada` v1 como productor y confirmó el acuerdo de Campañas para Búsqueda y Novedades. [Contratos de eventos](contratos-de-eventos.md#decisiones-para-aprobar-la-versión-1).
+
 - **2026-11-25 · Efrain** · **El gateway no limita peticiones** (→ [`servicios/api-gateway.md`](servicios/api-gateway.md) §12, G1). Reemplaza lo que decía su decisión del 2026-11-08. El enunciado no lo pide y el sistema solo corre en local para la entrega. *Falta que Raul quite la mención en `stack-y-convenciones.md` §2, el ADR 0002 y `arquitectura.excalidraw`.*
 - **2026-11-24 · Efrain** · Decisiones de `notification-service` (→ [`servicios/notification-service.md`](servicios/notification-service.md)):
   - **Consume `campana.cerrada`.** Reemplaza su decisión del 2026-11-07 y cierra ese riesgo: el enunciado pide avisos ante "cambios de estado", y ahora se avisan la cancelación y el plazo vencido. Un cierre por meta alcanzada no manda un segundo aviso. Lo había propuesto Arturo.
