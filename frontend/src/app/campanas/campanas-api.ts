@@ -68,6 +68,13 @@ export class CampanasApi {
     }));
   }
 
+  /** Consulta puntual de las campañas del organizador (`GET /api/campanas/mias`). */
+  listarMisCampanas(pagina = 0): Observable<PaginaDeCampanas> {
+    return this.http.get<PaginaDeCampanas>(`${this.url}/mias`, {
+      params: { pagina, tamano: TAMANO_PAGINA_CAMPANAS },
+    });
+  }
+
   /** Bandeja de administración por estado (`GET /api/campanas?estado=`). */
   campanasPorEstado(estado: () => EstadoCampana, pagina: () => number): LecturaPaginaCampanas {
     return httpResource<PaginaDeCampanas>(() => ({

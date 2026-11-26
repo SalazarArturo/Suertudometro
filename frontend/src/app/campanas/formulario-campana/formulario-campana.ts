@@ -14,6 +14,7 @@ import { MatInput } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { envioReintentable } from '../../core/http/envio-reintentable';
 import { leerErrorDeApi } from '../../core/http/error-de-api';
 import { erroresDeFormulario } from '../../core/http/errores-de-formulario';
 import { CampanasApi } from '../campanas-api';
@@ -21,6 +22,7 @@ import {
   CategoriaCampana,
   CATEGORIAS_CAMPANA,
   DetalleCampanaVista,
+  GuardarCampanaPeticion,
   LARGO_MAXIMO_HISTORIA,
   LARGO_MAXIMO_TITULO,
   LARGO_MINIMO_HISTORIA,
@@ -112,6 +114,7 @@ export class FormularioCampana {
   protected readonly procesandoAccion = signal(false);
   protected readonly errorAccion = signal<string | undefined>(undefined);
   private idCargadoEnFormulario: string | undefined;
+  private creacionIncierta = false;
 
   protected readonly formulario = form(
     this.datos,
@@ -166,7 +169,7 @@ export class FormularioCampana {
 
       required(campo.fechaLimite, { message: 'Selecciona la fecha límite de recaudación.' });
     },
-    { submission: { action: () => this.guardarBorrador() } },
+    { submission: envioReintentable(this.datos, () => this.guardarBorrador()) },
   );
 
   constructor() {
@@ -258,7 +261,7 @@ export class FormularioCampana {
 
   private async guardarBorrador(): Promise<TreeValidationResult> {
     const { titulo, historia, categoria, metaFinanciera, fechaLimite } = this.datos();
-    const peticion = {
+    const peticion: GuardarCampanaPeticion = {
       titulo: titulo.trim(),
       historia: historia.trim(),
       categoria,
@@ -267,14 +270,30 @@ export class FormularioCampana {
       fechaLimite: aIsoUtcFinDeDia(fechaLimite),
     };
 
+    const idActual = this.id();
+    if (!idActual && this.creacionIncierta) {
+      const idPrevio = await this.verificarBorradorExistente(peticion);
+      if (idPrevio) {
+        await this.terminarCreacion(idPrevio);
+        return undefined;
+      }
+    }
+
     let guardada: DetalleCampanaVista;
     try {
-      const idActual = this.id();
       guardada = idActual
         ? await firstValueFrom(this.api.editarBorrador(idActual, peticion))
         : await firstValueFrom(this.api.crearCampana(peticion));
     } catch (error) {
-      return erroresDeFormulario(leerErrorDeApi(error), {
+      const problema = leerErrorDeApi(error);
+      if (!idActual && (problema.estado === 0 || problema.estado >= 500)) {
+        const idRecuperado = await this.verificarBorradorExistente(peticion);
+        if (idRecuperado) {
+          await this.terminarCreacion(idRecuperado);
+          return undefined;
+        }
+      }
+      return erroresDeFormulario(problema, {
         titulo: this.formulario.titulo,
         historia: this.formulario.historia,
         metaFinanciera: this.formulario.metaFinanciera,
@@ -282,17 +301,42 @@ export class FormularioCampana {
       });
     }
 
-    if (!this.id()) {
-      this.avisos.open(
-        'Borrador creado. Ahora puedes subir la imagen de portada y enviarlo a revisión.',
-        'Cerrar',
-        { duration: 5000 },
-      );
-      await this.router.navigate(rutaEditarCampana(guardada.id));
+    if (!idActual) {
+      await this.terminarCreacion(guardada.id);
     } else {
       this.avisos.open('Cambios guardados en el borrador.', 'Cerrar', { duration: 4000 });
       this.campanaActual.reload();
     }
     return undefined;
+  }
+
+  private async verificarBorradorExistente(
+    peticion: GuardarCampanaPeticion,
+  ): Promise<string | undefined> {
+    try {
+      const pagina = await firstValueFrom(this.api.listarMisCampanas(0));
+      const existente = pagina.elementos.find(
+        (item) =>
+          item.estado === 'BORRADOR' &&
+          item.titulo === peticion.titulo &&
+          item.categoria === peticion.categoria &&
+          Number(item.metaFinanciera) === Number(peticion.metaFinanciera),
+      );
+      this.creacionIncierta = false;
+      return existente?.id;
+    } catch {
+      this.creacionIncierta = true;
+      return undefined;
+    }
+  }
+
+  private async terminarCreacion(idCampana: string): Promise<void> {
+    this.creacionIncierta = false;
+    this.avisos.open(
+      'Borrador creado. Ahora puedes subir la imagen de portada y enviarlo a revisión.',
+      'Cerrar',
+      { duration: 5000 },
+    );
+    await this.router.navigate(rutaEditarCampana(idCampana));
   }
 }
