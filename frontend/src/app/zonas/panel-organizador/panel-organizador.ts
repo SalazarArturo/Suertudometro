@@ -31,6 +31,12 @@ export class PanelOrganizador {
       descripcion: 'Cuenta tu historia, pon una meta y pide la revisión.',
     },
     {
+      ruta: '/panel/novedades',
+      icono: 'edit_note',
+      titulo: 'Publicar novedades',
+      descripcion: 'Comparte los avances de tus campañas publicadas.',
+    },
+    {
       ruta: '/aportes/mios',
       icono: 'volunteer_activism',
       titulo: 'Mis aportes',

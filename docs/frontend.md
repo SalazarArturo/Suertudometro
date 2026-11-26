@@ -32,7 +32,7 @@ Cada dominio carga sus rutas de forma diferida (*lazy loading*) desde su carpeta
 | Organizador | `/panel/campanas` | Mis campañas: listado paginado, progreso, eliminación de borradores y cancelación | Arturo | Con sesión | `GET /api/campanas/mias`, `DELETE /api/campanas/{id}`, `POST /api/campanas/{id}/cancelacion` |
 | Organizador | `/panel/campanas/nueva` y `/panel/campanas/:id/editar` | Crear y editar borrador de campaña, gestor de imágenes y solicitar revisión | Arturo | Con sesión | `POST /api/campanas`, `PUT /api/campanas/{id}`, `POST /api/campanas/{id}/imagenes`, `DELETE /api/campanas/{id}/imagenes/{idImagen}`, `POST /api/campanas/{id}/solicitud-revision` |
 | Organizador | `/panel/campanas/:idCampana/aportes` | Aportes recibidos de una campaña | Raul | Con sesión; el servicio exige ser el organizador de la campaña o un administrador | `GET /api/aportes/recibidos?idCampana=` |
-| Organizador | `/panel/...` (propuesta) | Publicar novedades | Gabo | Con sesión | Por definir |
+| Organizador | `/panel/novedades` | Publicar novedades en campañas propias publicadas, desde Mi panel | Gabo | Con sesión | `GET /api/campanas/mias`, `POST /api/novedades`, `GET /api/novedades/campana/{idCampana}` |
 | Administración | `/administracion` | Inicio del panel: enlace a la moderación de campañas | Efrain (base) | Rol `ADMINISTRADOR` | — |
 | Administración | `/administracion/campanas` | Revisión de campañas: aprobar, rechazar con observaciones y cancelar | Arturo | Rol `ADMINISTRADOR` | `GET /api/campanas?estado=`, `POST /api/campanas/{id}/aprobacion`, `POST /api/campanas/{id}/rechazo`, `POST /api/campanas/{id}/cancelacion` |
 | Todas | `/avisos` | Bandeja de avisos: lista paginada, filtro de no leídos, marcar uno o todos | Efrain | Con sesión | `GET /api/notificaciones/avisos`, `POST /api/notificaciones/avisos/{id}/lectura`, `POST /api/notificaciones/avisos/lectura` |
@@ -116,6 +116,8 @@ Los formularios ponen el error **en el campo** que corresponde (por ejemplo, `co
 
 **Volver a enviar sin editar:** Signal Forms cuenta un error del servidor como uno de validación, y hasta que la persona cambia un campo el botón no hace nada. Los formularios donde repetir el envío no duplica nada (iniciar sesión y registro) usan `envioReintentable` (`core/http/`) en su `submission`. Un error del servidor en un campo sí hay que corregirlo antes.
 
+**Publicación de novedades:** si falla la conexión o el servidor devuelve un error 5xx, el formulario conserva el texto y consulta las últimas novedades de la campaña. Tras una lectura exitosa, el organizador puede confirmar que ya se publicó o decidir si vuelve a enviar.
+
 ## 6. Convenciones para las pantallas
 
 - **Angular 22:**
@@ -183,6 +185,7 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-26 | Gabo | Publicación desde Mi panel, historial público de novedades y verificación del envío cuando se pierde la respuesta. |
 | 2026-11-25 | Efrain | §5 y F6: volver a enviar un formulario después de un error del servidor. |
 | 2026-11-25 | Efrain | §2: bandeja de avisos en `/avisos`, campanita, enlaces de la barra, del menú y de los paneles. §4: peticiones en segundo plano. F3 y F5 hechos; F4 con el tamaño nuevo. |
 | 2026-11-24 | Efrain | §2 y F3: la bandeja de avisos tendrá pantalla, en un PR aparte. |

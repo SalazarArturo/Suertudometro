@@ -107,6 +107,10 @@
       </aside>
     </div>
 
+    @if (datos.fechaPublicacion) {
+      <app-historial-novedades [idCampana]="datos.id" />
+    }
+
     <section class="seccion-aportes" aria-label="Aportes de la campaña">
       <div class="grilla-aportes">
         <app-aportar [idCampana]="datos.id" (aportado)="alRegistrarAporte(historialAportes)" />
