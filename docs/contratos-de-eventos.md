@@ -99,6 +99,8 @@ Campañas publica el cierre definitivo por meta alcanzada, plazo vencido o cance
 
 ## CampanaActualizada
 
+> **Ficha de `update-service` · Responsable: Gabo · Aprobada por el productor v1 (2026-11-26).**
+
 El organizador ejecutó `PublicarActualizacion` y Novedades guardó una novedad en una campaña publicada. `idActualizacion` identifica esa publicación y `contenido` es el texto escrito por el organizador. `ocurridoEn` indica cuándo se publicó.
 
 ```json
@@ -199,7 +201,7 @@ Las campañas cerradas quedan disponibles mediante el filtro de estado una vez q
 
 | Participantes | Acuerdo pendiente |
 |---|---|
-| Campañas, Búsqueda, Novedades y Contribuciones | **Definido por Arturo (productor, 2026-11-08):** `idOrganizador` UUID obligatorio; `categoria` como código de enum ASCII (`EDUCACION`, `SALUD`, `APOYO_COMUNITARIO`, `EMERGENCIAS`, `PROYECTOS_PERSONALES`, `OTROS`); `moneda` `"BOB"`; `fechaLimite` obligatoria en toda campaña; `CampanaCerrada` lleva `estadoFinal` (`FINALIZADA` \| `CANCELADA`) y `motivoCierre` (`META_ALCANZADA` \| `PLAZO_VENCIDO` \| `CANCELACION`). *Pendiente de confirmación de los consumidores (Gabo y Raul).* |
+| Campañas, Búsqueda, Novedades y Contribuciones | **Definido por Arturo (productor, 2026-11-08):** `idOrganizador` UUID obligatorio; `categoria` como código de enum ASCII (`EDUCACION`, `SALUD`, `APOYO_COMUNITARIO`, `EMERGENCIAS`, `PROYECTOS_PERSONALES`, `OTROS`); `moneda` `"BOB"`; `fechaLimite` obligatoria en toda campaña; `CampanaCerrada` lleva `estadoFinal` (`FINALIZADA` \| `CANCELADA`) y `motivoCierre` (`META_ALCANZADA` \| `PLAZO_VENCIDO` \| `CANCELACION`). **Confirmado por Gabo para Búsqueda y Novedades (2026-11-26).** *Pendiente de confirmación de Raul.* |
 | Contribuciones y Notificaciones | **Definido por Efrain (consumidor, 2026-11-24):** quien aporta, también de forma anónima, queda vinculado en privado, solo para recibir los avisos de esa campaña; el vínculo no se muestra a nadie. *Pendiente de confirmación de Raul.* |
-| Novedades y Notificaciones | **Definido por Efrain (consumidor, 2026-11-24):** el aviso muestra el contenido completo, como propone la ficha. *Pendiente de confirmación de Gabo.* |
+| Novedades y Notificaciones | **Definido por Efrain (consumidor, 2026-11-24):** el aviso muestra el contenido completo, como propone la ficha. **Confirmado por Gabo (productor, 2026-11-26).** |
 | Campañas y Notificaciones | **Propuesto por Arturo (2026-11-08):** `MetaAlcanzada` notifica al organizador y a los aportantes, y `notification-service` también consume `CampanaCerrada`. **Confirmado por Efrain (2026-11-24).** |
