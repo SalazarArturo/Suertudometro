@@ -1,6 +1,6 @@
 # api-gateway
 
-> **Responsable:** Efrain · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-24 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Efrain · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-25 · **Estado:** Borrador (en revisión del equipo)
 > Componente perimetral, sin dominio propio · Spring Cloud Gateway (WebFlux) · Spring Boot 4.1 · Java 21 · sin base de datos · atiende `/api/**` · puerto 8080, publicado en el host.
 
 ## 1. Responsabilidad
@@ -17,7 +17,7 @@ Es el **único punto de entrada** al sistema: el frontend solo habla con él, y 
 - emitir tokens ni guardar sesiones: lo hace identity-service;
 - decidir permisos por rol: cada servicio responde `403` si `X-Usuario-Rol` no alcanza (§5.1 del contrato);
 - lógica de negocio, ni combinar respuestas de varios servicios: cada pantalla llama a lo que necesita;
-- por ahora, el límite de peticiones (Bucket4j + Caffeine, `docs/stack-y-convenciones.md` §2): llega en el siguiente PR (§12).
+- limitar peticiones: el enunciado no lo pide y el sistema solo corre en local (§12, G1).
 
 ## 2. Rutas
 
@@ -30,7 +30,6 @@ Cada servicio monta su propio prefijo, como hace identity-service con `api/ident
 | `/api/aportes/**` | contribution-service | `http://contribution-service:8083` | `CONTRIBUTION_URL` | Activa |
 | `/api/novedades/**` | update-service | `http://update-service:8084` | `UPDATE_URL` | Activa |
 | `/api/busqueda/**` | search-service | `http://search-service:8085` | `SEARCH_URL` | Activa |
-| `NOTIFICATION_URL` | `http://localhost:8086` | Destino de `/api/notificaciones`. En Docker Compose, `http://notification-service:8086`. |
 | `/api/notificaciones/**` | notification-service | `http://notification-service:8086` | `NOTIFICATION_URL` | Activa |
 
 Los puertos son los del diagrama de despliegue. **Para activar una ruta**, se agregan en `application.yaml` la ruta (con su variable) y sus rutas públicas (§3), en un PR que revisa Efrain.
@@ -111,6 +110,7 @@ Las respuestas de error también llevan los headers de CORS. Si no los llevaran,
 | `CONTRIBUTION_URL` | `http://localhost:8083` | Destino de `/api/aportes`. En Docker Compose, `http://contribution-service:8083`. |
 | `UPDATE_URL` | `http://localhost:8084` | Destino de `/api/novedades`. En Docker Compose, `http://update-service:8084`. |
 | `SEARCH_URL` | `http://localhost:8085` | Destino de `/api/busqueda`. En Docker Compose, `http://search-service:8085`. |
+| `NOTIFICATION_URL` | `http://localhost:8086` | Destino de `/api/notificaciones`. En Docker Compose, `http://notification-service:8086`. |
 | `CORS_ORIGENES` | `http://localhost:4200` | Orígenes del frontend |
 
 - Escucha en el puerto 8080.
@@ -173,15 +173,15 @@ El gateway no tiene workflow propio: lo valida el CI general (`.github/workflows
 
 | # | Pendiente | Decide | Estado |
 |---|---|---|---|
-| G1 | Límite de peticiones (Bucket4j + Caffeine): cuántas por IP, y si el inicio de sesión tiene un límite propio | Efrain | Siguiente PR |
+| G1 | Límite de peticiones (Bucket4j + Caffeine): cuántas por IP, y si el inicio de sesión tiene un límite propio | Efrain | **Cerrado (Efrain, 2026-11-25):** no se implementa |
 | G2 | Las rutas públicas de cada servicio (§3) | Cada responsable | Resuelto para los seis servicios |
 | G3 | ¿El Swagger de cada servicio también se publica por el gateway? Hoy se publican el de identity-service, el de notification-service y el de update-service, que Gabo declaró público en desarrollo. El de contribution-service no, porque Raul solo declaró `GET /api/aportes`; campaign-service y search-service no publican Swagger. | Equipo | Abierto |
 
 ## 13. Plan de implementación
 
-- [ ] **Fase 1 · Base** (`feat/gateway-base`): la ruta de identity-service, JWT, headers `X-Usuario-*`, CORS, errores RFC 9457, `/salud` y Dockerfile.
-- [ ] **Fase 2 · Límite de peticiones** (`feat/gateway-limite-peticiones`).
-- [ ] **Rutas de los demás servicios**, a medida que existan.
+- [x] **Fase 1 · Base** (`feat/gateway-base`): la ruta de identity-service, JWT, headers `X-Usuario-*`, CORS, errores RFC 9457, `/salud` y Dockerfile.
+- **Fase 2 · Límite de peticiones:** descartada (§12, G1).
+- [x] **Rutas de los demás servicios**, a medida que existan.
   - [x] contribution-service y update-service (`feat/gateway-rutas-aportes-novedades`).
   - [x] campaign-service y search-service (`feat/gateway-rutas-campanas-busqueda`).
   - [x] notification-service (`chore/compose-notification`).
@@ -190,6 +190,7 @@ El gateway no tiene workflow propio: lo valida el CI general (`.github/workflows
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-25 | Efrain | §1, §12 y §13: sin límite de peticiones (G1). §2 y §7: `NOTIFICATION_URL` estaba en la tabla de rutas. |
 | 2026-11-24 | Efrain | §2, §3, §7 y §10 a §13: ruta de notification-service activa, con su Swagger público. |
 | 2026-11-20 | Efrain | §2, §3, §7 y §10 a §13: rutas de campaign-service y search-service activas, con las rutas públicas que confirmaron Arturo y Gabo. |
 | 2026-11-17 | Efrain | §2, §3, §7 y §10 a §13: rutas de contribution-service y update-service activas, con las rutas públicas que confirmaron Raul y Gabo. |

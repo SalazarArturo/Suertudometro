@@ -11,7 +11,7 @@ Lo que **no** hace, y qué servicio lo hace:
 - **Aprobar, rechazar o cancelar campañas:** lo hace `campaign-service`. Es todo el trabajo del administrador. Este servicio solo pone `rol: ADMINISTRADOR` en el token, y campaign-service autoriza con ese rol.
 - **Decidir quién organiza una campaña:** lo hace `campaign-service`, comparando el usuario con el `idOrganizador` de la campaña. "Organizador" no es un rol de este servicio (§2).
 - **Validar el JWT en cada petición:** lo hace `api-gateway`, que reenvía la identidad en headers (§5.1).
-- **CORS y límite de peticiones:** los aplica `api-gateway`.
+- **CORS:** lo aplica `api-gateway`.
 - **Enviar correos:** lo hace `notification-service`. De `UsuarioRegistrado` solo toma el correo de la cuenta; no manda un correo de bienvenida.
 - **Moderar cuentas de usuario** (suspender, bloquear o cambiar roles): **no se implementa**. Así se mantiene el modelo del event storming, que no tiene comandos de moderación de usuarios (decisión de Efrain del 2026-11-07, era el pendiente #6).
   > [!WARNING]
