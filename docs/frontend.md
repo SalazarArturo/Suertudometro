@@ -179,12 +179,13 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 | F3 | Pantalla de la bandeja de avisos ("campanita" en la barra superior y lista). **Hecho (Efrain, 2026-11-25):** [`notification-service.md`](servicios/notification-service.md) §11 | Efrain |
 | F4 | Presupuesto del bundle inicial. Con las pantallas de aportes pasa de 487,8 kB a 502,1 kB, y el aviso de `angular.json` está en 500 kB (el error, en 1 MB). El aumento no depende de las pantallas en sí: es la primera vez que la aplicación usa `CurrencyPipe` (7,3 kB; lo pide el §6) y `@for` (unos 7 kB), y su código queda en el bloque inicial. Opciones: subir el aviso, o mostrar el dinero con `Intl.NumberFormat` en lugar de `CurrencyPipe`. Lo anotó Raul el 2026-11-15. Con los enlaces de la barra y la campanita, que se cargan siempre, el inicial pasa de unos 503 kB a unos 515 kB (Efrain, 2026-11-25). **Sigue abierto.** | Efrain |
 | F5 | Enlace a "Mis aportes" en el menú de la cuenta (`core/layout/barra-superior`), como en el mockup del enunciado. **Hecho (Efrain, 2026-11-25):** está en la barra, en el menú y en "Mi panel". Falta que Raul lo revise. | Efrain, con Raul |
-| F6 | Volver a enviar sin editar después de un error del servidor (§5) en «Aportar» y en el formulario de campaña. Tras un corte o un `504` no se sabe si el primer envío llegó, así que reintentar podría duplicar el aporte o el borrador. | Raul (Aportar) y Arturo (campaña) |
+| F6 | Volver a enviar sin editar después de un error del servidor (§5) en «Aportar» y en el formulario de campaña. Tras un corte o un `504` no se sabe si el primer envío llegó, así que reintentar podría duplicar el aporte o el borrador. **Hecho en campaña (Arturo, 2026-11-26):** `FormularioCampana` usa `envioReintentable` (en edición `PUT /api/campanas/{id}` es idempotente y en creación `POST /api/campanas` consulta `GET /api/campanas/mias` tras un corte o `5xx` para recuperar el borrador si ya se creó sin duplicarlo). Falta «Aportar» (Raul). | Raul (Aportar) y Arturo (campaña) |
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-26 | Arturo | F6 (campaña): `FormularioCampana` usa `envioReintentable` y verifica en `GET /api/campanas/mias` si el borrador ya se creó tras un corte o error `5xx` antes de repetir `POST /api/campanas`. |
 | 2026-11-26 | Gabo | Publicación desde Mi panel, historial público de novedades y verificación del envío cuando se pierde la respuesta. |
 | 2026-11-25 | Efrain | §5 y F6: volver a enviar un formulario después de un error del servidor. |
 | 2026-11-25 | Efrain | §2: bandeja de avisos en `/avisos`, campanita, enlaces de la barra, del menú y de los paneles. §4: peticiones en segundo plano. F3 y F5 hechos; F4 con el tamaño nuevo. |

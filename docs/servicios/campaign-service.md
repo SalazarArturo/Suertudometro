@@ -1,6 +1,6 @@
 # campaign-service
 
-> **Responsable:** Arturo · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-23 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Arturo · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-26 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Campañas** (subdominio core) · Spring Boot 4.1 · Java 21 · base de datos `campaign-db` · volumen `campaign-images` · ruta en el gateway `/api/campanas` · puerto interno 8082.
 > **Implementación:** el backend completo está en `campaign-service/` integrado en el `docker-compose.yml` de la raíz detrás del `api-gateway`, y las 4 pantallas del frontend están en `frontend/src/app/campanas/`. Cómo correrlo: [`campaign-service/README.md`](../../campaign-service/README.md).
 
@@ -257,16 +257,16 @@ campaign-service/
 
 | Qué necesito | De quién | Para qué |
 |---|---|---|
-| Confirmación de las fichas `CampanaPublicada`, `CampanaCerrada` y `MetaAlcanzada` | Raul, Gabo y Efrain | Cerrar el pendiente #4 de contratos v1. |
-| Confirmación de cómo viajan el `idUsuario` y el `rol` (`ORGANIZADOR`, `ADMINISTRADOR`) desde el gateway | Efrain | Validar autoría del organizador y permisos de moderación en los endpoints REST (pendiente #5). |
+| Confirmación de las fichas `CampanaPublicada`, `CampanaCerrada` y `MetaAlcanzada` | Raul, Gabo y Efrain | Cerrar el pendiente #4 de contratos v1 (confirmado por Efrain el 2026-11-24 para Notificaciones y por Gabo el 2026-11-26 para Búsqueda y Novedades; pendiente de confirmación de Raul). |
+| Confirmación de cómo viajan el `idUsuario` y el `rol` (`ORGANIZADOR`, `ADMINISTRADOR`) desde el gateway | Efrain | Validar autoría del organizador y permisos de moderación en los endpoints REST (resuelto el 2026-11-07, pendiente #5). |
 | Contenedor `campaign-db`, volumen `campaign-images` y RabbitMQ en `docker-compose.yml` | Efrain | Ejecutar e integrar el servicio en el entorno completo (resuelto el 2026-11-20 en `feat/gateway-rutas-campanas-busqueda`). |
-| Eventos `aporte.registrado` emitidos según la ficha `AporteRegistrado` | Raul | Sumar el monto recaudado y disparar el cierre automático al alcanzar la meta. |
-| Base de Angular (shell, rutas e interceptor JWT) | Efrain | Montar las pantallas del dominio de campañas. |
+| Eventos `aporte.registrado` emitidos según la ficha `AporteRegistrado` | Raul | Sumar el monto recaudado y disparar el cierre automático al alcanzar la meta (resuelto e integrado en el compose). |
+| Base de Angular (shell, rutas e interceptor JWT) | Efrain | Montar las pantallas del dominio de campañas (resuelto). |
 
 ## 11. Pantallas del frontend (dominio de campañas)
 
 1. **Detalle de campaña (portal público):** muestra portada y galería, título, categoría, organizador, barra de progreso (`montoRecaudado` / `metaFinanciera` y porcentaje), fecha límite, estado, historia, historial de cambios de estado y los bloques integrados de aportes y novedades.
-2. **Crear y editar campaña (panel del organizador):** formulario de borrador (título, historia, categoría, meta en `BOB`, fecha límite), gestor de imágenes (subir hasta 5 imágenes y elegir portada), vista de observaciones si fue rechazada y botón "Solicitar revisión".
+2. **Crear y editar campaña (panel del organizador):** formulario de borrador (título, historia, categoría, meta en `BOB`, fecha límite), gestor de imágenes (subir hasta 5 imágenes y elegir portada), vista de observaciones si fue rechazada y botón "Solicitar revisión". Usa `envioReintentable` (`docs/frontend.md` §5 y F6): en edición (`PUT /api/campanas/{id}`) reintentar tras un error del servidor es idempotente, y en creación (`POST /api/campanas`), si ocurre un corte de red o un error `5xx`, consulta `GET /api/campanas/mias` para recuperar el borrador si ya se creó sin duplicarlo.
 3. **Mis campañas (panel del organizador):** listado de campañas del organizador filtradas por estado (`BORRADOR`, `EN_REVISION`, `PUBLICADA`, `FINALIZADA`, `CANCELADA`), con acciones para editar/eliminar borradores o cancelar una campaña publicada.
 4. **Bandeja de moderación de campañas (panel de administración):** listado de campañas `EN_REVISION` y `PUBLICADA`, vista previa completa, acción de "Aprobar" o "Rechazar con observaciones", y acción administrativa de "Cancelar campaña" por infracción de normas.
 
@@ -275,7 +275,7 @@ campaign-service/
 | # | Pendiente | Decide | Estado |
 |---|---|---|---|
 | P1 | Confirmar con Raul si ambos servicios Spring usan la misma estructura Maven o si `campaign-service` va con un solo módulo por paquetes y `contribution-service` con multimódulo. | Arturo y Raul | **Resuelto (2026-11-14):** ambos servicios usan un solo módulo Maven con las 5 capas por paquetes Java (cierra para Spring Boot el pendiente #10) |
-| P2 | Confirmar con Efrain que `notification-service` consuma `campana.cerrada` y los destinatarios de `meta.alcanzada`. | Arturo y Efrain | **Resuelto (Efrain, 2026-11-07):** `notification-service` no consume `campana.cerrada` (cierra el pendiente #8) |
+| P2 | Confirmar con Efrain que `notification-service` consuma `campana.cerrada` y los destinatarios de `meta.alcanzada`. | Arturo y Efrain | **Resuelto (Efrain, 2026-11-24):** `notification-service` sí consume `campana.cerrada` (avisa la cancelación y el plazo vencido al organizador y a los aportantes) y `meta.alcanzada` avisa al organizador y a los aportantes, coincidiendo con la propuesta de Arturo (reemplaza la decisión del 2026-11-07) |
 | P3 | Confirmar con Raul el manejo de aportes en tránsito al cerrarse por meta alcanzada. | Arturo y Raul | **Resuelto (Raul, 2026-11-14):** confirma la propuesta de Arturo (cierra el pendiente #9) |
 | P4 | Headers de identidad enviados por `api-gateway` (`X-Usuario-Id`, `X-Usuario-Rol`, etc.). | Efrain | **Resuelto (Efrain, 2026-11-07):** `X-Usuario-Id`, `X-Usuario-Rol` (`USUARIO`, `ADMINISTRADOR`) y `X-Usuario-Nombre` (cierra el pendiente #5) |
 
@@ -290,12 +290,13 @@ campaign-service/
 - [x] Implementar `infrastructure` (migración Flyway `V1__crear_esquema_campanas.sql`, entidades JPA, mappers, almacenamiento de imágenes en volumen, Transactional Outbox, consumidor idempotente de RabbitMQ, `Dockerfile` y `compose.yaml` propio) con pruebas de adaptadores y de arquitectura de capas.
 - [x] Implementar `api` (controladores REST, DTOs, lectura de headers `X-Usuario-*` y errores RFC 9457) con pruebas unitarias.
 - [x] Integrar en `docker-compose.yml` de la raíz detrás del `api-gateway` (con Efrain, 2026-11-20).
-- [x] Construir las 4 pantallas de campañas en Angular (`frontend/src/app/campanas/`) con sus pruebas en Vitest (2026-11-19) y resolver las URLs de imágenes contra el origen del gateway (2026-11-23).
+- [x] Construir las 4 pantallas de campañas en Angular (`frontend/src/app/campanas/`) con sus pruebas en Vitest (2026-11-19), resolver las URLs de imágenes contra el origen del gateway (2026-11-23) y habilitar el reenvío seguro sin duplicar borradores en `FormularioCampana` (F6, 2026-11-26).
 
 ## Historial de este documento
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-26 | Arturo | §10, §11, §12 (P2) y §13: se actualiza P2 con la confirmación de Efrain (`notification-service` consume `campana.cerrada` y `meta.alcanzada` avisa a organizador y aportantes), las confirmaciones de contratos v1 de Gabo y Efrain, y la resolución de F6 (`envioReintentable` y verificación previa en `FormularioCampana`). |
 | 2026-11-23 | Arturo | §10 y §13: se marca completada la integración en `docker-compose.yml` detrás del `api-gateway` y se antepone el origen del gateway en las URLs de imágenes de `DetalleCampana` y `FormularioCampana`. |
 | 2026-11-19 | Arturo | §11 y §13: implementación de las 4 pantallas de campañas en `frontend/src/app/campanas/` (`DetalleCampana`, `MisCampanas`, `FormularioCampana` y `ModeracionCampanas`) con Signal Forms, integración de `<app-aportar>` y `<app-historial-aportes>`, y pruebas en Vitest. |
 | 2026-11-17 | Arturo | Implementación completa del backend de `campaign-service` (capas `sharedkernel`, `domain`, `application`, `infrastructure` y `api`), migración Flyway, Outbox/Inbox RabbitMQ, `Dockerfile`, `compose.yaml` autónomo y suite de pruebas JUnit 5. |
