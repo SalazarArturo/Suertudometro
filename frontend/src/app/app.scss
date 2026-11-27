@@ -7,3 +7,10 @@
 .contenido {
   flex: 1;
 }
+
+// Solo guarda el filtro: no ocupa lugar.
+.definiciones {
+  position: absolute;
+  width: 0;
+  height: 0;
+}

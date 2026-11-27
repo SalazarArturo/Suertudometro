@@ -7,7 +7,7 @@ import { App } from './app';
 class PantallaDePrueba {}
 
 describe('App', () => {
-  it('muestra la barra superior y la pantalla de la ruta actual', async () => {
+  it('muestra la barra superior, la pantalla de la ruta actual y el pie', async () => {
     localStorage.clear();
     TestBed.configureTestingModule({
       providers: [provideRouter([{ path: '**', component: PantallaDePrueba }])],
@@ -17,7 +17,8 @@ describe('App', () => {
     await fixture.whenStable();
 
     const pantalla = fixture.nativeElement as HTMLElement;
-    expect(pantalla.querySelector('app-barra-superior')?.textContent).toContain('Go Fund Me');
+    expect(pantalla.querySelector('app-barra-superior')?.textContent).toContain('Fundly');
     expect(pantalla.querySelector('main')).not.toBeNull();
+    expect(pantalla.querySelector('app-pie-pagina footer')).not.toBeNull();
   });
 });

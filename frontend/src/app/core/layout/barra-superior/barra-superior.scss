@@ -1,60 +1,132 @@
-@use '@angular/material' as mat;
-
-// Como en el mockup: una barra azul marino con las esquinas redondeadas y un
-// margen alrededor.
+// Como en el afiche: sobre el papel, los enlaces a la izquierda, la marca al
+// centro y la cuenta a la derecha, con un trazo azul marino debajo.
 :host {
   display: block;
-  padding: 12px 16px 0;
 }
 
 .barra {
-  gap: 4px;
-  border-radius: var(--mat-sys-corner-medium);
-  // Sobre el azul marino, los botones de texto van en blanco.
-  @include mat.button-overrides(
-    (
-      text-label-text-color: #ffffff,
-      text-state-layer-color: #ffffff,
-      text-ripple-color: rgb(255 255 255 / 12%),
-    )
-  );
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  max-width: 1312px;
+  margin: 0 auto;
+  padding: 20px max(16px, env(safe-area-inset-right)) 14px max(16px, env(safe-area-inset-left));
+  border-bottom: 2px solid var(--color-marca);
+
+  @media (min-width: 840px) {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
 }
 
-.marca {
-  color: inherit;
-  font-family: var(--mat-sys-body-large-font);
-  font-size: 1.375rem;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.separador {
-  flex: 1;
-}
-
-.nombre {
-  display: inline-block;
-  max-width: 16ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  vertical-align: bottom;
-}
-
-// Los enlaces principales, como en el mockup. Sin lugar para ellos, están en el
-// menú de la cuenta.
+// Los enlaces principales. Sin lugar para ellos, están en el menú de la cuenta.
 .principal {
   display: none;
 
   @media (min-width: 840px) {
     display: flex;
-    gap: 4px;
+    gap: 24px;
+  }
+
+  a {
+    padding: 4px 0;
+    border-bottom: 3px solid transparent;
+    color: var(--color-marca);
+    font-family: var(--fuente-titular);
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    text-transform: uppercase;
+
+    &:hover {
+      border-bottom-color: currentColor;
+    }
+  }
+
+  .activo {
+    border-bottom-color: var(--color-accion);
   }
 }
 
-.activo {
-  text-decoration: underline;
-  text-underline-offset: 6px;
+.marca {
+  justify-self: start;
+  color: var(--color-marca);
+  font-family: var(--fuente-titular);
+  font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+
+  &:hover {
+    color: var(--color-accion);
+  }
+
+  @media (min-width: 840px) {
+    justify-self: center;
+  }
+}
+
+.acciones {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+// La cuenta: un círculo con la inicial, como un sello, y el nombre al lado.
+.cuenta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-marca);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover .inicial,
+  &[aria-expanded='true'] .inicial {
+    background-color: var(--color-marca);
+    color: var(--color-papel-claro);
+  }
+}
+
+.inicial {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--color-marca);
+  border-radius: 50%;
+  box-sizing: border-box;
+  font-family: var(--fuente-titular);
+  font-size: 1.3rem;
+  transition:
+    background-color 0.18s ease-out,
+    color 0.18s ease-out;
+}
+
+.nombre {
+  display: none;
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (min-width: 600px) {
+    display: inline;
+  }
+}
+
+.principal a:focus-visible,
+.marca:focus-visible,
+.cuenta:focus-visible {
+  outline: 3px solid var(--color-accion);
+  outline-offset: 4px;
 }
 
 .solo-angosto {

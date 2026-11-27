@@ -1,25 +1,24 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatToolbar } from '@angular/material/toolbar';
 import { IsActiveMatchOptions, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Campanita } from '../../../notificaciones/campanita/campanita';
 import { Sesion } from '../../sesion/sesion';
 import { NOMBRE_APLICACION } from '../../titulo/estrategia-titulo';
+import { ENLACES_PRINCIPALES } from '../enlaces-principales';
 
 /**
- * Barra superior del shell: la marca, los enlaces principales (como en el mockup
- * del enunciado) y, según la sesión, el acceso o la campanita y el menú de la
- * cuenta.
+ * Barra superior del shell, con el estilo del afiche: los enlaces principales a la
+ * izquierda, la marca al centro y, según la sesión, el acceso o la campanita y el
+ * menú de la cuenta a la derecha.
  */
 @Component({
   selector: 'app-barra-superior',
   imports: [
     RouterLink,
     RouterLinkActive,
-    MatToolbar,
     MatButton,
     MatIcon,
     MatMenu,
@@ -36,12 +35,7 @@ export class BarraSuperior {
   private readonly router = inject(Router);
   private readonly avisos = inject(MatSnackBar);
 
-  /** Se muestran siempre: los que piden sesión llevan a iniciarla y después vuelven. */
-  protected readonly enlaces = [
-    { ruta: '/', texto: 'Explorar' },
-    { ruta: '/panel/campanas/nueva', texto: 'Crear campaña' },
-    { ruta: '/aportes/mios', texto: 'Mis aportes' },
-  ] as const;
+  protected readonly enlaces = ENLACES_PRINCIPALES;
   /** Los filtros del catálogo van en la URL y no cambian de pantalla. */
   protected readonly mismaRuta: IsActiveMatchOptions = {
     paths: 'exact',
@@ -49,6 +43,11 @@ export class BarraSuperior {
     matrixParams: 'ignored',
     fragment: 'ignored',
   };
+  /** La primera letra del nombre, para el círculo de la cuenta. */
+  protected readonly inicial = computed(() => {
+    const nombre = this.sesion.usuario()?.nombre.trim() ?? '';
+    return (Array.from(nombre)[0] ?? '').toLocaleUpperCase('es');
+  });
 
   protected cerrarSesion(): void {
     this.sesion.cerrar();

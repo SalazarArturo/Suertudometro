@@ -3,10 +3,10 @@ import { Title } from '@angular/platform-browser';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 
 /** El nombre que ve la persona (el proyecto y el repositorio se llaman Suertudómetro). */
-export const NOMBRE_APLICACION = 'Go Fund Me';
+export const NOMBRE_APLICACION = 'Fundly';
 
 /**
- * Título de la pestaña: "<pantalla> · Go Fund Me", o solo el nombre de la
+ * Título de la pestaña: "<pantalla> · Fundly", o solo el nombre de la
  * aplicación si la ruta no tiene `title`. Así cada ruta declara solo el nombre
  * de su pantalla.
  */

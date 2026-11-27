@@ -1,7 +1,7 @@
 # frontend
 
-> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-25 · **Estado:** Borrador (en revisión del equipo)
-> Angular 22 · TypeScript 6 · Angular Material 22 · Vitest · contenedor `frontend` (Nginx, host `4200` → `80`) · nombre visible: **Go Fund Me** (el proyecto y el repositorio siguen llamándose Suertudómetro).
+> **Responsable de la base:** Efrain (shell, sesión y pantallas de identidad) · **Pantallas de cada dominio:** su responsable · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-27 · **Estado:** Borrador (en revisión del equipo)
+> Angular 22 · TypeScript 6 · Angular Material 22 · Vitest · contenedor `frontend` (Nginx, host `4200` → `80`) · nombre visible: **Fundly** (el proyecto y el repositorio siguen llamándose Suertudómetro).
 
 ## 1. Qué es
 
@@ -38,8 +38,9 @@ Cada dominio carga sus rutas de forma diferida (*lazy loading*) desde su carpeta
 | Todas | `/avisos` | Bandeja de avisos: lista paginada, filtro de no leídos, marcar uno o todos | Efrain | Con sesión | `GET /api/notificaciones/avisos`, `POST /api/notificaciones/avisos/{id}/lectura`, `POST /api/notificaciones/avisos/lectura` |
 | Todas | En la barra superior: `<app-campanita>` | Acceso a la bandeja, con la cantidad sin leer | Efrain | Con sesión; sin ella no aparece | `GET /api/notificaciones/avisos/no-leidos` |
 
-**Cómo se llega a cada pantalla** (lo mantiene Efrain, en `core/layout/barra-superior` y `zonas/`):
-- **Barra superior**, como en el mockup: Explorar, Crear campaña y Mis aportes. Se ven también sin sesión: las que la piden llevan a iniciarla y después vuelven. Debajo de 840 px la barra no las muestra y Crear campaña pasa al menú.
+**Cómo se llega a cada pantalla** (lo mantiene Efrain, en `core/layout/` y `zonas/`):
+- **Barra superior**, con el estilo del afiche: los enlaces principales a la izquierda (Explorar, Crear campaña y Mis aportes, en `core/layout/enlaces-principales.ts`), la marca al centro y la cuenta a la derecha. Los enlaces se ven también sin sesión: los que la piden llevan a iniciarla y después vuelven. Debajo de 840 px la barra no los muestra y Crear campaña pasa al menú.
+- **Pie de página** (`core/layout/pie-pagina`): los mismos enlaces principales y el aviso de que los aportes son simulados.
 - **Menú de la cuenta:** Mi perfil, Mi panel, Mis campañas y Mis aportes; con rol `ADMINISTRADOR`, también Administración y Moderación de campañas.
 - **Los paneles** (`/panel` y `/administracion`) son tarjetas con enlaces. Para sumar una pantalla, se agrega un elemento a `enlaces`.
 
@@ -56,14 +57,14 @@ frontend/
     ├── index.html · main.ts · styles.scss       # styles.scss: tema de Angular Material y estilos globales
     ├── environments/environment.ts              # urlApi
     └── app/
-        ├── app.ts · app.html · app.scss         # shell: barra superior y <router-outlet>
+        ├── app.ts · app.html · app.scss         # shell: barra superior, <router-outlet>, pie y el filtro SVG #gastado
         ├── app.config.ts · app.routes.ts        # proveedores y rutas de primer nivel (cada dominio agrega una línea)
         ├── core/                                # piezas de la base, una sola instancia (Efrain)
         │   ├── api/url-api.ts                   # token URL_API
         │   ├── http/                            # leer errores RFC 9457 y marcar peticiones en segundo plano
         │   ├── sesion/                          # Sesion, interceptores y guards
-        │   ├── titulo/                          # título de la pestaña: "<pantalla> · Suertudómetro"
-        │   └── layout/barra-superior/
+        │   ├── titulo/                          # título de la pestaña: "<pantalla> · Fundly"
+        │   └── layout/                          # barra-superior/, pie-pagina/ y enlaces-principales.ts
         ├── shared/                              # componentes de presentación reutilizables, sin lógica de negocio
         ├── identidad/                           # pantallas de identity-service (Efrain)
         ├── zonas/                               # inicio de los paneles del organizador y de administración
@@ -126,28 +127,33 @@ Los formularios ponen el error **en el campo** que corresponde (por ejemplo, `co
   - lecturas con `httpResource` y escrituras con `HttpClient`, dentro de `<dominio>-api.ts`;
   - servicios con `@Service()`, que es el reemplazo de `@Injectable({ providedIn: 'root' })` en la versión 22.
 - **Angular Material 22** para los componentes visuales: campos, botones, tarjetas, barra de progreso, diálogos y avisos.
-  - El tema está en `src/styles.scss` (Material 3). Las paletas de `src/_theme-colors.scss` se generaron con `ng generate @angular/material:theme-color` a partir del azul marino y del naranja.
+  - El tema está en `src/styles.scss` (Material 3). Las paletas de `src/_theme-colors.scss` se generaron con `ng generate @angular/material:theme-color` a partir del azul marino, del rojo y del papel.
   - Para colores propios se usan las variables `--color-*` y `--mat-sys-*`, nunca colores fijos. Así, si cambia el tema, cambia toda la aplicación.
   - Los campos llevan `appearance="outline"` en cada `mat-form-field`. No se configura de forma global porque el token de Material metería el módulo de formularios en el bundle inicial (unos 150 kB).
-- **Marca y colores**, tomados del mockup del equipo:
+- **Estilo «Afiche»** (propuesta 4 del rediseño, 2026-11-27): papel con grano, azul marino y rojo, esquinas rectas, títulos en Anton y notas escritas a mano.
 
   | Variable | Color | Uso |
   |---|---|---|
-  | `--color-marca` | `#22364e` (azul marino) | Barra superior, botones con contorno y foco de los campos. Es el `primary` de Material. |
-  | `--color-accion` | `#db8943` (naranja) | Acción principal: el botón relleno (`matButton="filled"`). Su texto va en azul marino, porque el blanco sobre este naranja no se lee bien (2,7:1). |
-  | `--color-acento-azul`, `--color-acento-verde`, `--color-acento-rojo` | `#426897`, `#4a8388`, `#bf5b5f` | Acentos, por ejemplo uno por categoría de campaña. El verde y el rojo no alcanzan 4,5:1 sobre blanco: úsalos en barras, bordes o texto grande. |
-  | `--color-fondo-suave` | `#f0f4f6` | Bloques destacados, como la portada |
-  | `--color-borde` | `#dde3e7` | Bordes de tarjetas y bloques |
-  | `--color-pista` | `#e8ebee` | Pista de las barras de progreso |
+  | `--color-marca` | `#111e4a` (azul marino) | Texto, bordes, botones con contorno y foco de los campos. Es el `primary` de Material. |
+  | `--color-marca-tenue` | `#4a5275` | Texto secundario (`on-surface-variant`) |
+  | `--color-accion` | `#b8223a` (rojo) | Acción principal: el botón relleno (`matButton="filled"`), con el texto en papel claro (5,3:1). También la barra de progreso. |
+  | `--color-papel` | `#e8e5db` | Fondo de la página, con el grano de `--grano` |
+  | `--color-papel-claro` | `#efeadd` | Tarjetas, menús y diálogos (`surface`), y el texto sobre el azul o el rojo |
+  | `--color-acento-azul`, `--color-acento-verde`, `--color-acento-rojo` | `#2b4a8b`, `#2f6b5e`, `#b8223a` | Acentos, por ejemplo uno por categoría de campaña. Los tres pasan 4,5:1 sobre el papel. |
+  | `--color-fondo-suave` | `#f5f2ea` | Bloques destacados dentro del papel |
+  | `--color-borde` | `#c8c0ad` | Bordes de tarjetas y bloques |
+  | `--color-pista` | `#d6d0c2` | Pista de las barras de progreso |
 
-  - **Letra:** Lato para el texto y Noto Serif en negrita para los títulos.
-  - **Nombre visible:** `NOMBRE_APLICACION` en `core/titulo/estrategia-titulo.ts`. Lo usan la barra superior y el título de la pestaña.
+  - **Letras** (Google Fonts, con respaldo del sistema): **Outfit** para el texto (`--fuente-texto`); **Anton** para los títulos y las etiquetas de los botones, en mayúsculas (`--fuente-titular`); **Reenie Beanie** para las notas a mano (`--fuente-mano`). Anton solo tiene peso 400: no le pongas `font-weight: 700`, porque el navegador la engrosa a la fuerza.
+  - **Botones:** el relleno es rojo y el de contorno lleva un trazo azul marino de 2 px; los dos son rectos y se levantan al pasar el mouse, con una sombra plana.
+  - **Clases globales para las pantallas:** `.titular-afiche` (titular grande con la tinta gastada del filtro `#gastado` de `app.html`) y `.mano` (nota escrita a mano).
+  - **Nombre visible:** `NOMBRE_APLICACION` en `core/titulo/estrategia-titulo.ts`. Lo usan la barra superior, el pie y el título de la pestaña.
 - **Configuración regional `es-BO`:** `DatePipe` y `CurrencyPipe` formatean en español de Bolivia (`{{ monto | currency: moneda }}`).
 - **Nombres:**
   - en español ASCII y con los términos del event storming (`docs/stack-y-convenciones.md` §5.1);
   - archivos en *kebab-case* sin sufijo de rol, como genera el CLI de Angular 22: `registro.ts` contiene `class Registro`;
   - los tipos van en `<dominio>.model.ts` y las pruebas en `<archivo>.spec.ts`.
-- **Rutas en español ASCII** (`/ingresar`, `/campanas/:id`). El `title` de cada ruta es solo el nombre de la pantalla, y `EstrategiaTitulo` le agrega " · Go Fund Me".
+- **Rutas en español ASCII** (`/ingresar`, `/campanas/:id`). El `title` de cada ruta es solo el nombre de la pantalla, y `EstrategiaTitulo` le agrega " · Fundly".
 
 ## 7. Configuración
 
@@ -177,7 +183,7 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 | F1 | Confirmar las rutas y las pantallas de cada dominio (tabla del §2) | Cada responsable, en su documento de diseño |
 | F2 | Compartir la campaña: solo frontend o también backend (pendiente #2 del estado) | Equipo |
 | F3 | Pantalla de la bandeja de avisos ("campanita" en la barra superior y lista). **Hecho (Efrain, 2026-11-25):** [`notification-service.md`](servicios/notification-service.md) §11 | Efrain |
-| F4 | Presupuesto del bundle inicial. Con las pantallas de aportes pasa de 487,8 kB a 502,1 kB, y el aviso de `angular.json` está en 500 kB (el error, en 1 MB). El aumento no depende de las pantallas en sí: es la primera vez que la aplicación usa `CurrencyPipe` (7,3 kB; lo pide el §6) y `@for` (unos 7 kB), y su código queda en el bloque inicial. Opciones: subir el aviso, o mostrar el dinero con `Intl.NumberFormat` en lugar de `CurrencyPipe`. Lo anotó Raul el 2026-11-15. Con los enlaces de la barra y la campanita, que se cargan siempre, el inicial pasa de unos 503 kB a unos 515 kB (Efrain, 2026-11-25). **Sigue abierto.** | Efrain |
+| F4 | Presupuesto del bundle inicial. Con las pantallas de aportes pasa de 487,8 kB a 502,1 kB, y el aviso de `angular.json` está en 500 kB (el error, en 1 MB). El aumento no depende de las pantallas en sí: es la primera vez que la aplicación usa `CurrencyPipe` (7,3 kB; lo pide el §6) y `@for` (unos 7 kB), y su código queda en el bloque inicial. Opciones: subir el aviso, o mostrar el dinero con `Intl.NumberFormat` en lugar de `CurrencyPipe`. Lo anotó Raul el 2026-11-15. Con los enlaces de la barra y la campanita, que se cargan siempre, el inicial pasa de unos 503 kB a unos 515 kB (Efrain, 2026-11-25). Con el tema del afiche y el pie de página, a 521 kB (Efrain, 2026-11-27). **Sigue abierto.** | Efrain |
 | F5 | Enlace a "Mis aportes" en el menú de la cuenta (`core/layout/barra-superior`), como en el mockup del enunciado. **Hecho (Efrain, 2026-11-25):** está en la barra, en el menú y en "Mi panel". Falta que Raul lo revise. | Efrain, con Raul |
 | F6 | Volver a enviar sin editar después de un error del servidor (§5) en «Aportar» y en el formulario de campaña. Tras un corte o un `504` no se sabe si el primer envío llegó, así que reintentar podría duplicar el aporte o el borrador. **Hecho en campaña (Arturo, 2026-11-26):** `FormularioCampana` usa `envioReintentable` (en edición `PUT /api/campanas/{id}` es idempotente y en creación `POST /api/campanas` consulta `GET /api/campanas/mias` tras un corte o `5xx` para recuperar el borrador si ya se creó sin duplicarlo). Falta «Aportar» (Raul). | Raul (Aportar) y Arturo (campaña) |
 
@@ -185,6 +191,7 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-27 | Efrain | §6: nombre visible «Fundly» y estilo «Afiche» (colores, letras, botones y clases globales). §2 y §3: barra superior nueva y pie de página. F4 con el tamaño nuevo. |
 | 2026-11-26 | Arturo | F6 (campaña): `FormularioCampana` usa `envioReintentable` y verifica en `GET /api/campanas/mias` si el borrador ya se creó tras un corte o error `5xx` antes de repetir `POST /api/campanas`. |
 | 2026-11-26 | Gabo | Publicación desde Mi panel, historial público de novedades y verificación del envío cuando se pierde la respuesta. |
 | 2026-11-25 | Efrain | §5 y F6: volver a enviar un formulario después de un error del servidor. |
