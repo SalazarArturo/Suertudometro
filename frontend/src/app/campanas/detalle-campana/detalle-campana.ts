@@ -1,5 +1,5 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, computed, inject, input } from '@angular/core';
+import { CurrencyPipe, DatePipe, LowerCasePipe } from '@angular/common';
+import { Component, computed, DOCUMENT, inject, input } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { RouterLink } from '@angular/router';
@@ -31,6 +31,7 @@ import { rutaEditarCampana } from '../campanas.routes';
   imports: [
     CurrencyPipe,
     DatePipe,
+    LowerCasePipe,
     RouterLink,
     MatButton,
     MatProgressBar,
@@ -46,6 +47,7 @@ export class DetalleCampana {
   readonly id = input.required<string>();
 
   private readonly api = inject(CampanasApi);
+  private readonly documento = inject(DOCUMENT);
   protected readonly sesion = inject(Sesion);
 
   protected readonly etiquetasCategoria = ETIQUETA_CATEGORIA;
@@ -89,6 +91,18 @@ export class DetalleCampana {
   protected alRegistrarAporte(historial: HistorialAportes): void {
     historial.recargar();
     this.campana.reload();
+  }
+
+  /**
+   * El botón «Aportar» de la tarjeta de progreso: baja hasta la sección de
+   * aportes y pone el foco en su primer campo (o en el enlace para iniciar sesión).
+   */
+  protected irAAportar(): void {
+    const seccion = this.documento.querySelector<HTMLElement>('app-aportar');
+    const suave = !this.documento.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)')
+      .matches;
+    seccion?.scrollIntoView?.({ behavior: suave ? 'smooth' : 'auto', block: 'start' });
+    seccion?.querySelector<HTMLElement>('input, a, button')?.focus({ preventScroll: true });
   }
 
   protected urlImagen(urlPublica: string): string {

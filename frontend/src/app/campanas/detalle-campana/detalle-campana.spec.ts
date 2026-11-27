@@ -102,4 +102,17 @@ describe('DetalleCampana', () => {
     expect(pantalla().textContent).toContain('Historial de estados');
     expect(pantalla().textContent).toContain('Campana aprobada y publicada por administracion');
   });
+
+  it('«Quiero aportar» lleva el foco a la sección de aportes', async () => {
+    backend.expectOne(urlDetalleCampana()).flush(CAMPANA_PUBLICADA_PRUEBA);
+    (await vi.waitFor(() => backend.expectOne(urlHistorial()))).flush(paginaDePrueba([]));
+    (await vi.waitFor(() => backend.expectOne(urlNovedades))).flush({ total: 0, resultados: [] });
+    await fixture.whenStable();
+
+    pantalla().querySelector<HTMLButtonElement>('.ir-a-aportar')!.click();
+
+    const seccion = pantalla().querySelector('app-aportar')!;
+    expect(seccion.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement?.textContent).toContain('Iniciar sesión');
+  });
 });
