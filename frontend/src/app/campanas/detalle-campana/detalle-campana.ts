@@ -8,6 +8,7 @@ import { rutaDeAportesRecibidos } from '../../aportes/aportes.routes';
 import { HistorialAportes } from '../../aportes/historial-aportes/historial-aportes';
 import { leerErrorDeApi } from '../../core/http/error-de-api';
 import { Sesion } from '../../core/sesion/sesion';
+import { HistorialNovedades } from '../../novedades/historial-novedades';
 import { CampanasApi } from '../campanas-api';
 import {
   calcularPorcentajeAvance,
@@ -35,6 +36,7 @@ import { rutaEditarCampana } from '../campanas.routes';
     MatProgressBar,
     Aportar,
     HistorialAportes,
+    HistorialNovedades,
   ],
   templateUrl: './detalle-campana.html',
   styleUrl: './detalle-campana.scss',

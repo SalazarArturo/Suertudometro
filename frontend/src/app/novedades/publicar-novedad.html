@@ -1,0 +1,117 @@
+<section class="pagina">
+  <a routerLink="/panel">Mi panel</a>
+  <h1>Publicar novedades</h1>
+
+  @if (campanas.isLoading()) {
+    <p role="status">Cargando tus campañas…</p>
+  } @else if (campanas.error()) {
+    <p role="alert">No se pudieron cargar tus campañas.</p>
+    <button matButton type="button" (click)="campanas.reload()">Volver a cargar</button>
+  } @else if (campanas.hasValue()) {
+    @if (publicadas().length === 0) {
+      <p>No tienes campañas publicadas en esta página.</p>
+    }
+    @if (campanas.value().totalPaginas > 1) {
+      <nav class="acciones" aria-label="Páginas de mis campañas">
+        <button
+          matButton
+          type="button"
+          [disabled]="bloqueaSeleccion() || pagina() === 0"
+          (click)="cambiarPagina(pagina() - 1)"
+        >
+          Anterior
+        </button>
+        <span>Página {{ pagina() + 1 }} de {{ campanas.value().totalPaginas }}</span>
+        <button
+          matButton
+          type="button"
+          [disabled]="bloqueaSeleccion() || pagina() + 1 >= campanas.value().totalPaginas"
+          (click)="cambiarPagina(pagina() + 1)"
+        >
+          Siguiente
+        </button>
+      </nav>
+    }
+  }
+
+  @if (publicadas().length > 0 || pendienteDeVerificar()) {
+    <form [formRoot]="formulario">
+      <label for="campana-novedad">Campaña</label>
+      <select
+        id="campana-novedad"
+        #campana
+        [value]="idCampana()"
+        [disabled]="bloqueaSeleccion()"
+        (change)="idCampana.set(campana.value)"
+      >
+        <option value="">Selecciona una campaña</option>
+        @for (opcion of publicadas(); track opcion.id) {
+          <option [value]="opcion.id">{{ opcion.titulo }}</option>
+        }
+      </select>
+      <mat-form-field appearance="outline">
+        <mat-label>Novedad</mat-label>
+        <textarea matInput [formField]="formulario.contenido"></textarea>
+        @for (error of formulario.contenido().errors(); track error.kind) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+      @if (error(); as mensaje) {
+        <p role="alert">{{ mensaje }}</p>
+      }
+      @if (pendienteDeVerificar()) {
+        <p role="alert">
+          No pudimos confirmar el envío. Revisa las últimas novedades antes de volver a publicar.
+        </p>
+        @if (historial.isLoading()) {
+          <p role="status">Consultando las últimas novedades…</p>
+        } @else if (historial.error()) {
+          <p role="alert">No se pudo consultar el historial.</p>
+          <button matButton type="button" (click)="historial.reload()">Consultar de nuevo</button>
+        } @else if (historial.hasValue()) {
+          <h2>Últimas novedades publicadas</h2>
+          @if (historial.value().resultados.length === 0) {
+            <p>No hay novedades en el historial.</p>
+          } @else {
+            <ul>
+              @for (novedad of historial.value().resultados; track novedad.idActualizacion) {
+                <li>
+                  <time [attr.datetime]="novedad.publicadoEn">{{
+                    novedad.publicadoEn | date: 'medium'
+                  }}</time>
+                  <p class="contenido">{{ novedad.contenido }}</p>
+                </li>
+              }
+            </ul>
+          }
+          <button
+            matButton
+            type="button"
+            [disabled]="formulario().submitting()"
+            (click)="confirmarQueYaEstaPublicada()"
+          >
+            Mi novedad ya está publicada
+          </button>
+        }
+      }
+      <div class="acciones">
+        <button
+          matButton="filled"
+          type="submit"
+          [disabled]="formulario().submitting() || !envioHabilitado()"
+        >
+          @if (formulario().submitting()) {
+            Publicando…
+          } @else if (pendienteDeVerificar()) {
+            Volver a publicar
+          } @else {
+            Publicar novedad
+          }
+        </button>
+      </div>
+    </form>
+  }
+  @if (publicada(); as id) {
+    <p role="status">Novedad publicada. <a [routerLink]="['/campanas', id]">Ver campaña</a></p>
+  }
+</section>

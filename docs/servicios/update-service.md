@@ -105,13 +105,13 @@ Es una estructura local del servicio, no un acuerdo general para otros integrant
 
 ## 11. Pantallas del frontend
 
-A cargo de Gabo sobre la base Angular de Efrain: formulario de publicación del organizador e historial público en el detalle de campaña. Pendientes de implementar e integrar; las rutas propuestas están en [`docs/frontend.md`](../frontend.md) y quedan por confirmar al desarrollar las pantallas.
+A cargo de Gabo sobre la base Angular de Efrain. Mi panel enlaza a `/panel/novedades` para publicar en campañas propias publicadas. El historial público, paginado, está en el detalle de cada campaña que llegó a publicarse. El manejo de un envío sin confirmación está en [el diseño del frontend](../frontend.md#5-errores-del-api).
 
 ## 12. Pendientes de este servicio
 
 - Revisar y aprobar este borrador y los contratos con productores y consumidores.
 - Activar y probar el acceso por el gateway con Efrain y la topología compartida; probar publicación, cierre y aviso de extremo a extremo.
-- Incorporar el servicio al Compose global y desarrollar sus pantallas.
+- Revisar las pantallas de novedades con Efrain y la integración en el detalle con Arturo.
 - Validar el CI en GitHub después de subir los cambios. La ejecución local no equivale a una corrida remota.
 
 ## 13. Plan de implementación

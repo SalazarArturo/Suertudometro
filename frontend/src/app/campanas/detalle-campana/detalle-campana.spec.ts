@@ -19,6 +19,7 @@ import { Sesion } from '../../core/sesion/sesion';
 import { DetalleCampana } from './detalle-campana';
 
 describe('DetalleCampana', () => {
+  const urlNovedades = `${URL_API_PRUEBA}/novedades/campana/${ID_CAMPANA_PRUEBA}?limite=20&desplazamiento=0`;
   let fixture: ComponentFixture<DetalleCampana>;
   let backend: HttpTestingController;
   let sesion: Sesion;
@@ -54,6 +55,17 @@ describe('DetalleCampana', () => {
     backend.expectOne(urlDetalleCampana()).flush(CAMPANA_PUBLICADA_PRUEBA);
     const reqHistorialAportes = await vi.waitFor(() => backend.expectOne(urlHistorial()));
     reqHistorialAportes.flush(paginaDePrueba([]));
+    const reqNovedades = await vi.waitFor(() => backend.expectOne(urlNovedades));
+    reqNovedades.flush({
+      total: 1,
+      resultados: [
+        {
+          idActualizacion: 'novedad-1',
+          contenido: 'Llegaron los primeros libros.',
+          publicadoEn: '2026-11-25T12:00:00Z',
+        },
+      ],
+    });
     await fixture.whenStable();
 
     expect(pantalla().querySelector('h1')?.textContent).toContain(
@@ -67,6 +79,9 @@ describe('DetalleCampana', () => {
     expect(pantalla().textContent).toContain('5.000,00');
     expect(pantalla().querySelector('app-aportar')).not.toBeNull();
     expect(pantalla().querySelector('app-historial-aportes')).not.toBeNull();
+    expect(pantalla().querySelector('app-historial-novedades')?.textContent).toContain(
+      'Llegaron los primeros libros.',
+    );
   });
 
   it('carga el historial de estados cuando quien consulta es el organizador dueño', async () => {
@@ -80,6 +95,8 @@ describe('DetalleCampana', () => {
     reqHistorialEstados.flush(HISTORIAL_ESTADOS_PRUEBA);
     const reqHistorialAportes = await vi.waitFor(() => backend.expectOne(urlHistorial()));
     reqHistorialAportes.flush(paginaDePrueba([]));
+    const reqNovedades = await vi.waitFor(() => backend.expectOne(urlNovedades));
+    reqNovedades.flush({ total: 0, resultados: [] });
     await fixture.whenStable();
 
     expect(pantalla().textContent).toContain('Historial de estados');

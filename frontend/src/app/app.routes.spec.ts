@@ -56,7 +56,7 @@ describe('enlaces de la aplicación', () => {
   it.each<[string, Type<unknown>, Rol, number]>([
     ['la barra de un usuario', BarraSuperior, 'USUARIO', 7],
     ['la barra del administrador', BarraSuperior, 'ADMINISTRADOR', 9],
-    ['Mi panel', PanelOrganizador, 'USUARIO', 4],
+    ['Mi panel', PanelOrganizador, 'USUARIO', 5],
     ['Administración', PanelAdministracion, 'ADMINISTRADOR', 1],
   ])('en %s, todos llevan a una pantalla que existe', async (_, componente, rol, cantidad) => {
     sesion.iniciar(sesionDePrueba(rol));
@@ -84,6 +84,12 @@ describe('enlaces de la aplicación', () => {
     const arnes = await RouterTestingHarness.create();
     await arnes.navigateByUrl('/avisos');
     expect(TestBed.inject(Router).url).toBe('/ingresar?volverA=%2Favisos');
+  });
+
+  it('publicar novedades pide sesión y conserva el destino', async () => {
+    const arnes = await RouterTestingHarness.create();
+    await arnes.navigateByUrl('/panel/novedades');
+    expect(TestBed.inject(Router).url).toBe('/ingresar?volverA=%2Fpanel%2Fnovedades');
   });
 
   it('la bandeja se abre con sesión', async () => {

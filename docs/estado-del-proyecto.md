@@ -71,7 +71,7 @@ Entregar **Suertudometro**, una plataforma de crowdfunding con aportes simulados
 
 Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 - cerrar la revisión de los 7 contratos de eventos. Gabo aprobó `CampanaActualizada` y confirmó el acuerdo de Campañas para Búsqueda y Novedades (2026-11-26);
-- las pantallas de novedades.
+- la revisión de las pantallas de novedades integradas con Mi panel y el detalle de campaña (Gabo, con Efrain y Arturo).
 
 ## Avance por servicio
 
@@ -87,7 +87,7 @@ Lo que ya existe está en `README.md` → Documentación. Falta lo siguiente:
 | `update-service` | Gabo | [Borrador](servicios/update-service.md) | Persistencia y API; ya está en el gateway y en el compose de la raíz, probado con los eventos reales de campaign-service |
 | `search-service` | Gabo | [Borrador](servicios/search-service.md) | Persistencia y API. Catálogo y consumidor probados con su propio Docker Compose; ya está en el gateway y en el compose de la raíz, probado con los eventos reales. |
 | `frontend` (base: auth y shell) | Efrain | [Borrador](frontend.md) | Integrado (probado con Docker Compose); la barra, el menú y los paneles enlazan las pantallas de los dominios |
-| `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Campañas (Arturo), Aportes (Raul), catálogo de Búsqueda (Gabo) y bandeja de avisos (Efrain). Faltan las de novedades (Gabo). |
+| `frontend` (pantallas de cada dominio) | Cada responsable | En el documento de cada servicio | Campañas (Arturo), Aportes (Raul), catálogo de Búsqueda y pantallas de Novedades (Gabo), y bandeja de avisos (Efrain). Novedades en revisión. |
 
 Valores posibles:
 - **Documento:** Sin documento · Borrador · Vigente.

@@ -55,6 +55,9 @@ describe('rutas de campañas', { timeout: 15000 }, () => {
     backend.expectOne(urlDetalleCampana()).flush(CAMPANA_PUBLICADA_PRUEBA);
     const reqHistorial = await vi.waitFor(() => backend.expectOne(urlHistorial()));
     reqHistorial.flush(paginaDePrueba([]));
+    backend
+      .expectOne(({ url }) => url === `${URL_API_PRUEBA}/novedades/campana/${ID_CAMPANA_PRUEBA}`)
+      .flush({ total: 0, resultados: [] });
 
     expect(pantalla.querySelector('h1')?.textContent).toContain(
       'Libros para la biblioteca comunitaria',
