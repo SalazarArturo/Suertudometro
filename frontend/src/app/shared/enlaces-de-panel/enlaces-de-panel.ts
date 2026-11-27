@@ -29,41 +29,75 @@ export interface EnlaceDePanel {
   styles: `
     ul {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-      gap: 16px;
-      margin: 24px 0 0;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+      gap: 28px;
+      margin: 0;
       padding: 0;
       list-style: none;
     }
 
+    /* Cada opción, como una hoja de papel con sombra plana que se levanta. */
     a {
       display: grid;
       grid-template-columns: max-content 1fr;
-      gap: 4px 12px;
+      align-items: center;
+      gap: 6px 16px;
       height: 100%;
       box-sizing: border-box;
-      padding: 16px;
-      border: 1px solid var(--color-borde);
-      border-radius: var(--mat-sys-corner-medium);
+      padding: 22px 24px;
+      border: 2px solid var(--color-marca);
+      background: var(--color-papel-claro);
+      box-shadow: 6px 6px 0 var(--color-marca);
       color: var(--color-marca);
       text-decoration: none;
+      transition:
+        translate 0.18s ease-out,
+        box-shadow 0.18s ease-out;
     }
 
-    a:hover,
+    a:hover {
+      translate: -2px -2px;
+      box-shadow: 8px 8px 0 var(--color-accion);
+    }
+
     a:focus-visible {
-      border-color: var(--color-marca);
-      background-color: var(--color-fondo-suave);
+      outline: 3px solid var(--color-accion);
+      outline-offset: 4px;
+    }
+
+    mat-icon {
+      grid-row: span 2;
+      align-self: start;
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--color-accion);
+      color: var(--color-papel-claro);
+      font-size: 26px;
     }
 
     .titulo {
-      font: var(--mat-sys-title-medium);
-      font-weight: 700;
-      text-decoration: underline;
+      font-family: var(--fuente-titular);
+      font-size: 1.6rem;
+      line-height: 1;
+      text-transform: uppercase;
     }
 
     .descripcion {
       grid-column: 2;
-      color: var(--mat-sys-on-surface-variant);
+      color: var(--color-marca-tenue);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      a {
+        transition: none;
+      }
+
+      a:hover {
+        translate: none;
+      }
     }
   `,
 })

@@ -8,11 +8,16 @@ import { ListaAportes } from '../lista-aportes/lista-aportes';
   imports: [ListaAportes],
   template: `
     <section class="pagina">
-      <h1>Mis aportes</h1>
-      <p class="bajada">
-        Los aportes que hiciste, del más reciente al más antiguo. Los anónimos también aparecen
-        aquí, pero solo tú puedes verlos.
-      </p>
+      <header class="cabecera-pagina">
+        <div>
+          <p class="mano">gracias por sumar</p>
+          <h1 class="titular-afiche">Mis aportes</h1>
+          <p class="bajada">
+            Los aportes que hiciste, del más reciente al más antiguo. Los anónimos también aparecen
+            aquí, pero solo tú puedes verlos.
+          </p>
+        </div>
+      </header>
       <app-lista-aportes
         [aportes]="aportes"
         [(pagina)]="pagina"
@@ -20,12 +25,6 @@ import { ListaAportes } from '../lista-aportes/lista-aportes';
         sinAportes="Todavía no hiciste ningún aporte."
       />
     </section>
-  `,
-  styles: `
-    .bajada {
-      margin: 0 0 20px;
-      color: var(--mat-sys-on-surface-variant);
-    }
   `,
 })
 export class MisAportes {

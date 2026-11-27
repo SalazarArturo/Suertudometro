@@ -23,7 +23,8 @@ import { ListaAportes } from '../lista-aportes/lista-aportes';
   `,
   styles: `
     h2 {
-      margin: 0 0 12px;
+      margin: 0 0 16px;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
     }
   `,
 })

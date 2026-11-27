@@ -114,10 +114,14 @@ html {
 
   @include mat.card-overrides(
     (
+      // Como la clase .ficha: papel claro, trazo azul marino y sombra plana.
       elevated-container-color: $papel-claro,
+      elevated-container-elevation: 6px 6px 0 $azul-marino,
       outlined-container-color: $papel-claro,
-      outlined-outline-color: $borde,
-      title-text-weight: 400,
+      outlined-container-elevation: 6px 6px 0 $azul-marino,
+      outlined-outline-color: $azul-marino,
+      outlined-outline-width: 2px,
+      title-text-weight: 400
     )
   );
 
@@ -180,7 +184,8 @@ h2,
 h3 {
   font-family: var(--fuente-titular);
   font-weight: 400;
-  line-height: 1.05;
+  // Con menos, los acentos y la tilde de la segunda línea se pierden entre las letras de la primera.
+  line-height: 1.15;
   letter-spacing: 0.01em;
   text-transform: uppercase;
   text-wrap: balance;
@@ -232,7 +237,9 @@ a {
   margin: 0;
   font-family: var(--fuente-titular);
   font-weight: 400;
-  line-height: 0.9;
+  // Como en h1-h3: con menos se pierden los acentos de la segunda línea. Los
+  // titulares de dos líneas sin acentos abajo pueden apretarse (0,9).
+  line-height: 1.15;
   text-transform: uppercase;
   filter: url('#gastado');
 }
@@ -306,6 +313,83 @@ a {
   border: 0;
 }
 
+// Encabezado de una pantalla: una nota a mano, el título grande, la bajada y, a
+// la derecha, sus acciones. Termina con el trazo azul marino de la barra.
+.cabecera-pagina {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-bottom: clamp(24px, 4vw, 40px);
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--color-marca);
+
+  .mano {
+    margin: 0 0 6px;
+    color: var(--color-accion);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.6rem, 6vw, 4.8rem);
+  }
+
+  .bajada {
+    max-width: 60ch;
+    margin: 12px 0 0;
+    color: var(--color-marca-tenue);
+  }
+}
+
+// Hoja de papel con borde y sombra plana: formularios y bloques destacados.
+// Las tarjetas de Material (mat-card) se ven igual, por el tema.
+.ficha {
+  box-sizing: border-box;
+  padding: clamp(20px, 2.4vw, 32px);
+  border: 2px solid var(--color-marca);
+  background: var(--color-papel-claro);
+  box-shadow: 6px 6px 0 var(--color-marca);
+}
+
+// Renglón de una lista: papel claro con un trazo rojo a la izquierda.
+.renglon {
+  padding: 16px 20px;
+  border-left: 4px solid var(--color-accion);
+  background: var(--color-papel-claro);
+}
+
+// Etiqueta recta, para el estado o la categoría. Con .rellena, en azul marino.
+.etiqueta-recta {
+  display: inline-block;
+  padding: 2px 10px;
+  border: 1.5px solid var(--color-marca);
+  color: var(--color-marca);
+  font-family: var(--fuente-titular);
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  line-height: 1.35;
+  text-transform: uppercase;
+
+  &.rellena {
+    background: var(--color-marca);
+    color: var(--color-papel-claro);
+  }
+}
+
+// Aviso de lista vacía o de error dentro de una pantalla.
+.recuadro {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 20px 24px;
+  border: 2px dashed var(--color-marca-tenue);
+
+  p {
+    margin: 0;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Clases compartidas por las pantallas de la base. Las de cada dominio van en
 // los estilos de su componente.
@@ -316,19 +400,41 @@ a {
   box-sizing: border-box;
   max-width: 960px;
   margin: 0 auto;
-  padding: 32px 16px;
+  padding: clamp(28px, 4vw, 48px) 16px clamp(48px, 6vw, 80px);
 }
 
-// Página con una tarjeta centrada: iniciar sesión, registro, perfil.
+// Página con una tarjeta centrada: iniciar sesión, registro, perfil. En las dos
+// primeras, a la izquierda va un lema grande en rojo, como en un afiche.
 .pagina-formulario {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
-  padding: 32px 16px;
+  gap: 24px clamp(32px, 6vw, 96px);
+  padding: clamp(28px, 5vw, 64px) 16px clamp(48px, 6vw, 80px);
+}
+
+.lema-acceso {
+  max-width: 520px;
+  color: var(--color-accion);
+
+  .mano {
+    margin: 0;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+  }
+
+  .titular-afiche {
+    font-size: clamp(3.6rem, 9vw, 8rem);
+  }
 }
 
 .tarjeta-formulario {
   width: 100%;
   max-width: 440px;
+
+  .mat-mdc-card-title {
+    font-size: 2rem;
+  }
 }
 
 .formulario {

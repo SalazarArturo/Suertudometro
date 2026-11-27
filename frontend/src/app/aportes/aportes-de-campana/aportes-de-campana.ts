@@ -16,7 +16,12 @@ import { HistorialAportes } from '../historial-aportes/historial-aportes';
   imports: [RouterLink, Aportar, HistorialAportes],
   template: `
     <section class="pagina">
-      <h1>Aportes de la campaña</h1>
+      <header class="cabecera-pagina">
+        <div>
+          <p class="mano">cada aporte cuenta</p>
+          <h1 class="titular-afiche">Aportes de la campaña</h1>
+        </div>
+      </header>
       <div class="secciones">
         <app-aportar [idCampana]="idCampana()" (aportado)="historial.recargar()" />
         <app-historial-aportes #historial [idCampana]="idCampana()" />
@@ -32,7 +37,7 @@ import { HistorialAportes } from '../historial-aportes/historial-aportes';
   styles: `
     .secciones {
       display: grid;
-      gap: 24px;
+      gap: clamp(28px, 4vw, 48px);
       align-items: start;
 
       @media (min-width: 840px) {
@@ -42,7 +47,7 @@ import { HistorialAportes } from '../historial-aportes/historial-aportes';
 
     .organizador {
       margin: 24px 0 0;
-      color: var(--mat-sys-on-surface-variant);
+      color: var(--color-marca-tenue);
     }
   `,
 })

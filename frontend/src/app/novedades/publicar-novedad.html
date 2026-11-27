@@ -1,6 +1,11 @@
 <section class="pagina">
-  <a routerLink="/panel">Mi panel</a>
-  <h1>Publicar novedades</h1>
+  <header class="cabecera-pagina">
+    <div>
+      <a class="volver" routerLink="/panel">Mi panel</a>
+      <p class="mano">cuéntales cómo va</p>
+      <h1 class="titular-afiche">Publicar novedades</h1>
+    </div>
+  </header>
 
   @if (campanas.isLoading()) {
     <p role="status">Cargando tus campañas…</p>
@@ -35,7 +40,7 @@
   }
 
   @if (publicadas().length > 0 || pendienteDeVerificar()) {
-    <form [formRoot]="formulario">
+    <form class="ficha" [formRoot]="formulario">
       <label for="campana-novedad">Campaña</label>
       <select
         id="campana-novedad"
