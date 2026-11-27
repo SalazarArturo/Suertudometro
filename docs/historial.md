@@ -8,6 +8,9 @@
 
 Las más recientes van arriba. Cada una indica quién la propuso o la decidió y dónde está el detalle.
 
+- **2026-11-27 · Efrain** (con la aprobación del grupo para rediseñar el frontend) · La página pasa a llamarse **«Fundly»** y adopta el estilo **«Afiche»**: papel con grano, azul marino `#111e4a` y rojo `#b8223a`, esquinas rectas, títulos en Anton, texto en Outfit y notas a mano en Reenie Beanie (→ [`frontend.md`](frontend.md) §6). Reemplaza el nombre y la paleta del 2026-11-08. El proyecto y el repositorio siguen llamándose Suertudómetro. El rediseño entra por partes: primero el tema y el shell; después cada zona, con los dueños de sus pantallas como revisores.
+  - *Riesgo anotado:* Fundly también es el nombre de una plataforma de crowdfunding de Estados Unidos. Igual que con «Go Fund Me», para el curso no hay problema, pero si el sistema se publica conviene un nombre propio.
+
 - **2026-11-26 · Gabo** · Aprobó `CampanaActualizada` v1 como productor y confirmó el acuerdo de Campañas para Búsqueda y Novedades. [Contratos de eventos](contratos-de-eventos.md#decisiones-para-aprobar-la-versión-1).
 
 - **2026-11-25 · Efrain** · **El gateway no limita peticiones** (→ [`servicios/api-gateway.md`](servicios/api-gateway.md) §12, G1). Reemplaza lo que decía su decisión del 2026-11-08. El enunciado no lo pide y el sistema solo corre en local para la entrega. *Falta que Raul quite la mención en `stack-y-convenciones.md` §2, el ADR 0002 y `arquitectura.excalidraw`.*
@@ -111,6 +114,7 @@ Hitos del proyecto, los más recientes arriba.
 
 | Fecha | Quién | Qué | Commit o rama |
 |---|---|---|---|
+| 2026-11-27 | Efrain | **Rediseño del frontend, parte 1: tema «Afiche» y shell.** Nombre visible «Fundly», tema de Material con los colores y las letras del afiche, barra superior nueva (enlaces, marca al centro y la cuenta en un círculo con la inicial), campanita a juego y pie de página con la marca gigante. Las pantallas de cada dominio toman el tema sin cambios en su código; su rediseño va en PR aparte. Probado en el navegador con el sistema levantado, en escritorio y en celular. | Rama `feat/frontend-tema-afiche` |
 | 2026-11-26 | Arturo | **Reenvío seguro en formulario de campaña (F6) y actualización de `campaign-service.md` (P2).** `FormularioCampana` usa `envioReintentable` y verifica en `GET /api/campanas/mias` si el borrador ya se creó tras un corte o error `5xx` antes de repetir `POST /api/campanas`, con pruebas en Vitest; se actualiza P2 y las dependencias de `docs/servicios/campaign-service.md`. | Rama `fix/campaign-reenvio-y-documentacion` |
 | 2026-11-26 | Gabo | **Pantallas de Novedades.** Publicación desde Mi panel e historial público en el detalle de campaña. Ante un envío incierto se consulta el historial y se conserva el texto. | Rama `feat/frontend-pantallas-novedades` |
 | 2026-11-25 | Efrain | **Bandeja de avisos y enlaces del menú.** Campanita en la barra superior con la cantidad sin leer y bandeja en `/avisos` (paginación, filtro, marcar uno o todos). Enlaces principales del mockup en la barra, más opciones en el menú de la cuenta, y "Mi panel" y "Administración" con sus enlaces en lugar de las páginas provisorias. El sondeo de la campanita no saca a nadie de su pantalla si la sesión vence. Probado en el navegador con el sistema levantado desde volúmenes vacíos. | Rama `feat/frontend-bandeja-avisos` |

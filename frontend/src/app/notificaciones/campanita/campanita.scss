@@ -1,34 +1,42 @@
 @use '@angular/material' as mat;
 
-// Está sobre el azul marino de la barra.
+// Está sobre el papel de la barra: un círculo con trazo azul marino, como los
+// botones del afiche. Al pasar el mouse se rellena.
 :host {
   @include mat.icon-button-overrides(
     (
-      icon-color: #ffffff,
-      state-layer-color: #ffffff,
-      ripple-color: rgb(255 255 255 / 12%),
+      icon-color: var(--color-marca),
+      state-layer-color: var(--color-marca),
     )
   );
 }
 
 a {
   position: relative;
+  // Sombra interior y no borde, para no mover el ícono.
+  box-shadow: inset 0 0 0 2px var(--color-marca);
+  transition: background-color 0.18s ease-out;
+
+  &:hover {
+    --mat-icon-button-icon-color: var(--color-papel-claro);
+    background-color: var(--color-marca);
+  }
 }
 
 .globo {
   position: absolute;
   // Material deja el ícono en la capa 1: sin esto, la campana tapa el número.
   z-index: 2;
-  top: 2px;
-  left: 24px;
-  min-width: 18px;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
   box-sizing: border-box;
-  padding: 0 4px;
+  padding: 0 5px;
   border-radius: var(--mat-sys-corner-full);
   background-color: var(--color-accion);
-  color: var(--color-marca);
+  color: var(--color-papel-claro);
   font: var(--mat-sys-label-small);
   font-weight: 700;
-  line-height: 18px;
+  line-height: 20px;
   text-align: center;
 }

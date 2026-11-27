@@ -1,0 +1,16 @@
+<footer class="pie">
+  <div class="envoltura">
+    <p class="mano lema">todo gran cambio empieza con un aporte</p>
+    <!-- Decorativa: el nombre ya está en el aviso de abajo. -->
+    <p class="titular-afiche marca" aria-hidden="true">{{ nombreAplicacion }}</p>
+    <nav aria-label="Pie de página">
+      @for (enlace of enlaces; track enlace.ruta) {
+        <a [routerLink]="enlace.ruta">{{ enlace.texto }}</a>
+      }
+    </nav>
+    <p class="aviso">
+      En {{ nombreAplicacion }} los aportes son simulados: nadie paga ni recibe dinero real.
+      Proyecto 07 de Ingeniería Web 3, Universidad NUR.
+    </p>
+  </div>
+</footer>

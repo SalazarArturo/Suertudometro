@@ -1,0 +1,61 @@
+// Banda azul marino con grano, como el pie del afiche.
+:host {
+  display: block;
+  margin-top: 64px;
+}
+
+.pie {
+  background: var(--color-marca) var(--grano);
+  color: var(--color-papel-claro);
+}
+
+.envoltura {
+  box-sizing: border-box;
+  display: grid;
+  gap: 20px;
+  max-width: 1312px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 96px) max(16px, env(safe-area-inset-right)) 32px
+    max(16px, env(safe-area-inset-left));
+}
+
+.lema {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2.6rem);
+}
+
+// La marca a todo el ancho: "Fundly" en Anton ocupa unos 2,65 em.
+.marca {
+  font-size: clamp(5rem, 33vw, 30rem);
+  line-height: 0.8;
+  white-space: nowrap;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+
+  a {
+    color: inherit;
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--color-papel-claro);
+      outline-offset: 3px;
+    }
+  }
+}
+
+.aviso {
+  margin: 0;
+  padding-top: 20px;
+  border-top: 1px solid rgb(239 234 221 / 25%);
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
