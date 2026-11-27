@@ -76,10 +76,10 @@ describe('Explorar campañas', () => {
     expect(pantalla().textContent).toContain('Buscando campañas');
     solicitud.flush({ total: 1, resultados: [ficha] });
     await arnes.fixture.whenStable();
-    expect(pantalla().querySelector('h2 a')?.getAttribute('href')).toBe(
+    expect(pantalla().querySelector('.tarjetas h3 a')?.getAttribute('href')).toBe(
       `/campanas/${ficha.idCampana}`,
     );
-    expect(pantalla().querySelector('img')?.src).toBe(
+    expect(pantalla().querySelector<HTMLImageElement>('.tarjetas img')?.src).toBe(
       new URL(ficha.rutaPortada, URL_API_PRUEBA).href,
     );
     expect(pantalla().textContent).toContain('125,00 BOB');
@@ -149,5 +149,77 @@ describe('Explorar campañas', () => {
     reintento.flush({ total: 0, resultados: [] });
     await arnes.fixture.whenStable();
     expect(pantalla().textContent).toContain('No se encontraron campañas');
+  });
+
+  /** El botón de la portada con ese texto: categorías, pestañas de orden o causas. */
+  function boton(selector: string, texto: string): HTMLButtonElement {
+    const encontrado = Array.from(pantalla().querySelectorAll<HTMLButtonElement>(selector)).find(
+      (b) => b.textContent?.includes(texto),
+    );
+    if (!encontrado) throw new Error(`No está el botón «${texto}»`);
+    return encontrado;
+  }
+
+  it('las categorías del cartel filtran al instante, conservan el texto y vuelven a la primera página', async () => {
+    const inicial = await abrir('/?texto=libros&pagina=3');
+    inicial.flush({ total: 0, resultados: [] });
+    await arnes.fixture.whenStable();
+    expect(boton('.chip', 'Todas').getAttribute('aria-pressed')).toBe('true');
+
+    const salud = await navegarCon(() => boton('.chip', 'Salud').click());
+    expect(salud.request.params.get('categoria')).toBe('SALUD');
+    expect(salud.request.params.get('texto')).toBe('libros');
+    expect(salud.request.params.get('desplazamiento')).toBe('0');
+    expect(router.url).not.toContain('pagina=');
+    salud.flush({ total: 1, resultados: [ficha] });
+    await arnes.fixture.whenStable();
+    expect(boton('.chip', 'Salud').getAttribute('aria-pressed')).toBe('true');
+    expect(boton('.chip', 'Todas').getAttribute('aria-pressed')).toBe('false');
+    expect(pantalla().querySelector('.sello')?.textContent).toContain('1');
+    expect(pantalla().querySelector('.sello')?.textContent).toContain('encontrada');
+
+    const todas = await navegarCon(() => boton('.chip', 'Todas').click());
+    expect(todas.request.params.has('categoria')).toBe(false);
+    todas.flush({ total: 0, resultados: [] });
+  });
+
+  it('ordena con las pestañas, ofrece relevancia solo con texto y filtra por estado', async () => {
+    const inicial = await abrir('/');
+    inicial.flush({ total: 3, resultados: [ficha] });
+    await arnes.fixture.whenStable();
+    expect(pantalla().querySelector('.sello')?.textContent).toContain('campañas activas');
+    expect(pantalla().querySelector('.orden')?.textContent).not.toContain('Relevancia');
+    expect(boton('.orden button', 'Más recientes').getAttribute('aria-pressed')).toBe('true');
+
+    const populares = await navegarCon(() => boton('.orden button', 'Más aportes').click());
+    expect(populares.request.params.get('orden')).toBe('popularidad');
+    populares.flush({ total: 3, resultados: [ficha] });
+    await arnes.fixture.whenStable();
+
+    const selector = pantalla().querySelector('select')!;
+    selector.value = 'FINALIZADA';
+    const finalizadas = await navegarCon(() => selector.dispatchEvent(new Event('change')));
+    expect(finalizadas.request.params.get('estado')).toBe('FINALIZADA');
+    expect(finalizadas.request.params.get('orden')).toBe('popularidad');
+    finalizadas.flush({ total: 0, resultados: [] });
+    await arnes.fixture.whenStable();
+
+    const conTexto = await abrir('/?texto=techos');
+    conTexto.flush({ total: 0, resultados: [] });
+    await arnes.fixture.whenStable();
+    expect(boton('.orden button', 'Relevancia').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('las causas del pie filtran por categoría y llevan el foco a los resultados', async () => {
+    const inicial = await abrir('/');
+    inicial.flush({ total: 0, resultados: [] });
+    await arnes.fixture.whenStable();
+
+    const emergencias = await navegarCon(() =>
+      boton('app-nuestras-causas button', 'Emergencias').click(),
+    );
+    expect(emergencias.request.params.get('categoria')).toBe('EMERGENCIAS');
+    expect(document.activeElement?.id).toBe('titulo-campanas');
+    emergencias.flush({ total: 0, resultados: [] });
   });
 });

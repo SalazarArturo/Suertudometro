@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.causas {
+  padding-block: clamp(56px, 7vw, 88px);
+}
+
+h2 {
+  margin-bottom: clamp(32px, 4vw, 48px);
+  font-size: clamp(3.4rem, 9vw, 8.2rem);
+}
+
+ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 36px 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+button {
+  display: grid;
+  justify-items: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  b {
+    border-bottom: 3px solid transparent;
+    font-family: var(--fuente-titular);
+    font-size: clamp(2.4rem, 4.2vw, 3.6rem);
+    font-weight: 400;
+    line-height: 1;
+    text-transform: uppercase;
+    transition: border-color 0.15s ease-out;
+  }
+
+  &:hover b {
+    border-bottom-color: currentColor;
+  }
+}

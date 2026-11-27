@@ -1,0 +1,158 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.tarjeta {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  height: 100%;
+  overflow-wrap: anywhere;
+
+  &:focus-within {
+    outline: 3px solid var(--color-accion);
+    outline-offset: 8px;
+  }
+}
+
+// La foto con marco rojo; azul si llegó a la meta.
+.marco {
+  position: relative;
+  padding: 12px;
+  background: var(--color-accion);
+
+  .lograda & {
+    background: var(--color-marca);
+  }
+}
+
+.portada {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 3 / 2;
+  background: var(--color-fondo-suave);
+  color: var(--color-marca-tenue);
+  font-size: 0.9rem;
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+
+    .cancelada & {
+      filter: grayscale(1);
+    }
+  }
+
+  &:has(img:not([hidden])) .sin-portada {
+    visibility: hidden;
+  }
+}
+
+.etiqueta {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  display: grid;
+  margin: 0;
+  padding: 4px 10px 6px;
+  background: rgb(17 30 74 / 80%);
+  color: var(--color-papel-claro);
+  line-height: 1;
+
+  .mano {
+    font-size: 1.4rem;
+  }
+
+  b {
+    font-family: var(--fuente-titular);
+    font-size: 1.2rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+}
+
+h3 {
+  margin: 4px 0 0;
+  font-size: 1.75rem;
+  line-height: 1;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+
+    // Toda la tarjeta es el enlace.
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  .tarjeta:hover & a {
+    text-decoration: underline 3px var(--color-accion);
+    text-underline-offset: 4px;
+  }
+}
+
+.resumen {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-marca-tenue);
+  font-size: 0.95rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+mat-progress-bar {
+  --mat-progress-bar-track-height: 8px;
+  --mat-progress-bar-active-indicator-height: 8px;
+
+  .lograda & {
+    --mat-progress-bar-active-indicator-color: var(--color-marca);
+  }
+}
+
+.montos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 0;
+  font-size: 0.95rem;
+
+  b {
+    font-family: var(--fuente-titular);
+    font-size: 1.6rem;
+    font-weight: 400;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.porcentaje {
+  margin-left: auto;
+  color: var(--color-accion);
+  font-weight: 600;
+
+  .lograda & {
+    color: var(--color-marca);
+  }
+}
+
+.aportes {
+  margin: 0;
+  color: var(--color-marca-tenue);
+  font-size: 0.9rem;
+}

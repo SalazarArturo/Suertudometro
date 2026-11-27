@@ -1,0 +1,133 @@
+// Las fotos giradas no deben ensanchar la página.
+:host {
+  display: block;
+  overflow-x: clip;
+}
+
+.como {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 4vw, 48px);
+  padding-block: clamp(64px, 9vw, 120px);
+
+  @media (max-width: 900px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.texto {
+  display: grid;
+  justify-items: start;
+  gap: 20px;
+  min-width: 0;
+
+  p {
+    max-width: 34rem;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+
+  .mano {
+    color: var(--color-accion);
+    font-size: clamp(1.9rem, 3vw, 2.6rem);
+    font-weight: 400;
+  }
+}
+
+h2 {
+  font-size: clamp(4rem, 10vw, 9rem);
+}
+
+.pasos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 36px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    max-width: 11ch;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  b {
+    color: var(--color-accion);
+    font-family: var(--fuente-titular);
+    font-size: 2.9rem;
+    font-weight: 400;
+    line-height: 1;
+  }
+}
+
+// Tres fotos con marco de papel, en abanico. Al pasar el mouse, la de encima se endereza.
+.abanico {
+  position: relative;
+  height: clamp(340px, 40vw, 560px);
+
+  @media (max-width: 900px) {
+    height: clamp(300px, 78vw, 520px);
+    margin-inline: 8%;
+  }
+
+  figure {
+    position: absolute;
+    width: 52%;
+    margin: 0;
+    padding: 14px 14px clamp(34px, 5vw, 46px);
+    background: var(--color-papel-claro);
+    box-shadow: 0 18px 30px rgb(17 30 74 / 22%);
+    transition:
+      rotate 0.3s ease-out,
+      translate 0.3s ease-out;
+
+    &:nth-child(1) {
+      top: 14%;
+      left: 4%;
+      rotate: 13deg;
+    }
+
+    &:nth-child(2) {
+      top: 4%;
+      right: 0;
+      rotate: -11deg;
+    }
+
+    &:nth-child(3) {
+      top: 10%;
+      left: 30%;
+      rotate: 2deg;
+    }
+
+    &:hover {
+      z-index: 1;
+      rotate: 0deg;
+      translate: 0 -10px;
+    }
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  figcaption {
+    position: absolute;
+    bottom: 8px;
+    left: 16px;
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .abanico figure {
+    transition: none;
+  }
+}
