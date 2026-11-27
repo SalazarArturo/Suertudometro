@@ -1,59 +1,108 @@
+// Detalle con el estilo del afiche: el título grande, la portada en un marco
+// rojo y una ficha de progreso con borde y sombra plana.
+.detalle {
+  display: block;
+  padding-block: clamp(24px, 4vw, 48px) clamp(48px, 6vw, 80px);
+}
+
 .encabezado {
-  margin-bottom: 20px;
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  margin-bottom: 28px;
 
   h1 {
-    margin: 8px 0 0;
+    max-width: 22ch;
+    font-size: clamp(2.6rem, 5.5vw, 5rem);
+    overflow-wrap: anywhere;
   }
 }
 
-.etiquetas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+// Como la etiqueta de las tarjetas de la portada: estado a mano, categoría en Anton.
+.etiqueta {
+  display: grid;
+  margin: 0;
+  padding: 4px 12px 6px;
+  background: var(--color-marca);
+  color: var(--color-papel-claro);
+  line-height: 1;
+  rotate: -2deg;
+
+  .mano {
+    font-size: 1.5rem;
+  }
+
+  b {
+    font-family: var(--fuente-titular);
+    font-size: 1.3rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
 }
 
-.insignia {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  background: var(--color-fondo-suave);
-  color: var(--color-marca);
-  border: 1px solid var(--color-borde);
-}
-
-.aviso-observacion,
-.aviso-cierre,
+.aviso,
 .bloque-error {
-  padding: 16px;
-  margin-bottom: 20px;
-  border-radius: 12px;
-  border: 1px solid var(--color-borde);
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  border-left: 4px solid var(--color-accion);
   background: var(--color-fondo-suave);
+}
+
+.aviso-cierre {
+  border-left-color: var(--color-marca);
+}
+
+.bloque-error {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+
+  p {
+    margin: 0;
+  }
 }
 
 .distribucion-principal {
   display: grid;
-  gap: 24px;
   align-items: start;
-  margin-bottom: 32px;
+  gap: clamp(28px, 4vw, 56px);
 
   @media (min-width: 860px) {
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   }
+
+  // En una sola columna, el progreso va justo después de las fotos y antes de la historia.
+  @media (max-width: 859px) {
+    .columna-contenido {
+      display: contents;
+    }
+
+    .columna-progreso {
+      order: 1;
+    }
+
+    .historia,
+    .bloque-historial-estados {
+      order: 2;
+    }
+  }
 }
 
+// La portada, como una foto con marco: rojo, o azul si se cerró por llegar a la meta.
 .portada {
-  margin: 0 0 16px;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--color-borde);
+  margin: 0 0 20px;
+  padding: clamp(10px, 1.4vw, 18px);
+  background: var(--color-accion);
+
+  &.lograda {
+    background: var(--color-marca);
+  }
 
   img {
     display: block;
     width: 100%;
-    max-height: 400px;
+    aspect-ratio: 3 / 2;
     object-fit: cover;
   }
 }
@@ -61,98 +110,150 @@
 .galeria {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 14px;
+  margin-bottom: 28px;
 
   .miniatura {
-    width: 88px;
-    height: 66px;
+    width: 96px;
+    height: 72px;
+    padding: 5px;
+    background: var(--color-papel-claro);
+    box-shadow: 0 6px 14px rgb(17 30 74 / 18%);
     object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid var(--color-borde);
-  }
-}
 
-.historia {
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid var(--color-borde);
-  background: #fff;
+    &:nth-child(odd) {
+      rotate: -3deg;
+    }
 
-  .texto-historia {
-    white-space: pre-line;
-    line-height: 1.6;
-  }
-}
-
-.tarjeta-progreso {
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid var(--color-borde);
-  background: var(--color-fondo-suave);
-
-  .recaudado {
-    margin: 0 0 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    strong {
-      font-size: 1.5rem;
-      color: var(--color-marca);
+    &:nth-child(even) {
+      rotate: 2deg;
     }
   }
 }
 
+.historia {
+  .mano {
+    margin: 0;
+    color: var(--color-accion);
+    font-size: 2rem;
+  }
+
+  h2 {
+    margin: 4px 0 16px;
+    font-size: clamp(2rem, 3.4vw, 2.8rem);
+  }
+
+  .texto-historia {
+    max-width: 65ch;
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.65;
+    white-space: pre-line;
+  }
+}
+
+// La ficha de progreso queda a la vista mientras se lee la historia.
+.columna-progreso {
+  @media (min-width: 860px) {
+    position: sticky;
+    top: 24px;
+  }
+}
+
+.tarjeta-progreso {
+  display: grid;
+  gap: 14px;
+  padding: clamp(20px, 2.4vw, 32px);
+  border: 2px solid var(--color-marca);
+  background: var(--color-papel-claro);
+  box-shadow: 6px 6px 0 var(--color-marca);
+
+  > .mano {
+    margin: 0 0 -8px;
+    color: var(--color-accion);
+  }
+
+  .recaudado {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+
+    strong {
+      font-family: var(--fuente-titular);
+      font-size: clamp(2.6rem, 4vw, 3.6rem);
+      font-weight: 400;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  mat-progress-bar {
+    --mat-progress-bar-track-height: 10px;
+    --mat-progress-bar-active-indicator-height: 10px;
+  }
+}
+
 .metadatos-progreso {
-  margin-top: 12px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.9rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  font-size: 0.95rem;
+
+  .porcentaje {
+    color: var(--color-accion);
+    font-weight: 700;
+  }
+}
+
+.ir-a-aportar {
+  width: 100%;
+  height: 52px;
+  font-size: 1.3rem;
 }
 
 .acciones-dueno {
-  margin-top: 16px;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
 .bloque-historial-estados {
-  margin-top: 24px;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid var(--color-borde);
+  margin-top: 40px;
+
+  h2 {
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+  }
 
   .lista-historial {
-    list-style: none;
-    padding: 0;
+    display: grid;
+    gap: 12px;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    padding: 0;
+    list-style: none;
 
     li {
-      display: flex;
-      flex-direction: column;
+      display: grid;
       gap: 2px;
-      padding-bottom: 8px;
+      padding: 0 0 12px 16px;
+      border-left: 3px solid var(--color-accion);
       border-bottom: 1px solid var(--color-borde);
     }
   }
 }
 
-.seccion-aportes {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid var(--color-borde);
+// Las secciones de novedades y aportes, separadas por un trazo como el de la barra.
+.seccion {
+  display: block;
+  margin-top: clamp(40px, 5vw, 64px);
+  padding-top: clamp(28px, 4vw, 40px);
+  border-top: 2px solid var(--color-marca);
 }
 
 .grilla-aportes {
   display: grid;
-  gap: 24px;
   align-items: start;
+  gap: clamp(28px, 4vw, 48px);
 
   @media (min-width: 840px) {
     grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);

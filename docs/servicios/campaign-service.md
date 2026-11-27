@@ -1,6 +1,6 @@
 # campaign-service
 
-> **Responsable:** Arturo · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-26 · **Estado:** Borrador (en revisión del equipo)
+> **Responsable:** Arturo · **Creado:** 2026-11-08 · **Última actualización:** 2026-11-27 · **Estado:** Borrador (en revisión del equipo)
 > Bounded context **Campañas** (subdominio core) · Spring Boot 4.1 · Java 21 · base de datos `campaign-db` · volumen `campaign-images` · ruta en el gateway `/api/campanas` · puerto interno 8082.
 > **Implementación:** el backend completo está en `campaign-service/` integrado en el `docker-compose.yml` de la raíz detrás del `api-gateway`, y las 4 pantallas del frontend están en `frontend/src/app/campanas/`. Cómo correrlo: [`campaign-service/README.md`](../../campaign-service/README.md).
 
@@ -265,7 +265,7 @@ campaign-service/
 
 ## 11. Pantallas del frontend (dominio de campañas)
 
-1. **Detalle de campaña (portal público):** muestra portada y galería, título, categoría, organizador, barra de progreso (`montoRecaudado` / `metaFinanciera` y porcentaje), fecha límite, estado, historia, historial de cambios de estado y los bloques integrados de aportes y novedades.
+1. **Detalle de campaña (portal público):** muestra portada y galería, título, categoría, organizador, barra de progreso (`montoRecaudado` / `metaFinanciera` y porcentaje), fecha límite, estado, historia, historial de cambios de estado y los bloques integrados de aportes y novedades. Con el rediseño del frontend (estilo «Afiche», Efrain, 2026-11-27): el título en grande, la portada en un marco rojo (azul si se cerró por meta alcanzada) y una ficha de progreso fija al costado, con el botón «Quiero aportar», que lleva a la sección de aportes. En celular, la ficha va justo después de las fotos.
 2. **Crear y editar campaña (panel del organizador):** formulario de borrador (título, historia, categoría, meta en `BOB`, fecha límite), gestor de imágenes (subir hasta 5 imágenes y elegir portada), vista de observaciones si fue rechazada y botón "Solicitar revisión". Usa `envioReintentable` (`docs/frontend.md` §5 y F6): en edición (`PUT /api/campanas/{id}`) reintentar tras un error del servidor es idempotente, y en creación (`POST /api/campanas`), si ocurre un corte de red o un error `5xx`, consulta `GET /api/campanas/mias` para recuperar el borrador si ya se creó sin duplicarlo.
 3. **Mis campañas (panel del organizador):** listado de campañas del organizador filtradas por estado (`BORRADOR`, `EN_REVISION`, `PUBLICADA`, `FINALIZADA`, `CANCELADA`), con acciones para editar/eliminar borradores o cancelar una campaña publicada.
 4. **Bandeja de moderación de campañas (panel de administración):** listado de campañas `EN_REVISION` y `PUBLICADA`, vista previa completa, acción de "Aprobar" o "Rechazar con observaciones", y acción administrativa de "Cancelar campaña" por infracción de normas.
@@ -296,6 +296,7 @@ campaign-service/
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-27 | Efrain | §11: el detalle con el estilo «Afiche» del rediseño del frontend. Lo revisa Arturo en el PR. |
 | 2026-11-26 | Arturo | §10, §11, §12 (P2) y §13: se actualiza P2 con la confirmación de Efrain (`notification-service` consume `campana.cerrada` y `meta.alcanzada` avisa a organizador y aportantes), las confirmaciones de contratos v1 de Gabo y Efrain, y la resolución de F6 (`envioReintentable` y verificación previa en `FormularioCampana`). |
 | 2026-11-23 | Arturo | §10 y §13: se marca completada la integración en `docker-compose.yml` detrás del `api-gateway` y se antepone el origen del gateway en las URLs de imágenes de `DetalleCampana` y `FormularioCampana`. |
 | 2026-11-19 | Arturo | §11 y §13: implementación de las 4 pantallas de campañas en `frontend/src/app/campanas/` (`DetalleCampana`, `MisCampanas`, `FormularioCampana` y `ModeracionCampanas`) con Signal Forms, integración de `<app-aportar>` y `<app-historial-aportes>`, y pruebas en Vitest. |

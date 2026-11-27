@@ -1,30 +1,29 @@
-<section class="pagina">
+<section class="detalle envoltura">
   @if (campana.isLoading()) {
     <p class="estado-carga" role="status">Cargando campaña…</p>
   } @else if (errorLectura(); as mensajeError) {
     <div class="bloque-error" role="alert">
+      <p class="mano">algo salió mal</p>
       <p>{{ mensajeError }}</p>
       <button matButton="outlined" type="button" (click)="campana.reload()">Reintentar</button>
     </div>
   } @else if (campana.value(); as datos) {
     <header class="encabezado">
-      <div class="etiquetas">
-        <span class="insignia categoria">{{ etiquetasCategoria[datos.categoria] }}</span>
-        <span class="insignia estado" [attr.data-estado]="datos.estado">
-          {{ etiquetasEstado[datos.estado] }}
-        </span>
-      </div>
-      <h1>{{ datos.titulo }}</h1>
+      <p class="etiqueta">
+        <span class="mano">{{ etiquetasEstado[datos.estado] | lowercase }}</span>
+        <b>{{ etiquetasCategoria[datos.categoria] }}</b>
+      </p>
+      <h1 class="titular-afiche">{{ datos.titulo }}</h1>
     </header>
 
     @if (datos.observacionesRechazo) {
-      <div class="aviso-observacion" role="alert">
+      <div class="aviso aviso-observacion" role="alert">
         <strong>Observaciones de revisión:</strong> {{ datos.observacionesRechazo }}
       </div>
     }
 
     @if (datos.motivoCierre) {
-      <div class="aviso-cierre" role="status">
+      <div class="aviso aviso-cierre" role="status">
         <strong>Campaña cerrada:</strong> {{ etiquetasMotivoCierre[datos.motivoCierre] }}
       </div>
     }
@@ -32,7 +31,7 @@
     <div class="distribucion-principal">
       <div class="columna-contenido">
         @if (imagenPortada(); as portada) {
-          <figure class="portada">
+          <figure class="portada" [class.lograda]="datos.motivoCierre === 'META_ALCANZADA'">
             <img [src]="urlImagen(portada.urlPublica)" [alt]="datos.titulo" />
           </figure>
         }
@@ -46,6 +45,7 @@
         }
 
         <article class="historia">
+          <p class="mano">nuestra historia</p>
           <h2>Historia de la campaña</h2>
           <p class="texto-historia">{{ datos.historia }}</p>
         </article>
@@ -57,7 +57,7 @@
               @if (entradas.length === 0) {
                 <p>Sin movimientos registrados.</p>
               } @else {
-                <ul class="lista-historial">
+                <ol class="lista-historial">
                   @for (entrada of entradas; track entrada.id) {
                     <li>
                       <span class="transicion">
@@ -72,7 +72,7 @@
                       </time>
                     </li>
                   }
-                </ul>
+                </ol>
               }
             }
           </section>
@@ -81,15 +81,26 @@
 
       <aside class="columna-progreso" aria-label="Progreso de recaudación">
         <div class="tarjeta-progreso">
+          <p class="mano">ya juntamos</p>
           <p class="recaudado">
             <strong>{{ datos.montoRecaudado | currency: datos.moneda }}</strong>
             <span>recaudados de {{ datos.metaFinanciera | currency: datos.moneda }}</span>
           </p>
-          <mat-progress-bar mode="determinate" [value]="porcentajeAvance()" />
+          <mat-progress-bar
+            mode="determinate"
+            [value]="porcentajeAvance()"
+            aria-label="Avance de la recaudación"
+          />
           <div class="metadatos-progreso">
-            <span>{{ porcentajeAvance() }} % de la meta</span>
+            <span class="porcentaje">{{ porcentajeAvance() }} % de la meta</span>
             <span>Fecha límite: {{ datos.fechaLimite | date: 'longDate' }}</span>
           </div>
+
+          @if (datos.estado === 'PUBLICADA') {
+            <button class="ir-a-aportar" matButton="filled" type="button" (click)="irAAportar()">
+              Quiero aportar
+            </button>
+          }
 
           @if (esOrganizadorDueno() || sesion.esAdministrador()) {
             <div class="acciones-dueno">
@@ -108,10 +119,10 @@
     </div>
 
     @if (datos.fechaPublicacion) {
-      <app-historial-novedades [idCampana]="datos.id" />
+      <app-historial-novedades class="seccion" [idCampana]="datos.id" />
     }
 
-    <section class="seccion-aportes" aria-label="Aportes de la campaña">
+    <section class="seccion seccion-aportes" aria-label="Aportes de la campaña">
       <div class="grilla-aportes">
         <app-aportar [idCampana]="datos.id" (aportado)="alRegistrarAporte(historialAportes)" />
         <app-historial-aportes #historialAportes [idCampana]="datos.id" />
