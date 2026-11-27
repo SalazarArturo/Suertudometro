@@ -1,29 +1,50 @@
-.encabezado {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
 .aviso-observaciones,
 .bloque-error {
-  padding: 16px;
-  margin-bottom: 20px;
-  border-radius: 12px;
-  border: 1px solid var(--color-borde);
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  border-left: 4px solid var(--color-accion);
   background: var(--color-fondo-suave);
+
+  p {
+    margin: 6px 0 0;
+  }
+}
+
+// El formulario y los bloques de imágenes y revisión, como hojas de papel.
+.tarjeta-formulario,
+.gestor-imagenes,
+.bloque-revision {
+  box-sizing: border-box;
+  padding: clamp(20px, 2.4vw, 32px);
+  border: 2px solid var(--color-marca);
+  background: var(--color-papel-claro);
+  box-shadow: 6px 6px 0 var(--color-marca);
 }
 
 .tarjeta-formulario {
-  padding: 24px;
-  border-radius: 12px;
-  border: 1px solid var(--color-borde);
-  background: #fff;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  // Tan ancho como los bloques de abajo (la clase global del mismo nombre lo limita a 440 px).
+  max-width: none;
+}
+
+.gestor-imagenes,
+.bloque-revision {
+  margin-top: 32px;
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+  }
+
+  p {
+    margin: 0 0 16px;
+  }
+
+  .bajada {
+    color: var(--color-marca-tenue);
+  }
 }
 
 .fila-doble {
@@ -41,55 +62,53 @@
   font-weight: 600;
 }
 
-.gestor-imagenes,
-.bloque-revision {
-  margin-top: 24px;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid var(--color-borde);
-  background: #fff;
-}
-
 .lista-imagenes {
-  list-style: none;
-  padding: 0;
-  margin: 16px 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 12px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
 }
 
 .item-imagen {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid var(--color-borde);
+  gap: 16px;
+  padding: 10px 14px;
+  border-left: 4px solid var(--color-marca);
+  background: var(--color-fondo-suave);
 
+  // La miniatura, como una foto pegada.
   img {
-    width: 72px;
-    height: 54px;
+    width: 84px;
+    height: 63px;
+    padding: 4px;
+    background: var(--color-papel-claro);
+    box-shadow: 0 4px 10px rgb(17 30 74 / 18%);
     object-fit: cover;
-    border-radius: 6px;
+    rotate: -2deg;
   }
 
   .info-imagen {
-    flex: 1;
     display: flex;
+    flex: 1;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 }
 
 .insignia-portada {
   padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  background: var(--color-fondo-suave);
-  color: var(--color-marca);
-  border: 1px solid var(--color-borde);
+  background: var(--color-accion);
+  color: var(--color-papel-claro);
+  font-family: var(--fuente-titular);
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .subida-imagen {
@@ -97,11 +116,14 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
-  margin-top: 12px;
+  padding: 16px;
+  border: 2px dashed var(--color-marca-tenue);
 }
 
 .selector-archivo {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  font-weight: 600;
 }

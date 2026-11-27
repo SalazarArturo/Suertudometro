@@ -25,15 +25,29 @@ import { NovedadesApi } from './novedades-api';
   ],
   templateUrl: './publicar-novedad.html',
   styles: `
+    .volver {
+      display: inline-block;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .volver::before {
+      content: '← ';
+    }
     form {
       display: grid;
       gap: 12px;
       max-width: 42rem;
     }
+    label {
+      font-weight: 600;
+    }
     select {
-      font: inherit;
-      padding: 8px;
       width: 100%;
+      padding: 12px;
+      border: 2px solid var(--color-marca);
+      background: var(--color-fondo-suave);
+      color: inherit;
+      font: inherit;
     }
     textarea {
       min-height: 8rem;

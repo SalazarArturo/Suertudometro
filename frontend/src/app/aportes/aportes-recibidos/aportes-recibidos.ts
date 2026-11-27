@@ -16,27 +16,26 @@ import { ListaAportes } from '../lista-aportes/lista-aportes';
   imports: [RouterLink, ListaAportes],
   template: `
     <section class="pagina">
-      <h1>Aportes recibidos</h1>
-      <p class="bajada">
-        @if (resumen(); as resumen) {
-          {{ resumen.titulo }} · {{ resumen.total }}
-          {{ resumen.total === 1 ? 'aporte' : 'aportes' }}.
-        }
-        Los aportes anónimos se muestran sin nombre.
-        <a [routerLink]="rutaDeCampana(idCampana())">Ver la campaña</a>
-      </p>
+      <header class="cabecera-pagina">
+        <div>
+          <p class="mano">quienes te apoyan</p>
+          <h1 class="titular-afiche">Aportes recibidos</h1>
+          <p class="bajada">
+            @if (resumen(); as resumen) {
+              {{ resumen.titulo }} · {{ resumen.total }}
+              {{ resumen.total === 1 ? 'aporte' : 'aportes' }}.
+            }
+            Los aportes anónimos se muestran sin nombre.
+            <a [routerLink]="rutaDeCampana(idCampana())">Ver la campaña</a>
+          </p>
+        </div>
+      </header>
       <app-lista-aportes
         [aportes]="aportes"
         [(pagina)]="pagina"
         sinAportes="Esta campaña todavía no recibió aportes."
       />
     </section>
-  `,
-  styles: `
-    .bajada {
-      margin: 0 0 20px;
-      color: var(--mat-sys-on-surface-variant);
-    }
   `,
 })
 export class AportesRecibidos {

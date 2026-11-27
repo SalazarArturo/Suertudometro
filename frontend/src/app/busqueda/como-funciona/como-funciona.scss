@@ -36,8 +36,10 @@
   }
 }
 
+// «Cómo funciona»: el acento va en la primera línea, así que puede ir apretado.
 h2 {
   font-size: clamp(4rem, 10vw, 9rem);
+  line-height: 0.95;
 }
 
 .pasos {

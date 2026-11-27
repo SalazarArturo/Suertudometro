@@ -10,6 +10,8 @@
   h1 {
     color: var(--color-accion);
     font-size: clamp(4.2rem, 21vw, 19.5rem);
+    // «Juntos sumamos» no lleva acentos: puede ir apretado.
+    line-height: 0.9;
     text-align: center;
 
     span {

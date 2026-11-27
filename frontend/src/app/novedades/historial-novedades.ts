@@ -64,17 +64,29 @@ import { NovedadesApi, TAMANO_PAGINA_NOVEDADES } from './novedades-api';
       padding: 0;
       list-style: none;
     }
+    h2 {
+      margin: 0 0 16px;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+    }
+    ul {
+      display: grid;
+      gap: 14px;
+    }
+    /* Cada novedad, como un renglón de papel con el trazo rojo del afiche. */
     li {
-      border-block-start: 1px solid var(--color-borde);
-      padding-block: 12px;
+      padding: 14px 20px;
+      border-left: 4px solid var(--color-accion);
+      background: var(--color-papel-claro);
     }
     li p {
-      margin: 4px 0 0;
+      margin: 6px 0 0;
+      font-size: 1.05rem;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
     time {
-      color: var(--mat-sys-on-surface-variant);
+      color: var(--color-marca-tenue);
+      font-size: 0.85rem;
     }
   `,
 })

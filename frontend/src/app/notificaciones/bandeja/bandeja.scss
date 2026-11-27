@@ -1,47 +1,44 @@
-.cabecera {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-
-  h1 {
-    margin: 0;
-  }
-}
-
 // Alto fijo, para que la lista no salte al aparecer la barra.
 .carga {
   height: 4px;
-  margin: 8px 0 12px;
+  margin: 8px 0 16px;
 }
 
 .avisos {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  gap: 14px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+// Cada aviso, como un renglón de papel; los que no se leyeron llevan el trazo rojo.
 .aviso {
   display: flex;
   gap: 16px;
-  padding: 12px 16px;
-  border: 1px solid var(--color-borde);
+  padding: 16px 20px;
   border-left: 4px solid var(--color-borde);
-  border-radius: var(--mat-sys-corner-medium);
+  background: var(--color-papel-claro);
 }
 
 .sin-leer {
   border-left-color: var(--color-accion);
-  background-color: var(--color-fondo-suave);
 }
 
 .icono {
+  display: grid;
   flex: none;
-  color: var(--color-marca);
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-marca);
+  color: var(--color-papel-claro);
+  font-size: 22px;
+
+  .sin-leer & {
+    background: var(--color-accion);
+  }
 }
 
 .texto {
@@ -55,22 +52,26 @@ h2 {
   align-items: center;
   gap: 4px 12px;
   margin: 0;
-  font: var(--mat-sys-title-medium);
-  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
   overflow-wrap: anywhere;
+
+  a {
+    color: inherit;
+    text-decoration-thickness: 2px;
+  }
 }
 
 .etiqueta {
-  padding: 2px 8px;
-  border-radius: var(--mat-sys-corner-full);
-  background-color: var(--color-accion);
-  color: var(--color-marca);
-  font: var(--mat-sys-label-small);
-  font-weight: 700;
+  padding: 1px 8px;
+  background: var(--color-accion);
+  color: var(--color-papel-claro);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
 }
 
 .mensaje {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   overflow-wrap: anywhere;
   white-space: pre-line;
 }
@@ -81,17 +82,15 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 4px 12px;
-  margin: 4px 0 0;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
+  margin: 6px 0 0;
+  color: var(--color-marca-tenue);
+  font-size: 0.85rem;
 }
 
 .vacio {
   margin: 0;
-  padding: 16px;
-  border: 1px dashed var(--color-borde);
-  border-radius: var(--mat-sys-corner-medium);
-  color: var(--mat-sys-on-surface-variant);
+  padding: 20px 24px;
+  border: 2px dashed var(--color-marca-tenue);
 }
 
 .paginas {
@@ -99,6 +98,6 @@ h2 {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 16px;
+  margin-top: 32px;
 }

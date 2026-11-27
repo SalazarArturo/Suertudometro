@@ -1,17 +1,16 @@
-// Cada aporte es un bloque con borde, como las tarjetas del mockup.
+// Cada aporte, como un renglón de papel con el trazo rojo del afiche.
 .aportes {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  gap: 14px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .aporte {
-  padding: 12px 16px;
-  border: 1px solid var(--color-borde);
-  border-radius: var(--mat-sys-corner-medium);
+  padding: 14px 20px;
+  border-left: 4px solid var(--color-accion);
+  background: var(--color-papel-claro);
 }
 
 .cabecera {
@@ -28,21 +27,24 @@
 }
 
 .anonimo {
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--color-marca-tenue);
   font-style: italic;
 }
 
+// El monto, grande y en Anton, como las cifras del afiche.
 .monto {
   color: var(--color-marca);
-  font: var(--mat-sys-title-medium);
-  font-weight: 700;
+  font-family: var(--fuente-titular);
+  font-size: 1.6rem;
+  line-height: 1;
   white-space: nowrap;
 }
 
 .mensaje {
   margin: 8px 0 0;
   padding-left: 12px;
-  border-left: 3px solid var(--color-acento-verde);
+  border-left: 3px solid var(--color-marca);
+  font-style: italic;
   overflow-wrap: anywhere;
   white-space: pre-line;
 }
@@ -53,23 +55,21 @@
   align-items: center;
   gap: 4px 12px;
   margin: 8px 0 0;
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--color-marca-tenue);
   font: var(--mat-sys-body-small);
 }
 
 .etiqueta {
-  padding: 2px 8px;
-  border-radius: var(--mat-sys-corner-full);
-  background-color: var(--color-fondo-suave);
+  padding: 1px 8px;
+  border: 1.5px solid var(--color-marca);
   color: var(--color-marca);
 }
 
 .vacio {
   margin: 0;
-  padding: 16px;
-  border: 1px dashed var(--color-borde);
-  border-radius: var(--mat-sys-corner-medium);
-  color: var(--mat-sys-on-surface-variant);
+  padding: 20px 24px;
+  border: 2px dashed var(--color-marca-tenue);
+  color: var(--color-marca-tenue);
 }
 
 .paginas {
@@ -77,6 +77,6 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 16px;
+  margin-top: 24px;
 }

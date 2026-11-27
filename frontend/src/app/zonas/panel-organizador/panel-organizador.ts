@@ -10,8 +10,13 @@ import { EnlaceDePanel, EnlacesDePanel } from '../../shared/enlaces-de-panel/enl
   imports: [EnlacesDePanel],
   template: `
     <section class="pagina">
-      <h1>Mi panel</h1>
-      <p>Tus campañas, tus aportes y tus avisos, en un solo lugar.</p>
+      <header class="cabecera-pagina">
+        <div>
+          <p class="mano">lo tuyo, a mano</p>
+          <h1 class="titular-afiche">Mi panel</h1>
+          <p class="bajada">Tus campañas, tus aportes y tus avisos, en un solo lugar.</p>
+        </div>
+      </header>
       <app-enlaces-de-panel [enlaces]="enlaces" />
     </section>
   `,

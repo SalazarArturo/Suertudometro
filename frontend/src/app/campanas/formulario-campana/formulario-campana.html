@@ -1,6 +1,11 @@
 <section class="pagina">
-  <header class="encabezado">
-    <h1>{{ esEdicion() ? 'Editar borrador de campaña' : 'Crear nueva campaña' }}</h1>
+  <header class="cabecera-pagina">
+    <div>
+      <p class="mano">{{ esEdicion() ? 'sigue con tu borrador' : 'cuenta tu historia' }}</p>
+      <h1 class="titular-afiche">
+        {{ esEdicion() ? 'Editar borrador de campaña' : 'Crear nueva campaña' }}
+      </h1>
+    </div>
     <a matButton="outlined" [routerLink]="rutaMisCampanas()">Volver a mis campañas</a>
   </header>
 

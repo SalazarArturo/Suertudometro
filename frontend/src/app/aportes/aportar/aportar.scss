@@ -1,17 +1,18 @@
-// Bloque destacado, como la portada del mockup.
+// Bloque destacado, como una hoja de papel del afiche con su sombra plana.
 .aportar {
-  padding: 20px 24px;
-  border: 1px solid var(--color-borde);
-  border-radius: var(--mat-sys-corner-large);
-  background-color: var(--color-fondo-suave);
+  padding: clamp(20px, 2.4vw, 32px);
+  border: 2px solid var(--color-marca);
+  background-color: var(--color-papel-claro);
+  box-shadow: 6px 6px 0 var(--color-accion);
 
   h2 {
-    margin: 0 0 4px;
+    margin: 0 0 8px;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
   }
 }
 
 .ayuda {
   margin: 0 0 12px;
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--color-marca-tenue);
   font: var(--mat-sys-body-small);
 }
