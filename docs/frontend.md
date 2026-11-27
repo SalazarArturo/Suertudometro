@@ -21,7 +21,7 @@ Cada dominio carga sus rutas de forma diferida (*lazy loading*) desde su carpeta
 | Base | `/registro` | Crear cuenta; al terminar, inicia sesión sola | Efrain | Solo sin sesión | `POST /api/identidad/usuarios` y luego `/sesiones` |
 | Base | `/perfil` | Mi perfil: nombre, correo, rol y fecha de registro | Efrain | Con sesión | `GET /api/identidad/perfil` |
 | Base | `**` | Página no encontrada | Efrain | Público | — |
-| Portal público | `/` | Explorar campañas por título o historia, con filtros, orden y paginación. Las tarjetas llevan al detalle `/campanas/:id`. | Gabo | Público | `GET /api/busqueda` ([contrato de Búsqueda](servicios/search-service.md)) |
+| Portal público | `/` | Explorar campañas por título o historia, con filtros, orden y paginación. Las tarjetas llevan al detalle `/campanas/:id`. Con el estilo del afiche: el cartel «Juntos sumamos» con el buscador y las categorías, las tarjetas con marco, «Nuestras causas» y «Cómo funciona». | Gabo | Público | `GET /api/busqueda` ([contrato de Búsqueda](servicios/search-service.md)) |
 | Portal público | `/campanas/:id` | Detalle: portada, historia, galería, meta, progreso, historial de estados, aportes y novedades | Arturo, con secciones de Raul (`<app-aportar>` y `<app-historial-aportes>`) y Gabo (novedades) | Público | `GET /api/campanas/{id}`, `GET /api/campanas/{id}/historial-estados`, `/api/aportes`, `/api/novedades` |
 | Portal público | En el detalle: `<app-aportar>` | Aportar, con nombre o anónimo y con mensaje de apoyo | Raul | Con sesión; sin ella, la sección ofrece iniciar sesión | `POST /api/aportes` |
 | Portal público | En el detalle: `<app-historial-aportes>` | Historial de aportes de la campaña: nombre o "Anónimo", monto, mensaje y fecha | Raul | Público | `GET /api/aportes?idCampana=` |
@@ -52,7 +52,7 @@ Cada dominio carga sus rutas de forma diferida (*lazy loading*) desde su carpeta
 frontend/
 ├── angular.json · package.json · tsconfig*.json · eslint.config.js · .prettierrc
 ├── Dockerfile · nginx.conf · .dockerignore     # build de Angular servido por Nginx
-├── public/                                      # archivos estáticos (favicon)
+├── public/                                      # archivos estáticos: favicon e img/ (alcancía y fotos de la portada, generadas con IA)
 └── src/
     ├── index.html · main.ts · styles.scss       # styles.scss: tema de Angular Material y estilos globales
     ├── environments/environment.ts              # urlApi
@@ -146,7 +146,10 @@ Los formularios ponen el error **en el campo** que corresponde (por ejemplo, `co
 
   - **Letras** (Google Fonts, con respaldo del sistema): **Outfit** para el texto (`--fuente-texto`); **Anton** para los títulos y las etiquetas de los botones, en mayúsculas (`--fuente-titular`); **Reenie Beanie** para las notas a mano (`--fuente-mano`). Anton solo tiene peso 400: no le pongas `font-weight: 700`, porque el navegador la engrosa a la fuerza.
   - **Botones:** el relleno es rojo y el de contorno lleva un trazo azul marino de 2 px; los dos son rectos y se levantan al pasar el mouse, con una sombra plana.
-  - **Clases globales para las pantallas:** `.titular-afiche` (titular grande con la tinta gastada del filtro `#gastado` de `app.html`) y `.mano` (nota escrita a mano).
+  - **Clases globales para las pantallas:**
+    - `.titular-afiche` (titular grande con la tinta gastada del filtro `#gastado` de `app.html`) y `.mano` (nota escrita a mano);
+    - `.envoltura` (contenido ancho, hasta 1280 px) y `.banda-roja` / `.banda-azul` (bandas a todo el ancho, con grano);
+    - `.chip` (ficha para filtrar; la elegida lleva `aria-pressed="true"`) y `.oculto-visualmente` (texto solo para lectores de pantalla).
   - **Nombre visible:** `NOMBRE_APLICACION` en `core/titulo/estrategia-titulo.ts`. Lo usan la barra superior, el pie y el título de la pestaña.
 - **Configuración regional `es-BO`:** `DatePipe` y `CurrencyPipe` formatean en español de Bolivia (`{{ monto | currency: moneda }}`).
 - **Nombres:**
@@ -183,7 +186,7 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 | F1 | Confirmar las rutas y las pantallas de cada dominio (tabla del §2) | Cada responsable, en su documento de diseño |
 | F2 | Compartir la campaña: solo frontend o también backend (pendiente #2 del estado) | Equipo |
 | F3 | Pantalla de la bandeja de avisos ("campanita" en la barra superior y lista). **Hecho (Efrain, 2026-11-25):** [`notification-service.md`](servicios/notification-service.md) §11 | Efrain |
-| F4 | Presupuesto del bundle inicial. Con las pantallas de aportes pasa de 487,8 kB a 502,1 kB, y el aviso de `angular.json` está en 500 kB (el error, en 1 MB). El aumento no depende de las pantallas en sí: es la primera vez que la aplicación usa `CurrencyPipe` (7,3 kB; lo pide el §6) y `@for` (unos 7 kB), y su código queda en el bloque inicial. Opciones: subir el aviso, o mostrar el dinero con `Intl.NumberFormat` en lugar de `CurrencyPipe`. Lo anotó Raul el 2026-11-15. Con los enlaces de la barra y la campanita, que se cargan siempre, el inicial pasa de unos 503 kB a unos 515 kB (Efrain, 2026-11-25). Con el tema del afiche y el pie de página, a 521 kB (Efrain, 2026-11-27). **Sigue abierto.** | Efrain |
+| F4 | Presupuesto del bundle inicial. Con las pantallas de aportes pasa de 487,8 kB a 502,1 kB, y el aviso de `angular.json` está en 500 kB (el error, en 1 MB). El aumento no depende de las pantallas en sí: es la primera vez que la aplicación usa `CurrencyPipe` (7,3 kB; lo pide el §6) y `@for` (unos 7 kB), y su código queda en el bloque inicial. Opciones: subir el aviso, o mostrar el dinero con `Intl.NumberFormat` en lugar de `CurrencyPipe`. Lo anotó Raul el 2026-11-15. Con los enlaces de la barra y la campanita, que se cargan siempre, el inicial pasa de unos 503 kB a unos 515 kB (Efrain, 2026-11-25). Con el tema del afiche y el pie de página, a 521 kB, y con las clases globales de la portada, a 522,5 kB (Efrain, 2026-11-27). **Sigue abierto.** | Efrain |
 | F5 | Enlace a "Mis aportes" en el menú de la cuenta (`core/layout/barra-superior`), como en el mockup del enunciado. **Hecho (Efrain, 2026-11-25):** está en la barra, en el menú y en "Mi panel". Falta que Raul lo revise. | Efrain, con Raul |
 | F6 | Volver a enviar sin editar después de un error del servidor (§5) en «Aportar» y en el formulario de campaña. Tras un corte o un `504` no se sabe si el primer envío llegó, así que reintentar podría duplicar el aporte o el borrador. **Hecho en campaña (Arturo, 2026-11-26):** `FormularioCampana` usa `envioReintentable` (en edición `PUT /api/campanas/{id}` es idempotente y en creación `POST /api/campanas` consulta `GET /api/campanas/mias` tras un corte o `5xx` para recuperar el borrador si ya se creó sin duplicarlo). Falta «Aportar» (Raul). | Raul (Aportar) y Arturo (campaña) |
 
@@ -191,6 +194,7 @@ El frontend no tiene workflow propio: lo valida el CI general (`.github/workflow
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-27 | Efrain | §2: portada «Explorar campañas» con el estilo del afiche (pantalla de Gabo). §3: imágenes en `public/img/`. §6: clases globales nuevas. F4 con el tamaño nuevo. |
 | 2026-11-27 | Efrain | §6: nombre visible «Fundly» y estilo «Afiche» (colores, letras, botones y clases globales). §2 y §3: barra superior nueva y pie de página. F4 con el tamaño nuevo. |
 | 2026-11-26 | Arturo | F6 (campaña): `FormularioCampana` usa `envioReintentable` y verifica en `GET /api/campanas/mias` si el borrador ya se creó tras un corte o error `5xx` antes de repetir `POST /api/campanas`. |
 | 2026-11-26 | Gabo | Publicación desde Mi panel, historial público de novedades y verificación del envío cuando se pierde la respuesta. |

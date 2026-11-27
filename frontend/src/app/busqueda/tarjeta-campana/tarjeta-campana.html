@@ -1,0 +1,50 @@
+@let campana = ficha();
+<article
+  class="tarjeta"
+  [class.lograda]="campana.metaAlcanzada"
+  [class.cancelada]="campana.estado === 'CANCELADA'"
+>
+  <div class="marco">
+    <div class="portada">
+      <span class="sin-portada">Portada no disponible</span>
+      @if (portada(); as url) {
+        <img
+          #imagen
+          [src]="url"
+          alt=""
+          loading="lazy"
+          (error)="imagen.hidden = true"
+          (load)="imagen.hidden = false"
+        />
+      }
+    </div>
+    <p class="etiqueta">
+      <span class="mano">{{ etiquetaEstado[campana.estado] | lowercase }}</span>
+      <b>{{ etiquetaCategoria[campana.categoria] }}</b>
+    </p>
+  </div>
+
+  <h3>
+    <a [routerLink]="rutaDetalle(campana.idCampana)">{{ campana.titulo }}</a>
+  </h3>
+  <p class="resumen">{{ campana.resumen }}</p>
+
+  <mat-progress-bar
+    mode="determinate"
+    [value]="avance()"
+    [attr.aria-label]="'Avance de ' + campana.titulo"
+  />
+  <p class="montos">
+    <span
+      ><b>{{ campana.montoRecaudado | currency: campana.moneda : '' }}</b>
+      {{ campana.moneda }}</span
+    >
+    <span
+      >de {{ campana.metaFinanciera | currency: campana.moneda : '' }} {{ campana.moneda }}</span
+    >
+    <span class="porcentaje">{{ campana.porcentajeAvance | number: '1.0-2' }} %</span>
+  </p>
+  <p class="aportes">
+    {{ campana.cantidadAportes }} {{ campana.cantidadAportes === 1 ? 'aporte' : 'aportes' }}
+  </p>
+</article>

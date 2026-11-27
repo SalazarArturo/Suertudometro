@@ -1,153 +1,312 @@
-.catalogo {
-  max-width: 1120px;
-  color: var(--color-marca);
+:host {
+  display: block;
 }
 
-.cabecera {
-  border-block-end: 1px solid var(--color-borde);
-  padding-block-end: 24px;
-}
-
-h1 {
-  font-size: clamp(2rem, 5vw, 3.25rem);
-  line-height: 1.1;
-  margin: 0 0 24px;
-}
-
-.buscador,
-.filtros {
-  display: grid;
-  gap: 12px;
-  align-items: center;
-}
-
-.buscador {
-  grid-template-columns: minmax(0, 1fr) auto;
-  button {
-    padding-inline: 28px;
-  }
-}
-
-.filtros {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 16px;
-}
-
-mat-form-field {
-  min-width: 0;
-}
-.total {
-  margin: 20px 0 12px;
-}
-.tarjetas {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-  gap: 24px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-article {
+// El cartel: el titular gigante en rojo, con la alcancía flotando delante.
+.cartel {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  box-sizing: border-box;
-  border: 1px solid var(--color-borde);
-  border-radius: var(--mat-sys-corner-large);
-  overflow: hidden;
-  &:focus-within {
-    outline: 2px solid var(--color-marca);
-    outline-offset: 3px;
-  }
-}
+  margin-top: clamp(16px, 4vw, 48px);
 
-.portada {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 16 / 9;
-  position: relative;
-  background: var(--color-fondo-suave);
-  color: var(--mat-sys-on-surface-variant);
-  img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  &:has(img:not([hidden])) .sin-portada {
-    visibility: hidden;
-  }
-}
+  h1 {
+    color: var(--color-accion);
+    font-size: clamp(4.2rem, 21vw, 19.5rem);
+    text-align: center;
 
-.contenido {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  padding: 18px;
-  overflow-wrap: anywhere;
-  h2 {
-    margin: 16px 0 8px;
-    line-height: 1.25;
-  }
-  a {
-    color: var(--color-marca);
-    text-underline-offset: 0.16em;
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
+    span {
+      display: block;
+      animation: subir 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+      & + span {
+        animation-delay: 0.08s;
+      }
     }
   }
 }
 
-.clasificacion,
-.cifras,
-.paginacion {
+.alcancia {
+  position: absolute;
+  top: -8%;
+  left: 50%;
+  width: clamp(120px, 29vw, 420px);
+  height: auto;
+  translate: -50% 0;
+  filter: drop-shadow(0 28px 30px rgb(17 30 74 / 22%));
+  animation: flotar 6s ease-in-out 1s infinite;
+  pointer-events: none;
+}
+
+// Debajo del cartel: el sello, el buscador con las categorías y la bajada.
+.pie-cartel {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) 240px;
+  align-items: center;
+  gap: 32px;
+  padding-block: clamp(24px, 3vw, 40px) clamp(48px, 6vw, 80px);
+
+  @media (max-width: 900px) {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 20px;
+
+    .centro {
+      grid-row: 1;
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.sello {
+  position: relative;
+  display: grid;
+  place-content: center;
+  width: clamp(116px, 12.5vw, 178px);
+  aspect-ratio: 1;
+  margin: 0;
+  border: 2.5px solid var(--color-marca);
+  border-radius: 50%;
+  text-align: center;
+  rotate: -8deg;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 9px;
+    border: 1px solid var(--color-marca);
+    border-radius: 50%;
+  }
+
+  b {
+    font-family: var(--fuente-titular);
+    font-size: clamp(2.2rem, 4vw, 3.6rem);
+    font-weight: 400;
+    line-height: 0.95;
+  }
+
+  .mano {
+    font-size: clamp(1.2rem, 1.8vw, 1.6rem);
+  }
+}
+
+.bajada {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.buscador {
+  display: flex;
+  max-width: 720px;
+  margin: 0 auto;
+  border: 2px solid var(--color-marca);
+  background: var(--color-papel-claro);
+
+  &:focus-within {
+    box-shadow: 4px 4px 0 var(--color-accion);
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
+
+  button {
+    height: auto;
+    padding: 14px 32px;
+    font-size: 1.3rem;
+
+    &:hover {
+      translate: none;
+      box-shadow: none;
+      background: var(--color-marca);
+    }
+  }
+}
+
+.campo {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding-inline: 18px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding-block: 18px;
+    border: 0;
+    outline: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 1.1rem;
+
+    &::placeholder {
+      color: var(--color-marca-tenue);
+    }
+  }
+}
+
+.categorias,
+.orden {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.categorias {
+  justify-content: center;
+  margin-top: 20px;
+}
+
+// Los resultados: el título grande, el orden como pestañas y el estado.
+.resultados {
+  padding-block: clamp(32px, 5vw, 56px) clamp(64px, 8vw, 112px);
+  border-top: 2px solid var(--color-marca);
+}
+
+.cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 16px;
+
+  h2 {
+    font-size: clamp(3.2rem, 8.5vw, 7.6rem);
+    outline: none;
+  }
+}
+
+.controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 28px;
+}
+
+.orden {
+  gap: 20px;
+
+  button {
+    padding: 2px 0;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: none;
+    color: var(--color-marca);
+    font-family: var(--fuente-titular);
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    opacity: 0.55;
+
+    &[aria-pressed='true'] {
+      border-color: var(--color-accion);
+      opacity: 1;
+    }
+  }
+}
+
+.mostrar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
+  font-weight: 600;
+
+  select {
+    padding: 8px 10px;
+    border: 1.5px solid var(--color-marca);
+    background: var(--color-papel-claro);
+    color: inherit;
+    font: inherit;
+    font-weight: 500;
+  }
 }
 
-.estado-campana {
-  border: 1px solid var(--color-borde);
-  padding: 1px 8px;
-  border-radius: var(--mat-sys-corner-small);
+.total {
+  margin: 0 0 28px;
+  color: var(--color-marca-tenue);
 }
 
-.resumen,
-.cifras {
-  color: var(--mat-sys-on-surface-variant);
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr));
+  gap: clamp(32px, 3vw, 44px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  // Algunas fotos quedan un poco torcidas, como pegadas a mano.
+  li {
+    transition:
+      rotate 0.25s ease-out,
+      translate 0.25s ease-out;
+
+    &:nth-child(4n + 1) {
+      rotate: 1.4deg;
+    }
+
+    &:nth-child(4n + 3) {
+      rotate: -1.4deg;
+    }
+
+    &:hover,
+    &:focus-within {
+      rotate: 0deg;
+      translate: 0 -8px;
+    }
+  }
 }
-.resumen {
-  margin: 0 0 18px;
-}
-.recaudacion {
-  margin-top: auto;
-}
-.cifras {
-  margin: 6px 0 0;
-}
+
 .estado {
-  padding: 24px 0;
-}
-.paginacion {
-  justify-content: center;
-  flex-wrap: wrap;
-  padding-top: 24px;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  border: 2px dashed var(--color-marca-tenue);
+  text-align: center;
+
+  p {
+    margin: 0;
+  }
+
+  .mano {
+    font-size: 2.2rem;
+  }
 }
 
-@media (max-width: 600px) {
-  .filtros {
-    grid-template-columns: 1fr;
+.paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 48px;
+}
+
+@keyframes subir {
+  from {
+    transform: translateY(0.18em);
   }
-  .buscador {
-    grid-template-columns: 1fr;
+}
+
+@keyframes flotar {
+  50% {
+    translate: -50% -10px;
   }
-  .buscador button {
-    justify-self: start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cartel span,
+  .alcancia {
+    animation: none;
+  }
+
+  .tarjetas li {
+    transition: none;
   }
 }

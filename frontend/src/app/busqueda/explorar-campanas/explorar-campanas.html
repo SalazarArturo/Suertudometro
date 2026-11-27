@@ -1,53 +1,111 @@
-<section class="pagina catalogo" aria-labelledby="titulo-catalogo">
-  <header class="cabecera">
-    <h1 id="titulo-catalogo">Explorar campañas</h1>
-    <form role="search" aria-label="Buscar campañas" (submit)="buscar($event)">
-      <div class="buscador">
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>Buscar en el título o la historia</mat-label>
-          <input matInput type="search" [formField]="formulario.texto" />
-        </mat-form-field>
+<header class="heroe envoltura">
+  <div class="cartel">
+    <h1 class="titular-afiche"><span>Juntos</span> <span>sumamos</span></h1>
+    <img
+      class="alcancia"
+      src="img/alcancia.webp"
+      alt=""
+      width="760"
+      height="1140"
+      fetchpriority="high"
+    />
+  </div>
+
+  <div class="pie-cartel">
+    <!-- Decorativo: la cantidad ya se anuncia junto a los resultados. -->
+    @let total = catalogo.hasValue() ? catalogo.value().total : undefined;
+    <p class="sello" aria-hidden="true">
+      <b>{{ total ?? '…' }}</b>
+      <span class="mano">
+        @if (hayFiltros()) {
+          {{ total === 1 ? 'encontrada' : 'encontradas' }}
+        } @else {
+          {{ total === 1 ? 'campaña activa' : 'campañas activas' }}
+        }
+      </span>
+    </p>
+
+    <div class="centro">
+      <form class="buscador" role="search" aria-label="Buscar campañas" (submit)="buscar($event)">
+        <label class="campo">
+          <mat-icon aria-hidden="true">search</mat-icon>
+          <span class="oculto-visualmente">Buscar en el título o la historia</span>
+          <input
+            type="search"
+            placeholder="Busca una causa: libros, salud, techos…"
+            [formField]="formulario.texto"
+          />
+        </label>
         <button matButton="filled" type="submit">Buscar</button>
+      </form>
+      <ul class="categorias" aria-label="Categorías">
+        <li>
+          <button
+            class="chip"
+            type="button"
+            [attr.aria-pressed]="!consulta().filtros.categoria"
+            (click)="elegirCategoria('')"
+          >
+            Todas
+          </button>
+        </li>
+        @for (categoria of categorias; track categoria.codigo) {
+          <li>
+            <button
+              class="chip"
+              type="button"
+              [attr.aria-pressed]="consulta().filtros.categoria === categoria.codigo"
+              (click)="elegirCategoria(categoria.codigo)"
+            >
+              {{ categoria.etiqueta }}
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <p class="bajada">
+      Campañas solidarias de toda Bolivia. Aporta en segundos y mira cómo llegan a su meta.
+    </p>
+  </div>
+</header>
+
+<section class="resultados envoltura" aria-labelledby="titulo-campanas">
+  <div class="cabeza">
+    <h2 id="titulo-campanas" class="titular-afiche" tabindex="-1">Explorar campañas</h2>
+    <div class="controles">
+      <div class="orden" role="group" aria-label="Ordenar por">
+        @for (opcion of ordenes; track opcion.valor) {
+          @if (opcion.valor !== 'relevancia' || consulta().filtros.texto) {
+            <button
+              type="button"
+              [attr.aria-pressed]="ordenEfectivo() === opcion.valor"
+              (click)="elegirOrden(opcion.valor)"
+            >
+              {{ opcion.texto }}
+            </button>
+          }
+        }
       </div>
-      <div class="filtros">
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>Categoría</mat-label>
-          <select matNativeControl [formField]="formulario.categoria">
-            <option value="">Todas las categorías</option>
-            @for (categoria of categorias; track categoria.codigo) {
-              <option [value]="categoria.codigo">{{ categoria.etiqueta }}</option>
-            }
-          </select>
-        </mat-form-field>
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>Estado</mat-label>
-          <select matNativeControl [formField]="formulario.estado">
-            <option value="PUBLICADA">Publicadas</option>
-            <option value="FINALIZADA">Finalizadas</option>
-            <option value="CANCELADA">Canceladas</option>
-            <option value="TODOS">Todos los estados</option>
-          </select>
-        </mat-form-field>
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>Ordenar por</mat-label>
-          <select matNativeControl [formField]="formulario.orden">
-            <option value="">
-              Automático ({{ filtros().texto.trim() ? 'relevancia' : 'más recientes' }})
+      <label class="mostrar">
+        Mostrar
+        <select (change)="elegirEstado($event)">
+          @for (opcion of estados; track opcion.valor) {
+            <option [value]="opcion.valor" [selected]="consulta().filtros.estado === opcion.valor">
+              {{ opcion.texto }}
             </option>
-            <option value="recientes">Más recientes</option>
-            <option value="popularidad">Más aportes</option>
-            <option value="relevancia" [disabled]="!filtros().texto.trim()">Relevancia</option>
-          </select>
-        </mat-form-field>
-      </div>
-    </form>
-  </header>
+          }
+        </select>
+      </label>
+    </div>
+  </div>
 
   @if (catalogo.isLoading()) {
     <p role="status">Buscando campañas…</p>
     <mat-progress-bar mode="indeterminate" aria-label="Buscando campañas" />
   } @else if (error(); as mensaje) {
     <div class="estado">
+      <p class="mano">algo salió mal</p>
       <p role="alert">{{ mensaje }}</p>
       <button matButton="outlined" type="button" (click)="catalogo.reload()">Reintentar</button>
     </div>
@@ -60,52 +118,7 @@
       <ul class="tarjetas" aria-label="Campañas encontradas">
         @for (ficha of pagina.resultados; track ficha.idCampana) {
           <li>
-            <article>
-              <div class="portada">
-                <span class="sin-portada">Portada no disponible</span>
-                @if (api.urlPortada(ficha.rutaPortada); as url) {
-                  <img
-                    #imagen
-                    [src]="url"
-                    alt=""
-                    loading="lazy"
-                    (error)="imagen.hidden = true"
-                    (load)="imagen.hidden = false"
-                  />
-                }
-              </div>
-              <div class="contenido">
-                <div class="clasificacion">
-                  <span>{{ etiquetaCategoria[ficha.categoria] }}</span>
-                  <span class="estado-campana">{{ etiquetaEstado[ficha.estado] }}</span>
-                </div>
-                <h2>
-                  <a [routerLink]="rutaDetalle(ficha.idCampana)">{{ ficha.titulo }}</a>
-                </h2>
-                <p class="resumen">{{ ficha.resumen }}</p>
-                <div class="recaudacion">
-                  <p>
-                    <strong
-                      >{{ ficha.montoRecaudado | currency: ficha.moneda : '' }}
-                      {{ ficha.moneda }}</strong
-                    >
-                    de {{ ficha.metaFinanciera | currency: ficha.moneda : '' }} {{ ficha.moneda }}
-                  </p>
-                  <mat-progress-bar
-                    mode="determinate"
-                    [value]="math.min(100, ficha.porcentajeAvance)"
-                    [attr.aria-label]="'Avance de ' + ficha.titulo"
-                  />
-                  <p class="cifras">
-                    <span>{{ ficha.porcentajeAvance | number: '1.0-2' }} %</span
-                    ><span
-                      >{{ ficha.cantidadAportes }}
-                      {{ ficha.cantidadAportes === 1 ? 'aporte' : 'aportes' }}</span
-                    >
-                  </p>
-                </div>
-              </div>
-            </article>
+            <app-tarjeta-campana [ficha]="ficha" [portada]="api.urlPortada(ficha.rutaPortada)" />
           </li>
         }
       </ul>
@@ -135,17 +148,15 @@
     } @else {
       <div class="estado">
         @if (consulta().pagina > 1) {
+          <p class="mano">nada por aquí</p>
           <p role="status">Esta página no tiene campañas.</p>
           <button matButton="outlined" type="button" (click)="irAPagina(1)">
             Volver a la primera página
           </button>
         } @else {
+          <p class="mano">nada por aquí</p>
           <p role="status">No se encontraron campañas con estos filtros.</p>
-          @if (
-            consulta().filtros.texto ||
-            consulta().filtros.categoria ||
-            consulta().filtros.estado !== 'PUBLICADA'
-          ) {
+          @if (hayFiltros()) {
             <a matButton="outlined" routerLink="/">Limpiar filtros</a>
           }
         }
@@ -153,3 +164,6 @@
     }
   }
 </section>
+
+<app-nuestras-causas (elegir)="verCausa($event)" />
+<app-como-funciona />

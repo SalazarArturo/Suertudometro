@@ -1,0 +1,25 @@
+<section class="como envoltura" aria-labelledby="titulo-como">
+  <div class="texto">
+    <p class="mano">así de simple</p>
+    <h2 id="titulo-como" class="titular-afiche">Cómo funciona</h2>
+    <p>
+      Cualquier persona puede contar lo que su comunidad necesita. La administración revisa cada
+      campaña antes de publicarla, y quien organiza cuenta los avances con novedades.
+    </p>
+    <ol class="pasos">
+      <li><b>01</b>Cuenta tu historia</li>
+      <li><b>02</b>La revisamos y publicamos</li>
+      <li><b>03</b>Recibe aportes y comparte novedades</li>
+    </ol>
+    <a matButton="filled" routerLink="/panel/campanas/nueva">Crear mi campaña</a>
+  </div>
+
+  <div class="abanico" aria-hidden="true">
+    @for (foto of fotos; track foto.archivo) {
+      <figure>
+        <img [src]="foto.archivo" alt="" loading="lazy" width="720" height="480" />
+        <figcaption class="mano">{{ foto.nota }}</figcaption>
+      </figure>
+    }
+  </div>
+</section>

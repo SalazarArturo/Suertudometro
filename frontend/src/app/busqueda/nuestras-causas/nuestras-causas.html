@@ -1,0 +1,15 @@
+<section class="banda-roja" aria-labelledby="titulo-causas">
+  <div class="envoltura causas">
+    <h2 id="titulo-causas" class="titular-afiche">Nuestras causas</h2>
+    <ul>
+      @for (categoria of categorias; track categoria.codigo) {
+        <li>
+          <button type="button" (click)="elegir.emit(categoria.codigo)">
+            <b>{{ categoria.etiqueta }}</b>
+            <span class="mano">{{ nota[categoria.codigo] }}</span>
+          </button>
+        </li>
+      }
+    </ul>
+  </div>
+</section>

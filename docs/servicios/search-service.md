@@ -1,6 +1,6 @@
 # search-service · Búsqueda
 
-> **Responsable:** Gabo · **Creado:** 2026-11-20 · **Última actualización:** 2026-11-20 · **Estado:** Borrador (en revisión)
+> **Responsable:** Gabo · **Creado:** 2026-11-20 · **Última actualización:** 2026-11-27 · **Estado:** Borrador (en revisión)
 > Contexto de soporte Búsqueda · Django 5.2 + DRF · Python 3.13 · PostgreSQL 18 (`search-db`) · API `/api/busqueda` · puerto interno `8085`.
 
 ## 1. Responsabilidad
@@ -94,6 +94,8 @@ Seguir la estructura de Novedades dentro de `search-service/`: `configuracion/` 
 
 «Explorar campañas» en `/` consulta el catálogo desde la [base Angular](../frontend.md). Conserva el texto, los filtros, el orden y la página en la URL. Una búsqueda nueva vuelve a la primera página. La pantalla distingue carga, error con reintento y resultados vacíos. Cada tarjeta enlaza a `/campanas/:id` y muestra la portada cuando la ruta publicada está disponible en el gateway. Si la recaudación supera la meta, el porcentaje se muestra completo y la barra se detiene en el 100 %.
 
+Con el rediseño del frontend (estilo «Afiche», Efrain, 2026-11-27), la pantalla es la portada del sitio: un cartel con el buscador, las categorías como fichas que filtran al instante y un sello con la cantidad de resultados; el orden va en pestañas y el estado en un selector, los dos con efecto inmediato. Cada campaña es una `<app-tarjeta-campana>` con la portada en un marco. Al final, «Nuestras causas» filtra por categoría y lleva a los resultados, y «Cómo funciona» explica los tres pasos. La consulta a `GET /api/busqueda` no cambia.
+
 ## 12. Pendientes de este servicio
 
 - Revisar en el PR la aclaración de visibilidad y completar la aprobación de contratos v1 con los demás servicios (#4).
@@ -110,4 +112,5 @@ Seguir la estructura de Novedades dentro de `search-service/`: `configuracion/` 
 
 | Fecha | Quién | Cambio |
 |---|---|---|
+| 2026-11-27 | Efrain | §11: la pantalla con el estilo «Afiche» del rediseño del frontend. Lo revisa Gabo en el PR. |
 | 2026-11-20 | Gabo | Diseño y backend del catálogo, con pruebas aisladas y acuerdos de popularidad y visibilidad revisados con Raul y Arturo. |
